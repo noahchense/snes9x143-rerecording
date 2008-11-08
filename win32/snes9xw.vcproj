@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="Snes9X"
+	Name="Snes9X143"
 	ProjectGUID="{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}"
 	RootNamespace="Snes9X"
 	>
@@ -82,7 +82,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib ddraw.lib dsound.lib dxguid.lib vfw32.lib lua.lib shlwapi.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib"
 				OutputFile="$(ProjectDir)\snes9x-ccore.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -161,9 +161,9 @@
 				Optimization="2"
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="1"
-				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="$(ProjectDir)..\..,$(ProjectDir)..\..\zlib,$(ProjectDir)..\unzip,$(ProjectDir)..\..\FMOD\api\inc,$(ProjectDir)..\..\libpng\include,$(ProjectDir)..\..\lua\src"
-				PreprocessorDefinitions="NDEBUG;HAVE_LIBPNG;ZSNES_C4;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;ZSNES_FX;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE"
+				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories=".;directx;zlib;libpng-1.2.1;lua-5.1.4/src"
+				PreprocessorDefinitions="NDEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;NOASM"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				StructMemberAlignment="3"
@@ -178,6 +178,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
 				CompileAs="0"
+				DisableSpecificWarnings="4290;4996;4200"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -192,11 +193,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib ddraw.lib dsound.lib dxguid.lib vfw32.lib lua.lib shlwapi.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib"
 				OutputFile="$(ProjectDir)\snes9x.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(ProjectDir)..\..\FMOD\api\lib;$(ProjectDir)..\i386;$(ProjectDir)..\..\libpng\lib;$(ProjectDir)..\..\lua\lib"
+				AdditionalLibraryDirectories="directx"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
 				DelayLoadDLLs=""
@@ -206,7 +207,7 @@
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"
-				LinkTimeCodeGeneration="0"
+				LinkTimeCodeGeneration="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -268,8 +269,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(ProjectDir)..\..,$(ProjectDir)..\..\zlib,$(ProjectDir)..\unzip,$(ProjectDir)..\..\FMOD\api\inc,$(ProjectDir)..\..\libpng\include,$(ProjectDir)..\..\lua\src"
-				PreprocessorDefinitions="_DEBUG;HAVE_LIBPNG;ZSNES_C4;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;ZSNES_FX;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".;directx;zlib;libpng-1.2.1;lua-5.1.4/src"
+				PreprocessorDefinitions="_DEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;NOASM"
 				RuntimeLibrary="1"
 				StructMemberAlignment="3"
 				UsePrecompiledHeader="0"
@@ -283,6 +284,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				CompileAs="0"
+				DisableSpecificWarnings="4290;4996;4200"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -297,11 +299,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlibd.lib libpngd.lib comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib ddraw.lib dsound.lib dxguid.lib vfw32.lib lua.lib shlwapi.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib"
 				OutputFile="$(ProjectDir)\snes9x-debug.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(ProjectDir)..\..\FMOD\api\lib;$(ProjectDir)..\i386;$(ProjectDir)..\..\libpng\lib;$(ProjectDir)..\..\lua\lib"
+				AdditionalLibraryDirectories="directx"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
 				DelayLoadDLLs=""
@@ -830,7 +832,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1037,7 +1038,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1079,7 +1079,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1313,7 +1312,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1321,7 +1319,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1378,7 +1375,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1390,7 +1386,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1419,7 +1414,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1431,7 +1425,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1455,7 +1448,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1463,7 +1455,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1488,7 +1479,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1500,7 +1490,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1524,7 +1513,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1532,7 +1520,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1952,7 +1939,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2873,536 +2859,72 @@
 			Name="libPNG"
 			>
 			<File
-				RelativePath="..\..\libpng\src\png.c"
+				RelativePath=".\libpng-1.2.1\png.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\png.h"
+				RelativePath=".\libpng-1.2.1\pngerror.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngconf.h"
+				RelativePath=".\libpng-1.2.1\pnggccrd.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngerror.c"
+				RelativePath=".\libpng-1.2.1\pngget.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pnggccrd.c"
+				RelativePath=".\libpng-1.2.1\pngmem.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngget.c"
+				RelativePath=".\libpng-1.2.1\pngpread.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngmem.c"
+				RelativePath=".\libpng-1.2.1\pngread.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngpread.c"
+				RelativePath=".\libpng-1.2.1\pngrio.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngread.c"
+				RelativePath=".\libpng-1.2.1\pngrtran.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngrio.c"
+				RelativePath=".\libpng-1.2.1\pngrutil.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngrtran.c"
+				RelativePath=".\libpng-1.2.1\pngset.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngrutil.c"
+				RelativePath=".\libpng-1.2.1\pngtrans.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngset.c"
+				RelativePath=".\libpng-1.2.1\pngvcrd.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngtrans.c"
+				RelativePath=".\libpng-1.2.1\pngwio.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngvcrd.c"
+				RelativePath=".\libpng-1.2.1\pngwrite.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngwio.c"
+				RelativePath=".\libpng-1.2.1\pngwtran.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\libpng\src\pngwrite.c"
+				RelativePath=".\libpng-1.2.1\pngwutil.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\libpng\src\pngwtran.c"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\libpng\src\pngwutil.c"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -3478,346 +3000,145 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="i386"
+			Name="lua"
 			>
 			<File
-				RelativePath="..\i386\2xsaimmx.obj"
+				RelativePath=".\lua-5.1.4\src\lapi.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\bilinear.obj"
+				RelativePath=".\lua-5.1.4\src\lauxlib.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\c4.obj"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\i386\cpuexec.obj"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\i386\cpuops.obj"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\i386\fxemu2.obj"
+				RelativePath=".\lua-5.1.4\src\lbaselib.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\fxemu2b.obj"
+				RelativePath=".\lua-5.1.4\src\lcode.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\fxemu2c.obj"
+				RelativePath=".\lua-5.1.4\src\ldblib.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\fxtable.obj"
+				RelativePath=".\lua-5.1.4\src\ldebug.c"
 				>
 			</File>
 			<File
-				RelativePath="..\offsets.cpp"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\i386\sa1ops.obj"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\i386\sfxproc.obj"
+				RelativePath=".\lua-5.1.4\src\ldo.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\spc.obj"
+				RelativePath=".\lua-5.1.4\src\ldump.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\zsnes.obj"
+				RelativePath=".\lua-5.1.4\src\lfunc.c"
 				>
 			</File>
 			<File
-				RelativePath="..\i386\zsnesc4.obj"
+				RelativePath=".\lua-5.1.4\src\lgc.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
-			<Filter
-				Name="asm"
+			<File
+				RelativePath=".\lua-5.1.4\src\linit.c"
 				>
-				<File
-					RelativePath="..\i386\2XSAIMMX.ASM"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\bilinear.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\C4.ASM"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\cpuexec.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\cpuops.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\fxemu2.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\fxemu2b.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\fxemu2c.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\fxtable.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\getset.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sa1gs.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sa1ops.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sfxproc.asm"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\SPC.ASM"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\spc700.S"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\ZSNES.ASM"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\zsnesc4.asm"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="header"
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\liolib.c"
 				>
-				<File
-					RelativePath="..\i386\asmaddr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\asmops.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\asmstruc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\offsets.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sa1addr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sa1ops.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\sa1struc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\i386\spcops.h"
-					>
-				</File>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\llex.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lmathlib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lmem.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\loadlib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lobject.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lopcodes.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\loslib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lparser.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lstate.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lstring.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lstrlib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\ltable.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\ltablib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\ltm.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lundump.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lvm.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\lzio.c"
+				>
+			</File>
+			<File
+				RelativePath=".\lua-5.1.4\src\print.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="zLib"
 			>
 			<File
-				RelativePath="..\..\zlib\adler32.c"
+				RelativePath=".\zlib\adler32.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\compress.c"
+				RelativePath=".\zlib\compress.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\crc32.c"
+				RelativePath=".\zlib\crc32.c"
 				>
 				<FileConfiguration
 					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -3827,7 +3148,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -3837,7 +3157,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -3847,314 +3166,54 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\crc32.h"
+				RelativePath=".\zlib\deflate.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\deflate.c"
+				RelativePath=".\zlib\gzio.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\deflate.h"
+				RelativePath=".\zlib\infblock.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\gzio.c"
+				RelativePath=".\zlib\infcodes.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\infback.c"
+				RelativePath=".\zlib\inffast.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\inffast.c"
+				RelativePath=".\zlib\inflate.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\inflate.c"
+				RelativePath=".\zlib\inftrees.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\inftrees.c"
+				RelativePath=".\zlib\infutil.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\trees.c"
+				RelativePath=".\zlib\trees.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\uncompr.c"
+				RelativePath=".\zlib\uncompr.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\zlib\zutil.h"
+				RelativePath=".\zlib\zutil.c"
 				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\ioapi.c"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
