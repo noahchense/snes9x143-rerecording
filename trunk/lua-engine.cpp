@@ -4,6 +4,7 @@
 #include <string.h>
 //#include <unistd.h> // for unlink
 #include <ctype.h>
+#include <assert.h>
 
 #ifdef __linux
 #include <sys/types.h>
@@ -122,6 +123,10 @@ int S9xLuaSpeed() {
 		IPPU.SkippedFrames=0;
 		IPPU.RenderThisFrame = FALSE;
 		return 1;
+
+	default:
+		assert(false);
+		return 0;
 	
 	}
 }

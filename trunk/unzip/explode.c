@@ -104,8 +104,9 @@ int explode_nolit8 OF((struct huft *, struct huft *, int, int));
 int explode_nolit4 OF((struct huft *, struct huft *, int, int));
 int explode ();
 
-extern file_in_zip_read_info_s *pfile_in_zip_read_info;
-extern unz_s *pUnzip;
+//zero 08-nov-08: these needed not to be extern
+file_in_zip_read_info_s *pfile_in_zip_read_info;
+unz_s *pUnzip;
 
 /* The implode algorithm uses a sliding 4K or 8K byte window on the
    uncompressed stream to find repeated byte strings.  This is implemented
