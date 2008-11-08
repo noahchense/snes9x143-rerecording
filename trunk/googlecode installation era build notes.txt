@@ -1,0 +1,6 @@
+all zsnes asm/obj files were removed 
+ZSNES_FX was removed from preprocessor
+ZSNES_C4 was removed from preprocessor
+
+dsp* was unexcluded from build
+fx* was unexcluded from build
