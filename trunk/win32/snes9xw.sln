@@ -1,6 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Snes9X", "snes9xw.vcproj", "{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Snes9X143", "snes9xw.vcproj", "{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Snes9X143", "Copy of snes9xw.vcproj", "{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,12 @@ Global
 		{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}.Debug|Win32.Build.0 = Debug|Win32
 		{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}.Release|Win32.ActiveCfg = Release|Win32
 		{B86059D8-C9A6-46BE-8FBA-3170C54F1DFD}.Release|Win32.Build.0 = Release|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.C core (Deprecated)|Win32.ActiveCfg = C core (Deprecated)|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.C core (Deprecated)|Win32.Build.0 = C core (Deprecated)|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.Debug|Win32.Build.0 = Debug|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.Release|Win32.ActiveCfg = Release|Win32
+		{20EEFE8B-4605-43F6-A4DE-2441C6393DBA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
