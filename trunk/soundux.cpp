@@ -478,6 +478,8 @@ void S9xFixSoundAfterSnapshotLoad (int version)
     for (int i = 0; i < 8; i++)
     {
 		//SoundData.channels[i].needs_decode = TRUE;
+		SoundData.channels[i].block = SoundData.channels[i].decoded;
+
 		S9xSetSoundFrequency (i, SoundData.channels[i].hertz);
 		SoundData.channels[i].envxx = SoundData.channels[i].envx << ENVX_SHIFT;
 
