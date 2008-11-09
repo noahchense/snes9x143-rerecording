@@ -477,17 +477,22 @@ void S9xFixSoundAfterSnapshotLoad (int version)
     S9xSetFilterCoefficient (7, (signed char) APU.DSP [APU_C7]);
     for (int i = 0; i < 8; i++)
     {
-		SoundData.channels[i].needs_decode = TRUE;
+		//SoundData.channels[i].needs_decode = TRUE;
 		S9xSetSoundFrequency (i, SoundData.channels[i].hertz);
 		SoundData.channels[i].envxx = SoundData.channels[i].envx << ENVX_SHIFT;
+
+		// not used
 		SoundData.channels[i].next_sample = 0;
 		SoundData.channels[i].interpolate = 0;
+
+		// FIXME: sounds safety, but not true
 		SoundData.channels[i].nb_index = 0;
 		SoundData.channels[i].nb_sample[0] = 0;
 		SoundData.channels[i].nb_sample[1] = 0;
 		SoundData.channels[i].nb_sample[2] = 0;
 		SoundData.channels[i].nb_sample[3] = 0;
 		SoundData.channels[i].count = 0;
+
 		SoundData.channels[i].previous [0] = (int32) SoundData.channels [i].previous16 [0];
 		SoundData.channels[i].previous [1] = (int32) SoundData.channels [i].previous16 [1];
     }
