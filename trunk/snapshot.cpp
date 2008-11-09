@@ -1719,8 +1719,6 @@ void UnfreezeStructFromCopy (void *sbase, FreezeData *fields, int num_fields, ui
 
 /*****************************************************************/
 
-extern uint8 spc_dump_dsp[0x100];
-
 bool8 S9xSPCDump (const char *filename)
 {
     static uint8 header [] = {
@@ -1731,6 +1729,7 @@ bool8 S9xSPCDump (const char *filename)
     static uint8 version = {
 		0x1e
     };
+	const uint8 reserved[64] = { 0 };
 	
     FILE *fs;
 		
@@ -1774,7 +1773,8 @@ bool8 S9xSPCDump (const char *filename)
 		fputc (APURegisters.S, fs) == EOF ||
 		fseek (fs, 256, SEEK_SET) == EOF ||
 		fwrite (IAPU.RAM, 0x10000, 1, fs) != 1 ||
-		fwrite (spc_dump_dsp, 1, 192, fs) != 192 ||
+		fwrite (APU.DSP, 1, 128, fs) != 128 ||
+		fwrite (reserved, 1, 64, fs) != 64 ||
 		fwrite (APU.ExtraRAM, 64, 1, fs) != 1 ||
 		fclose (fs) < 0)
     {
