@@ -140,7 +140,6 @@ EXTERN_C struct SAPU APU;
 EXTERN_C struct SIAPU IAPU;
 extern int spc_is_dumping;
 extern int spc_is_dumping_temp;
-extern uint8 spc_dump_dsp[0x100];
 STATIC inline void S9xAPUUnpackStatus()
 {
     IAPU._Zero = ((APURegisters.P & Zero) == 0) | (APURegisters.P & Negative);

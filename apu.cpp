@@ -104,7 +104,6 @@
 
 int spc_is_dumping=0;
 int spc_is_dumping_temp;
-uint8 spc_dump_dsp[0x100]; 
 
 extern int NoiseFreq [32];
 #ifdef DEBUGGER
@@ -159,7 +158,6 @@ void S9xResetAPU ()
 
     Settings.APUEnabled = Settings.NextAPUEnabled;
 
-	ZeroMemory(spc_dump_dsp, 0x100);
 	ZeroMemory(IAPU.RAM, 0x100);
 	memset(IAPU.RAM+0x20, 0xFF, 0x20);
 	memset(IAPU.RAM+0x60, 0xFF, 0x20);
@@ -231,8 +229,6 @@ void S9xSetAPUDSP (uint8 byte)
 	static uint8 KeyOn;
 	static uint8 KeyOnPrev;
     int i;
-
-	spc_dump_dsp[reg] = byte;
 
     switch (reg)
     {
