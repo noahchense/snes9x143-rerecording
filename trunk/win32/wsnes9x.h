@@ -304,7 +304,7 @@ struct sGUI {
 	MacroInputType MacroInputMode;
 	bool PauseWithMacro;
 	bool SaveMacroSnap;
-	bool SaveMacroSnapIntoTempDir;
+	bool PlatformSnapIntoTempDir;
 	int  MaxRecentMacros;
 	char RecentMacros [MAX_RECENT_MACROS_LIST_SIZE][MACRO_MAX_TEXT_LENGTH];
 

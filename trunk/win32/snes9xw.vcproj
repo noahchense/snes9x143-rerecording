@@ -558,6 +558,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\win32-snapshot.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\win32-snapshot.h"
+				>
+			</File>
+			<File
 				RelativePath=".\win32-sound.cpp"
 				>
 			</File>

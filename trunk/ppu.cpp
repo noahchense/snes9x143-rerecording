@@ -120,6 +120,7 @@ uint8 in_bit=0;
 extern uint8 *HDMAMemPointers [8];
 
 bool8 pad_read = 0;
+bool8 pad_read_last = 0;
 
 static inline void S9xLatchCounters (bool force)
 {
@@ -2929,6 +2930,7 @@ void S9xUpdateJoypadButtons ()
 	S9xMovieUpdate();
 	if(!pad_read)
 		++IPPU.LagCounter;
+	pad_read_last = pad_read;
 	pad_read = false;
 
 	if(!Settings.UpAndDown)

@@ -87,34 +87,13 @@
   Nintendo Co., Limited and its subsidiary companies.
 *******************************************************************************/
 
-
-
-#ifndef LAZYMACRO_H_INCLUDED
-#define LAZYMACRO_H_INCLUDED
+#ifndef WIN32_SNAPSHOT_H_INCLUDED
+#define WIN32_SNAPSHOT_H_INCLUDED
 
 #include <windows.h>
-#include <windowsx.h>
-#include <tchar.h>
 
-#include "wsnes9x.h"
-#include "../port.h"
+bool GetPrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bDefault, LPCTSTR lpFileName);
+BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName);
+BOOL WritePrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bBoolean, LPCTSTR lpFileName);
 
-/****************************************************************************/
-
-#define MACRO_VERSION           1
-#define MACRO_MAX_LENGTH        18000
-#define MACRO_MAX_LOOP          32
-
-int CALLBACK DlgInputMacro(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-
-void MacroInit(void);
-bool MacroChangeState(int player, bool state);
-bool MacroToggleState(int player);
-void MacroDisableAll(void);
-bool MacroIsEnabled(int player);
-bool MacroSetText(int player, LPCTSTR text);
-uint16 MacroInput(int player);
-bool MacroSaveState(LPCTSTR filename);
-bool MacroLoadState(LPCTSTR filename);
-
-#endif // !LAZYMACRO_H_INCLUDED
+#endif // !WIN32_SNAPSHOT_H_INCLUDED

@@ -288,7 +288,7 @@ void WinSetDefaultValues ()
 	GUI.MacroInputMode = MACRO_INPUT_MOV;
 	GUI.PauseWithMacro = false;
 	GUI.SaveMacroSnap = true;
-	GUI.SaveMacroSnapIntoTempDir = true;
+	GUI.PlatformSnapIntoTempDir = true;
 	for(int i = 0; i < MAX_RECENT_MACROS_LIST_SIZE; i++)
 		GUI.RecentMacros[i][0] = '\0';
 
@@ -1023,7 +1023,7 @@ void WinRegisterConfigItems()
 	AddUIntC("MacroInputMode", GUI.MacroInputMode, MACRO_INPUT_MOV, "for input macro: 0=disable, 1=overwrite, 2=toggle");
 	AddBoolC("PauseWithMacro", GUI.PauseWithMacro, false, "true to pause when input macro stops");
 	AddBoolC("SaveMacroSnapshot", GUI.SaveMacroSnap, true, "true to save macro settings with snapshot");
-	AddBoolC("SaveMacroSnapIntoTempDir", GUI.SaveMacroSnapIntoTempDir, true, "true to save macro snapshot into temporary directory instead of snapshot directory");
+	AddBoolC("PlatformSnapIntoTempDir", GUI.PlatformSnapIntoTempDir, true, "true to save platform-dependent snapshot into temporary directory instead of snapshot directory");
 	AddUIntC("MaxRecentMacros", GUI.MaxRecentMacros, 14, "max recent macros to show in the dropdown (must be <= 32)");
 	#define ADD(n) AddString("RecentMacro" #n, GUI.RecentMacros[n-1], MACRO_MAX_TEXT_LENGTH, "")
 		ADD(1);  ADD(2);  ADD(3);  ADD(4);  ADD(5);  ADD(6);  ADD(7);  ADD(8);

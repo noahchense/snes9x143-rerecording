@@ -87,34 +87,110 @@
   Nintendo Co., Limited and its subsidiary companies.
 *******************************************************************************/
 
-
-
-#ifndef LAZYMACRO_H_INCLUDED
-#define LAZYMACRO_H_INCLUDED
-
-#include <windows.h>
-#include <windowsx.h>
-#include <tchar.h>
+#include "../port.h"
+#include "../snes9x.h"
+#include "../display.h"
+#include "../movie.h"
+#include "../ppu.h"
+#include "../gfx.h"
 
 #include "wsnes9x.h"
-#include "../port.h"
+#include "lazymacro.h"
+#include "win32-snapshot.h"
 
-/****************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
-#define MACRO_VERSION           1
-#define MACRO_MAX_LENGTH        18000
-#define MACRO_MAX_LOOP          32
+#include <windows.h>
 
-int CALLBACK DlgInputMacro(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+extern bool8 pad_read, pad_read_last;
+extern void S9xReRefresh();
 
-void MacroInit(void);
-bool MacroChangeState(int player, bool state);
-bool MacroToggleState(int player);
-void MacroDisableAll(void);
-bool MacroIsEnabled(int player);
-bool MacroSetText(int player, LPCTSTR text);
-uint16 MacroInput(int player);
-bool MacroSaveState(LPCTSTR filename);
-bool MacroLoadState(LPCTSTR filename);
+/*****************************************************************************/
 
-#endif // !LAZYMACRO_H_INCLUDED
+bool GetPrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bDefault, LPCTSTR lpFileName)
+{
+	static TCHAR text[256];
+	GetPrivateProfileString(lpAppName, lpKeyName, bDefault ? _T("true") : _T("false"), text, COUNT(text), lpFileName);
+	if(lstrcmpi(text, _T("true")) == 0)
+		return true;
+	else if(lstrcmpi(text, _T("false")) == 0)
+		return false;
+	else
+		return bDefault;
+}
+
+BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName)
+{
+	static TCHAR intText[256];
+	wsprintf(intText, _T("%d"), nValue);
+	return WritePrivateProfileString(lpAppName, lpKeyName, intText, lpFileName);
+}
+
+BOOL WritePrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bBoolean, LPCTSTR lpFileName)
+{
+	return WritePrivateProfileString(lpAppName, lpKeyName, bBoolean ? _T("true") : _T("false"), lpFileName);
+}
+
+/*****************************************************************************/
+
+void GetPlatformSnapPath (char *path, const char *base)
+{
+	TCHAR tempDir[MAX_PATH + 1];
+
+	GetTempPath(MAX_PATH, tempDir);
+	wsprintf(path, _T("%s\\%s.s9xw"), GUI.PlatformSnapIntoTempDir ? 
+		tempDir : S9xGetDirectory(SNAPSHOT_DIR), S9xBasename(base));
+}
+
+EXTERN_C bool8 S9xFreezePlatformDepends (const char *basefilename)
+{
+	static TCHAR filepath [_MAX_PATH + 1];
+	bool result = true;
+
+	// GetPlatformSnapPath should return full-path always
+	GetPlatformSnapPath(filepath, basefilename);
+
+	// TODO: more abstract implementation
+	result &= MacroSaveState(filepath);
+	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
+	WritePrivateProfileBool(_T("Control"), _T("pad_read"), pad_read, filepath);
+	WritePrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last, filepath);
+	WritePrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
+	WritePrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
+	return result;
+}
+
+EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename)
+{
+	static TCHAR filepath [_MAX_PATH + 1];
+	bool8 pad_read_temp;
+	bool adjustLagCounter;
+	bool result = true;
+
+	GetPlatformSnapPath(filepath, basefilename);
+
+	// TODO: more abstract implementation
+	result &= MacroLoadState(filepath);
+	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
+	pad_read = GetPrivateProfileBool(_T("Control"), _T("pad_read"), pad_read, filepath);
+	pad_read_last = GetPrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last, filepath);
+	IPPU.TotalEmulatedFrames = GetPrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
+	IPPU.LagCounter = GetPrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
+
+	// messy
+	adjustLagCounter = (IPPU.LagCounter && !pad_read_last);
+
+	pad_read_temp = pad_read;
+	pad_read = pad_read_last;
+	IPPU.LagCounter -= (adjustLagCounter ? 1 : 0);
+	S9xUpdateFrameCounter (-1);
+	IPPU.LagCounter += (adjustLagCounter ? 1 : 0);
+	pad_read = pad_read_temp;
+
+	S9xReRefresh();
+
+	return result;
+}
