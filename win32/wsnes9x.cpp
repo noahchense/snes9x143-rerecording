@@ -4958,15 +4958,11 @@ void FreezeUnfreeze (int slot, bool8 freeze)
     if (freeze)
     {
         S9xFreezeGame (filename);
-        if(GUI.SaveMacroSnap/* && S9xMovieRecording()*/)
-             MacroFreezeUnfreeze(slot, freeze);
     }
     else
     {
         if (S9xUnfreezeGame (filename))
         {
-            if(GUI.SaveMacroSnap/* && S9xMovieRecording()*/)
-                MacroFreezeUnfreeze(slot, freeze);
 //	        S9xMessage (S9X_INFO, S9X_FREEZE_FILE_INFO, S9xBasename (filename));
 #ifdef NETPLAY_SUPPORT
             S9xNPServerQueueSendingFreezeFile (filename);

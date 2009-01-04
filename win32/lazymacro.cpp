@@ -160,6 +160,7 @@
 
 
 
+#include "win32-snapshot.h"
 #include "lazymacro.h"
 #include "wlanguage.h"
 #include "directx.h"
@@ -176,10 +177,6 @@
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef countof
-#define countof(a)  (sizeof(a) / sizeof(a[0]))
 #endif
 
 UINT CharOf(LPCTSTR lpsz)
@@ -237,35 +234,6 @@ bool MacroUpdateCounter(int player);
 bool MacroUpdateCounterAll(void);
 bool MacroRestoreCounter(int player);
 bool MacroRestoreCounterAll(void);
-
-/*****************************************************************************/
-bool GetPrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bDefault, LPCTSTR lpFileName);
-BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName);
-BOOL WritePrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bBoolean, LPCTSTR lpFileName);
-
-bool GetPrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bDefault, LPCTSTR lpFileName)
-{
-	static TCHAR text[256];
-	GetPrivateProfileString(lpAppName, lpKeyName, bDefault ? _T("true") : _T("false"), text, countof(text), lpFileName);
-	if(lstrcmpi(text, _T("true")) == 0)
-		return true;
-	else if(lstrcmpi(text, _T("false")) == 0)
-		return false;
-	else
-		return bDefault;
-}
-
-BOOL WritePrivateProfileInt(LPCTSTR lpAppName, LPCTSTR lpKeyName, INT nValue, LPCTSTR lpFileName)
-{
-	static TCHAR intText[256];
-	wsprintf(intText, _T("%d"), nValue);
-	return WritePrivateProfileString(lpAppName, lpKeyName, intText, lpFileName);
-}
-
-BOOL WritePrivateProfileBool(LPCTSTR lpAppName, LPCTSTR lpKeyName, bool bBoolean, LPCTSTR lpFileName)
-{
-	return WritePrivateProfileString(lpAppName, lpKeyName, bBoolean ? _T("true") : _T("false"), lpFileName);
-}
 
 /*****************************************************************************/
 /* WinProc                                                                   */
@@ -531,31 +499,6 @@ uint16 MacroInput(int player)
 	return padState;
 }
 
-void MacroFreezeUnfreeze (int slot, bool freeze)
-{
-	static TCHAR filename [_MAX_PATH + 1];
-	TCHAR drive [_MAX_DRIVE + 1];
-	TCHAR dir [_MAX_DIR + 1];
-	TCHAR fname [_MAX_FNAME + 1];
-	TCHAR ext [_MAX_EXT + 1];
-	TCHAR tempDir[MAX_PATH + 1];
-
-	GetTempPath(MAX_PATH, tempDir);
-	_tsplitpath(Memory.ROMFilename, drive, dir, fname, ext);
-	wsprintf(filename, _T("%s\\%s.%03d.s9xw"), GUI.SaveMacroSnapIntoTempDir ? 
-		tempDir : S9xGetDirectory(SNAPSHOT_DIR), 
-		fname, slot);
-
-	if (freeze)
-	{
-		MacroSaveState(filename);
-	}
-	else
-	{
-		MacroLoadState(filename);
-	}
-}
-
 extern bool S9xGetState (WORD KeyIdent);
 
 bool MacroSaveState(LPCTSTR filename)
@@ -564,7 +507,7 @@ bool MacroSaveState(LPCTSTR filename)
 	static TCHAR snapPath[_MAX_PATH + 1];
 	TCHAR secName[64];
 
-	GetFullPathName(filename, countof(snapPath), snapPath, NULL);
+	GetFullPathName(filename, COUNT(snapPath), snapPath, NULL);
 
 	WritePrivateProfileInt(_T("Macro"), _T("Version"), MACRO_VERSION, snapPath);
 
@@ -589,7 +532,7 @@ bool MacroLoadState(LPCTSTR filename)
 	TCHAR secName[64];
 	int snapVersion;
 
-	GetFullPathName(filename, countof(snapPath), snapPath, NULL);
+	GetFullPathName(filename, COUNT(snapPath), snapPath, NULL);
 
 	snapVersion = GetPrivateProfileInt(_T("Macro"), _T("Version"), 0, snapPath);
 

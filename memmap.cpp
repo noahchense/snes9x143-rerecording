@@ -1662,6 +1662,9 @@ void CMemory::InitROM (bool8 Interleaved)
 
 	IPPU.TotalEmulatedFrames = 0;
 	IPPU.LagCounter = 0;
+	extern bool8 pad_read, pad_read_last;
+	pad_read = false;
+	pad_read_last = false;
 
 	ResetSpeedMap();
 	ApplyROMFixes ();

@@ -685,8 +685,16 @@ bool8 S9xFreezeGame (const char *filename)
 	
     if (S9xOpenSnapshotFile (filename, FALSE, &stream))
     {
+		S9xPrepareSoundForSnapshotSave (FALSE);
+
 		S9xFreezeToStream (stream);
 		S9xCloseSnapshotFile (stream);
+
+		#ifdef WIN32 // S9xFreezePlatformDepends
+			S9xFreezePlatformDepends (filename);
+		#endif // !S9xFreezePlatformDepends
+
+		S9xPrepareSoundForSnapshotSave (TRUE);
 
 		S9xResetSaveTimer (TRUE);
 
@@ -789,6 +797,11 @@ bool8 S9xUnfreezeGame (const char *filename)
 		}
 
 		S9xCloseSnapshotFile (snapshot);
+
+		#ifdef WIN32 // S9xUnfreezePlatformDepends
+			S9xUnfreezePlatformDepends (filename);
+		#endif // !S9xUnfreezePlatformDepends
+
 		return (TRUE);
     }
 
@@ -1202,9 +1215,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 
 		if(local_movie_data) // cannot restore last displayed pad_read status, so assume it was read
 		{
-			extern bool8 pad_read;
-			S9xUpdateFrameCounter (-1);
+			extern bool8 pad_read, pad_read_last;
 			pad_read = true;
+			pad_read_last = true;
+			S9xUpdateFrameCounter (-1);
 		}
 
 		Memory.FixROMSpeed ();

@@ -285,6 +285,11 @@ EXTERN_C void S9xGenerateSound ();
 EXTERN_C void S9xGenerateFrameSound ();
 #endif
 
+#ifdef __WIN32__
+EXTERN_C bool8 S9xFreezePlatformDepends (const char *basefilename);
+EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename);
+#endif
+
 #ifdef STORM
 EXTERN_C int soundsignal;
 EXTERN_C void MixSound(void);
