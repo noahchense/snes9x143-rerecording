@@ -72,8 +72,9 @@ bool CDirect3D::initialize(HWND hWnd)
 	HRESULT hr = pD3D->CreateDevice(D3DADAPTER_DEFAULT,
                       D3DDEVTYPE_HAL,
                       hWnd,
-                      D3DCREATE_MIXED_VERTEXPROCESSING,
-					  &dPresentParams,
+                      D3DCREATE_MIXED_VERTEXPROCESSING
+                        | D3DCREATE_FPU_PRESERVE, // mainly for lua modules
+                      &dPresentParams,
                       &pDevice);
 	if(FAILED(hr)) {
 		DXTRACE_ERR_MSGBOX(TEXT("Error creating D3D9 device"), hr);
