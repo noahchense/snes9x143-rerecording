@@ -274,7 +274,9 @@ static int snes9x_pause(lua_State *L) {
 static int snes9x_message(lua_State *L) {
 
 	const char *msg = luaL_checkstring(L,1);
-	S9xMessage(S9X_INFO, S9X_MOVIE_INFO, msg);
+	static char msgBuf[1024];
+	strcpy(msgBuf, msg);
+	S9xMessage(S9X_INFO, S9X_MOVIE_INFO, msgBuf);
 	
 	return 0;
 
