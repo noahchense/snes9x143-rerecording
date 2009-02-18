@@ -4907,15 +4907,6 @@ char *S9xGetFreezeFilename(int slot) {
     TCHAR fname [_MAX_FNAME + 1];
     TCHAR ext [_MAX_EXT + 1];
 
-#ifdef NETPLAY_SUPPORT
-    if (!freeze && Settings.NetPlay && !Settings.NetPlayServer)
-    {
-        S9xMessage (S9X_INFO, S9X_NETPLAY_NOT_SERVER,
-			"Only the server is allowed to load freeze files.");
-        return NULL;
-    }
-#endif
-
     _splitpath (Memory.ROMFilename, drive, dir, fname, ext);
     static char *digits = "t123456789";
 	for(int oldDir = 0; oldDir <= 1; oldDir++)
@@ -4948,8 +4939,18 @@ char *S9xGetFreezeFilename(int slot) {
 
 void FreezeUnfreeze (int slot, bool8 freeze)
 {
-    char *filename = S9xGetFreezeFilename(slot);
+    char *filename;
 
+#ifdef NETPLAY_SUPPORT
+    if (!freeze && Settings.NetPlay && !Settings.NetPlayServer)
+    {
+        S9xMessage (S9X_INFO, S9X_NETPLAY_NOT_SERVER,
+			"Only the server is allowed to load freeze files.");
+        return;
+    }
+#endif
+
+    filename = S9xGetFreezeFilename(slot);
     if (!filename)
 	return;
 
