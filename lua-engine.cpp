@@ -12,6 +12,7 @@
 #endif
 
 
+#include "port.h"
 #include "snes9x.h"
 #include "memmap.h"
 #include "display.h"
@@ -58,6 +59,10 @@ static bool8 wasPaused = FALSE;
 
 // Transparency strength. 0=opaque, 4=so transparent it's invisible
 static int transparency;
+inline uint8 alpha_touint8(int trans)
+{
+	return (4 - trans) * 255 / 4;
+}
 
 // Our joypads.
 static uint32 lua_joypads[5];
@@ -71,7 +76,7 @@ unsigned char lua_watch_bitfield[16384];
 
 
 static bool8 gui_used = FALSE;
-static uint16 *gui_data = NULL;
+static uint8 *gui_data = NULL; // BGRA
 
 
 // Protects Lua calls from going nuts.
@@ -611,10 +616,10 @@ static int movie_stop(lua_State *L) {
 // Common code by the gui library: make sure the screen array is ready
 static void gui_prepare() {
 	if (!gui_data)
-		gui_data = (uint16*)malloc(256*239*sizeof(uint16));
+		gui_data = (uint8*)calloc(256*239*4, sizeof(uint8));
 	if (!gui_used) {
 		for (int i = 0; i < 256*239; i++)
-			gui_data[i] = 1;
+			((uint32*)gui_data)[i] = 0;
 	}
 	gui_used = TRUE;
 }
@@ -691,13 +696,20 @@ static int gui_drawpixel(lua_State *L) {
 	int y = luaL_checkinteger(L,2);
 
 	uint16 colour = gui_getcolour(L,3);
+	uint8 red   = ((colour >> 11) & 31) << 3;
+	uint8 green = ((colour >> 5)  & 63) << 2;
+	uint8 blue  = ( colour        & 31) << 3;
+	uint8 alpha = alpha_touint8(transparency);
 
 	if (x < 0 || x >= 256 || y < 0 || y >= 239)
 		luaL_error(L,"bad coordinates");
 
 	gui_prepare();
 
-	gui_data[y*256 + x] = colour;
+	gui_data[(y*256 + x)*4    ] = blue;
+	gui_data[(y*256 + x)*4 + 1] = green;
+	gui_data[(y*256 + x)*4 + 2] = red;
+	gui_data[(y*256 + x)*4 + 3] = alpha;
 
 	return 0;
 }
@@ -707,11 +719,16 @@ static int gui_drawline(lua_State *L) {
 
 	int x1,y1,x2,y2;
 	uint16 colour;
+	uint8 red, green, blue, alpha;
 	x1 = luaL_checkinteger(L,1);
 	y1 = luaL_checkinteger(L,2);
 	x2 = luaL_checkinteger(L,3);
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
+	red   = ((colour >> 11) & 31) << 3;
+	green = ((colour >> 5)  & 63) << 2;
+	blue  = ( colour        & 31) << 3;
+	alpha = alpha_touint8(transparency);
 
 	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
 		luaL_error(L,"bad coordinates");
@@ -727,14 +744,22 @@ static int gui_drawline(lua_State *L) {
 		if (x1 > x2) 
 			swap<int>(x1,x2);
 		int i;
-		for (i=x1; i <= x2; i++)
-			gui_data[y1*256+i] = colour;
+		for (i=x1; i <= x2; i++) {
+			gui_data[(y1*256+i)*4] = blue;
+			gui_data[(y1*256+i)*4+1] = green;
+			gui_data[(y1*256+i)*4+2] = red;
+			gui_data[(y1*256+i)*4+3] = alpha;
+		}
 	} else if (x1 == x2) { // Vertical line?
 		if (y1 > y2)
 			swap<int>(y1,y2);
 		int i;
-		for (i=y1; i < y2; i++)
-			gui_data[i*256+x1] = colour;
+		for (i=y1; i < y2; i++) {
+			gui_data[(i*256+x1)*4] = blue;
+			gui_data[(i*256+x1)*4+1] = green;
+			gui_data[(i*256+x1)*4+2] = red;
+			gui_data[(i*256+x1)*4+3] = alpha;
+		}
 	} else {
 		// Some very real slope. We want to increase along the x value, so we swap for that.
 		if (x1 > x2) {
@@ -749,7 +774,10 @@ static int gui_drawline(lua_State *L) {
 
 		while (myX <= x2) {
 			// Draw the current pixel
-			gui_data[myY*256 + myX] = colour;
+			gui_data[(myY*256 + myX)*4] = blue;
+			gui_data[(myY*256 + myX)*4+1] = green;
+			gui_data[(myY*256 + myX)*4+2] = red;
+			gui_data[(myY*256 + myX)*4+3] = alpha;
 
 			// If it's above 1, we knock 1 off it and go up 1 pixel
 			if (accum >= 1.0) {
@@ -773,6 +801,7 @@ static int gui_drawbox(lua_State *L) {
 
 	int x1,y1,x2,y2;
 	uint16 colour;
+	uint8 red, green, blue, alpha;
 	int i;
 
 	x1 = luaL_checkinteger(L,1);
@@ -780,6 +809,10 @@ static int gui_drawbox(lua_State *L) {
 	x2 = luaL_checkinteger(L,3);
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
+	red   = ((colour >> 11) & 31) << 3;
+	green = ((colour >> 5)  & 63) << 2;
+	blue  = ( colour        & 31) << 3;
+	alpha = alpha_touint8(transparency);
 
 	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
 		luaL_error(L,"bad coordinates");
@@ -797,20 +830,36 @@ static int gui_drawbox(lua_State *L) {
 		swap<int>(y1,y2);
 
 	// top surface
-	for (i=x1; i <= x2; i++)
-		gui_data[y1*256 + i] = colour;
+	for (i=x1; i <= x2; i++) {
+		gui_data[(y1*256 + i)*4] = blue;
+		gui_data[(y1*256 + i)*4+1] = green;
+		gui_data[(y1*256 + i)*4+2] = red;
+		gui_data[(y1*256 + i)*4+3] = alpha;
+	}
 
 	// bottom surface
-	for (i=x1; i <= x2; i++)
-		gui_data[y2*256 + i] = colour;
+	for (i=x1; i <= x2; i++) {
+		gui_data[(y2*256 + i)*4] = blue;
+		gui_data[(y2*256 + i)*4+1] = green;
+		gui_data[(y2*256 + i)*4+2] = red;
+		gui_data[(y2*256 + i)*4+3] = alpha;
+	}
 
 	// left surface
-	for (i=y1; i <= y2; i++)
-		gui_data[i*256+x1] = colour;
+	for (i=y1; i <= y2; i++) {
+		gui_data[(i*256+x1)*4] = blue;
+		gui_data[(i*256+x1)*4+1] = green;
+		gui_data[(i*256+x1)*4+2] = red;
+		gui_data[(i*256+x1)*4+3] = alpha;
+	}
 
 	// right surface
-	for (i=y1; i <= y2; i++)
-		gui_data[i*256+x2] = colour;
+	for (i=y1; i <= y2; i++) {
+		gui_data[(i*256+x2)*4] = blue;
+		gui_data[(i*256+x2)*4+1] = green;
+		gui_data[(i*256+x2)*4+2] = red;
+		gui_data[(i*256+x2)*4+3] = alpha;
+	}
 
 
 	return 0;
@@ -920,20 +969,25 @@ static int gui_transparency(lua_State *L) {
 
 #include "font.h"
 
-static inline void FontPixToScreen(char p, uint16 *s)
+static inline void FontPixToScreen(char p, uint32 *s)
 {
+#define CONVERT_16_TO_32(pixel) \
+    (((((pixel) >> 11)        ) << /*RedShift+3*/  19) | \
+     ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
+      (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
+
 	if(p == '#')
 	{
-		*s = Settings.DisplayColor;
+		*s = CONVERT_16_TO_32(Settings.DisplayColor) | 0xff000000; // TODO: set alpha
 	}
 	else if(p == '.')
 	{
-		static const uint16 black = BUILD_PIXEL(0,0,0);
+		static const uint32 black = CONVERT_16_TO_32(BUILD_PIXEL(0,0,0)) | 0xff000000; // TODO: set alpha
 		*s = black;
 	}
 }
 
-static void DisplayChar(uint16 *s, uint8 c) {
+static void DisplayChar(uint32 *s, uint8 c) {
 	extern int font_height, font_width;
 	int line = ((c - 32) >> 4) * font_height;
 	int offset = ((c - 32) & 15) * font_width;
@@ -948,7 +1002,7 @@ static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFr
 
 	extern int font_width, font_height;
 
-	uint16 *Screen = gui_data // text draw position, starting on the screen
+	uint32 *Screen = (uint32*) gui_data // text draw position, starting on the screen
                   + pixelsFromLeft // with this much horizontal offset
                   + linesFromTop*256;
 
@@ -1057,10 +1111,10 @@ static int gui_gdoverlay(lua_State *L) {
 			if (pixels[4 * (y*height+x)] == 127)
 				continue;
 
-			int red = pixels[4 * (y*width+x)+1];
-			int green = pixels[4 * (y*width+x)+2];
-			int blue = pixels[4 * (y*width+x)+3];
-			gui_data[256*(sy)+sx] = ((red >> 3) << 11) | ((green >> 2)<<5) | (blue >> 3);
+			gui_data[(256*(sy)+sx)*4] = pixels[4 * (y*width+x)+3]; // blue
+			gui_data[(256*(sy)+sx)*4+1] = pixels[4 * (y*width+x)+2]; // green
+			gui_data[(256*(sy)+sx)*4+2] = pixels[4 * (y*width+x)+1]; // red
+			gui_data[(256*(sy)+sx)*4+3] = 255; // alpha (do not copy)
 		}
 	
 	}
@@ -1623,6 +1677,7 @@ int S9xLoadLuaCode(const char *filename) {
 	// Initialize settings
 	luaRunning = TRUE;
 	skipRerecords = FALSE;
+	transparency = 0; // opaque
 
 	wasPaused = Settings.Paused;
 	Settings.Paused = FALSE;
@@ -1740,37 +1795,39 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 
 	int x,y;
 
-	if (transparency == 4) // wtf?
-		return;
-	
 	if (width == 256) {
-		// direct copy
-		if (transparency == 0) {
-			for (y=0; y < height && y < 239; y++) {
-				for (x=0; x < 256; x++) {
-					if (gui_data[y*256+x] != 1)
-						screen[y*ppl + x] =  gui_data[y*256+x];
-				}
-			}	
-		} else {
-			int strans = 4 - transparency;
-			for (y=0; y < height && y < 239; y++) {
-				for (x=0; x < 256; x++) {
-					if (gui_data[y*256+x] != 1) {
-						int red, green, blue;
-						red = ((gui_data[y*256+x] >> 11) & 31) * transparency + ((screen[y*ppl + x] >> 11) & 31) * strans;
-						green = ((gui_data[y*256+x] >> 5) & 63) * transparency + ((screen[y*ppl + x] >> 5) & 63) * strans;
-						blue = ((gui_data[y*256+x] >> 11)) * transparency + ((screen[y*ppl + x]) & 31) * strans;
+		for (y=0; y < height && y < 239; y++) {
+			for (x=0; x < 256; x++) {
+				const uint8 gui_red   = gui_data[(y*256+x)*4+2];
+				const uint8 gui_green = gui_data[(y*256+x)*4+1];
+				const uint8 gui_blue  = gui_data[(y*256+x)*4];
+				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
+				const uint8 scr_red   = ((screen[y*ppl + x] >> 11) & 31) << 3;
+				const uint8 scr_green = ((screen[y*ppl + x] >> 5)  & 63) << 2;
+				const uint8 scr_blue  = ( screen[y*ppl + x]        & 31) << 3;
+				int red, green, blue;
 
-
-						screen[y*ppl + x] =  ((red/4) << 11) | ((green/4) << 5) | (blue);
-					}
+				if (gui_alpha == 0) {
+					// do nothing
+					red = scr_red;
+					green = scr_green;
+					blue = scr_blue;
 				}
-			}	
-		
-		
+				else if (gui_alpha == 255) {
+					// direct copy
+					red = gui_red;
+					green = gui_green;
+					blue = gui_blue;
+				}
+				else {
+					// alpha-blending
+					red   = (((int) gui_red   - scr_red)   * gui_alpha / 255 + scr_red)   & 255;
+					green = (((int) gui_green - scr_green) * gui_alpha / 255 + scr_green) & 255;
+					blue  = (((int) gui_blue  - scr_blue)  * gui_alpha / 255 + scr_blue)  & 255;
+				}
+				screen[y*ppl + x] =  ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
+			}
 		}
-
 	} else {
 		// Now it gets ugly
 		
