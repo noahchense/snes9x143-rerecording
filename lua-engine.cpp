@@ -62,7 +62,7 @@ static uint8 alphaDefault = 255;
 
 // Our joypads.
 static uint32 lua_joypads[5];
-static uint8 lua_joypads_used;
+static uint8 lua_joypads_used = 0;
 
 
 // NON-static. This is a listing of memory addresses we're watching as bitfields
@@ -734,10 +734,10 @@ static inline uint32 gui_getcolour_wrapped(lua_State *L, int offset, bool hasDef
 			return luaL_error(L, "invalid colour");
 	}
 }
-static inline uint32 gui_getcolour(lua_State *L, int offset) {
+static uint32 gui_getcolour(lua_State *L, int offset) {
 	return gui_getcolour_wrapped(L, offset, false, 0);
 }
-static inline uint32 gui_optcolour(lua_State *L, int offset, uint32 defaultColour) {
+static uint32 gui_optcolour(lua_State *L, int offset, uint32 defaultColour) {
 	return gui_getcolour_wrapped(L, offset, true, defaultColour);
 }
 
@@ -1703,6 +1703,7 @@ int S9xLoadLuaCode(const char *filename) {
 	luaRunning = TRUE;
 	skipRerecords = FALSE;
 	alphaDefault = 255; // opaque
+	lua_joypads_used = 0; // not used
 
 	wasPaused = Settings.Paused;
 	Settings.Paused = FALSE;
@@ -1731,6 +1732,7 @@ void S9xLuaStop() {
 		lua_close(LUA); // this invokes our garbage collectors for us
 		LUA = NULL;
 		luaRunning = 0;
+		lua_joypads_used = 0;
 		if (wasPaused)
 			Settings.Paused = TRUE;
 		memset(lua_watch_bitfield, 0, sizeof(lua_watch_bitfield));
@@ -1764,8 +1766,12 @@ int S9xLuaUsingJoypad(int which) {
  * per frame (if S9xLuaUsingJoypad says it's safe to do so)
  */
 int S9xLuaReadJoypad(int which) {
-	lua_joypads_used &= ~(1 << which);
-	return lua_joypads[which];
+	if (lua_joypads_used & (1 << which)) {
+		lua_joypads_used &= ~(1 << which);
+		return lua_joypads[which] | 0x80000000;
+	}
+	else
+		return 0; // disconnected
 }
 
 /**

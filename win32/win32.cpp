@@ -682,20 +682,23 @@ bool S9xGetState (WORD KeyIdent)
     return ((GetKeyState (KeyIdent) & 0x80) == 0);
 }
 
+bool WinReadJoypadNeedsScan = true;
 uint32 S9xReadJoypad (int which1)
 {
-    if (which1 > 4)
-        return 0;
+	if (which1 > 4)
+		return 0;
 
-    if (which1 == 0 && !Settings.NetPlay)
-        S9xWinScanJoypads ();
+	if (WinReadJoypadNeedsScan && !Settings.NetPlay) {
+		S9xWinScanJoypads();
+		WinReadJoypadNeedsScan = false;
+	}
 
 #ifdef NETPLAY_SUPPORT
-    if (Settings.NetPlay)
+	if (Settings.NetPlay)
 	return (S9xNPGetJoypad (which1));
 #endif
 
-    return (joypads [which1]);
+	return (joypads [which1]);
 }
 
 void CheckAxis (int val, int min, int max, bool &first, bool &second)
