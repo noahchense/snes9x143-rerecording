@@ -2924,7 +2924,7 @@ void S9xUpdateJoypadButtons ()
 		if (S9xLuaUsingJoypad(i))
 			IPPU.Joypads[i] = S9xLuaReadJoypad(i);
 		else
-			IPPU.Joypads [i] = S9xReadJoypad (i);
+			IPPU.Joypads[i] = S9xReadJoypad (i);
 	}
 
 	S9xMovieUpdate();
@@ -2953,6 +2953,11 @@ void S9xUpdateJoypadButtons ()
 				IPPU.Joypads [i] |= 0xffff0000;
 		}
     }
+
+#ifdef __WIN32__
+	extern bool WinReadJoypadNeedsScan;
+	WinReadJoypadNeedsScan = true;
+#endif
 }
 
 void S9xUpdateJoypadMemory ()
