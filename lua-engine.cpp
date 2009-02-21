@@ -57,12 +57,8 @@ static bool8 frameAdvanceWaiting = FALSE;
 // We save our pause status in the case of a natural death.
 static bool8 wasPaused = FALSE;
 
-// Transparency strength. 0=opaque, 4=so transparent it's invisible
-static int transparency;
-inline uint8 alpha_touint8(int trans)
-{
-	return (4 - trans) * 255 / 4;
-}
+// Transparency strength. 255=opaque, 0=so transparent it's invisible
+static uint8 alphaDefault = 255;
 
 // Our joypads.
 static uint32 lua_joypads[5];
@@ -382,7 +378,7 @@ static int joypad_read(lua_State *L) {
 }
 
 
-// joypad.write(int which, table buttons)
+// joypad.set(int which, table buttons)
 //
 //   Sets the given buttons to be pressed during the next
 //   frame advance. The table should have the right 
@@ -616,14 +612,48 @@ static int movie_stop(lua_State *L) {
 // Common code by the gui library: make sure the screen array is ready
 static void gui_prepare() {
 	if (!gui_data)
-		gui_data = (uint8*)calloc(256*239*4, sizeof(uint8));
-	if (!gui_used) {
-		for (int i = 0; i < 256*239; i++)
-			((uint32*)gui_data)[i] = 0;
-	}
+		gui_data = (uint8*) malloc(256*239*4);
+	if (!gui_used)
+		memset(gui_data, 0, 256*239*4);
 	gui_used = TRUE;
 }
 
+// pixform for lua graphics
+#define BUILD_PIXEL_ARGB8888(A,R,G,B) (((int) (A) << 24) | ((int) (R) << 16) | ((int) (G) << 8) | (int) (B))
+#define DECOMPOSE_PIXEL_ARGB8888(PIX,A,R,G,B) { (A) = ((PIX) >> 24) & 0xff; (R) = ((PIX) >> 16) & 0xff; (G) = ((PIX) >> 8) & 0xff; (B) = (PIX) & 0xff; }
+#define LUA_BUILD_PIXEL BUILD_PIXEL_ARGB8888
+#define LUA_DECOMPOSE_PIXEL DECOMPOSE_PIXEL_ARGB8888
+
+// write a pixel to buffer
+static inline void blend32(uint32 *dstPixel, uint32 colour)
+{
+	uint8 *dst = (uint8*) dstPixel;
+	int a, r, g, b;
+	LUA_DECOMPOSE_PIXEL(colour, a, r, g, b);
+
+	if (a == 255 || dst[3] == 0) {
+		// direct copy
+		*(uint32*)(dst) = colour;
+	}
+	else if (a == 0) {
+		// do not copy
+	}
+	else {
+		// alpha-blending
+		int a_dst = ((255 - a) * dst[3] + 128) / 255;
+		int a_new = a + a_dst;
+
+		dst[0] = (uint8) ((( dst[0] * a_dst + b * a) + (a_new / 2)) / a_new);
+		dst[1] = (uint8) ((( dst[1] * a_dst + g * a) + (a_new / 2)) / a_new);
+		dst[2] = (uint8) ((( dst[2] * a_dst + r * a) + (a_new / 2)) / a_new);
+		dst[3] = (uint8) a_new;
+	}
+}
+// write a pixel to gui_data (do not check boundaries for speedup)
+static inline void gui_drawpixel_fast(int x, int y, uint32 colour) {
+	//gui_prepare();
+	blend32((uint32*) &gui_data[(y*256+x)*4], colour);
+}
 
 // Helper for a simple hex parser
 static int hex2int(lua_State *L, char c) {
@@ -638,47 +668,77 @@ static int hex2int(lua_State *L, char c) {
 
 /**
  * Converts an integer or a string on the stack at the given
- * offset to a RGB16 (565) colour. Several encodings are supported.
- * The user may construct their own RGB16 value, given a simple colour name,
- * or an HTML-style "#09abcd" colour. Of course, 16 bit reduction occurs.
+ * offset to a RGB32 colour. Several encodings are supported.
+ * The user may construct their own RGB value, given a simple colour name,
+ * or an HTML-style "#09abcd" colour. 16 bit reduction doesn't occur at this time.
  */
-static uint16 gui_getcolour(lua_State *L, int offset) {
+static inline bool str2colour(uint32 *colour, lua_State *L, const char *str) {
+	if (strcmp(str,"red")==0) {
+		*colour = LUA_BUILD_PIXEL(alphaDefault, 255, 0, 0);
+		return true;
+	} else if (strcmp(str, "green")==0) {
+		*colour = LUA_BUILD_PIXEL(alphaDefault, 0, 255, 0);
+		return true;
+	} else if (strcmp(str, "blue")==0) {
+		*colour = LUA_BUILD_PIXEL(alphaDefault, 0, 0, 255);
+		return true;
+	} else if (strcmp(str, "black")==0) {
+		*colour = LUA_BUILD_PIXEL(alphaDefault, 0, 0, 0);
+		return true;
+	} else if (strcmp(str, "white")==0) {
+		*colour = LUA_BUILD_PIXEL(alphaDefault, 255, 255, 255);
+		return true;
+	} else if (strcmp(str, "clear")==0) {
+		*colour = LUA_BUILD_PIXEL(0, 0, 0, 0); // a=0, invisible
+		return true;
+	} else if (str[0] == '#' && strlen(str) == 7) { // RGB24
+		int red, green, blue;
+		red   = (hex2int(L, str[1]) << 4) | hex2int(L, str[2]);
+		green = (hex2int(L, str[3]) << 4) | hex2int(L, str[4]);
+		blue  = (hex2int(L, str[5]) << 4) | hex2int(L, str[6]);
+		*colour = LUA_BUILD_PIXEL(alphaDefault, red, green, blue);
+		return true;
+	} else if (str[0] == '#' && strlen(str) == 9) { // RGB32
+		int red, green, blue, alpha;
+		alpha = (hex2int(L, str[1]) << 4) | hex2int(L, str[2]);
+		red   = (hex2int(L, str[3]) << 4) | hex2int(L, str[4]);
+		green = (hex2int(L, str[5]) << 4) | hex2int(L, str[6]);
+		blue  = (hex2int(L, str[7]) << 4) | hex2int(L, str[8]);
+		*colour = LUA_BUILD_PIXEL(alpha, red, green, blue);
+		return true;
+	} else
+		return false;
+}
+static inline uint32 gui_getcolour_wrapped(lua_State *L, int offset, bool hasDefaultValue, uint32 defaultColour) {
 	switch (lua_type(L,offset)) {
 	case LUA_TSTRING:
 		{
 			const char *str = lua_tostring(L,offset);
-			if (strcmp(str,"red")==0) {
-				return 31 << 11;
-			} else if (strcmp(str, "green")==0) {
-				return 63 << 5;
-			} else if (strcmp(str, "blue")==0) {
-				return 31;
-			} else if (strcmp(str, "black")==0) {
-				return 0;
-			} else if (strcmp(str, "white")==0) {
-				return 65535;
-			} else if (strcmp(str, "clear")==0) {
-				return 1;
-			} else if (str[0] == '#' && strlen(str) == 7) {
-				int red, green, blue;
-				red = (hex2int(L, str[1]) << 4) | hex2int(L, str[2]);
-				green = (hex2int(L, str[3]) << 4) | hex2int(L, str[4]);
-				blue = (hex2int(L, str[5]) << 4) | hex2int(L, str[6]);
+			uint32 colour;
 
-				int assembled = (red >> 3) << 11;
-				assembled |= (green >> 2) << 5;
-				assembled |= blue >> 3;
-				return assembled;
-			} else
-				return luaL_error(L, "unknown colour %s", str);
-
+			if (str2colour(&colour, L, str))
+				return colour;
+			else {
+				if (hasDefaultValue)
+					return defaultColour;
+				else
+					return luaL_error(L, "unknown colour %s", str);
+			}
 		}
 	case LUA_TNUMBER:
-		return (uint16) lua_tointeger(L,offset);
+		return (uint32) lua_tointeger(L,offset);
 	default:
-		return luaL_error(L, "invalid colour");
+		if (hasDefaultValue)
+			return defaultColour;
+		else
+			return luaL_error(L, "invalid colour");
 	}
-
+}
+static inline uint32 gui_getcolour(lua_State *L, int offset) {
+	return gui_getcolour_wrapped(L, offset, false, 0);
+}
+static inline uint32 gui_optcolour(lua_State *L, int offset, uint32 defaultColour) {
+	return gui_getcolour_wrapped(L, offset, true, defaultColour);
 }
 
 // I'm going to use this a lot in here
@@ -695,21 +755,14 @@ static int gui_drawpixel(lua_State *L) {
 	int x = luaL_checkinteger(L, 1);
 	int y = luaL_checkinteger(L,2);
 
-	uint16 colour = gui_getcolour(L,3);
-	uint8 red   = ((colour >> 11) & 31) << 3;
-	uint8 green = ((colour >> 5)  & 63) << 2;
-	uint8 blue  = ( colour        & 31) << 3;
-	uint8 alpha = alpha_touint8(transparency);
+	uint32 colour = gui_getcolour(L,3);
 
 	if (x < 0 || x >= 256 || y < 0 || y >= 239)
 		luaL_error(L,"bad coordinates");
 
 	gui_prepare();
 
-	gui_data[(y*256 + x)*4    ] = blue;
-	gui_data[(y*256 + x)*4 + 1] = green;
-	gui_data[(y*256 + x)*4 + 2] = red;
-	gui_data[(y*256 + x)*4 + 3] = alpha;
+	gui_drawpixel_fast(x, y, colour);
 
 	return 0;
 }
@@ -718,17 +771,12 @@ static int gui_drawpixel(lua_State *L) {
 static int gui_drawline(lua_State *L) {
 
 	int x1,y1,x2,y2;
-	uint16 colour;
-	uint8 red, green, blue, alpha;
+	uint32 colour;
 	x1 = luaL_checkinteger(L,1);
 	y1 = luaL_checkinteger(L,2);
 	x2 = luaL_checkinteger(L,3);
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
-	red   = ((colour >> 11) & 31) << 3;
-	green = ((colour >> 5)  & 63) << 2;
-	blue  = ( colour        & 31) << 3;
-	alpha = alpha_touint8(transparency);
 
 	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
 		luaL_error(L,"bad coordinates");
@@ -745,20 +793,14 @@ static int gui_drawline(lua_State *L) {
 			swap<int>(x1,x2);
 		int i;
 		for (i=x1; i <= x2; i++) {
-			gui_data[(y1*256+i)*4] = blue;
-			gui_data[(y1*256+i)*4+1] = green;
-			gui_data[(y1*256+i)*4+2] = red;
-			gui_data[(y1*256+i)*4+3] = alpha;
+			gui_drawpixel_fast(i, y1, colour);
 		}
 	} else if (x1 == x2) { // Vertical line?
 		if (y1 > y2)
 			swap<int>(y1,y2);
 		int i;
 		for (i=y1; i < y2; i++) {
-			gui_data[(i*256+x1)*4] = blue;
-			gui_data[(i*256+x1)*4+1] = green;
-			gui_data[(i*256+x1)*4+2] = red;
-			gui_data[(i*256+x1)*4+3] = alpha;
+			gui_drawpixel_fast(x1, i, colour);
 		}
 	} else {
 		// Some very real slope. We want to increase along the x value, so we swap for that.
@@ -774,10 +816,7 @@ static int gui_drawline(lua_State *L) {
 
 		while (myX <= x2) {
 			// Draw the current pixel
-			gui_data[(myY*256 + myX)*4] = blue;
-			gui_data[(myY*256 + myX)*4+1] = green;
-			gui_data[(myY*256 + myX)*4+2] = red;
-			gui_data[(myY*256 + myX)*4+3] = alpha;
+			gui_drawpixel_fast(myX, myY, colour);
 
 			// If it's above 1, we knock 1 off it and go up 1 pixel
 			if (accum >= 1.0) {
@@ -800,8 +839,7 @@ static int gui_drawline(lua_State *L) {
 static int gui_drawbox(lua_State *L) {
 
 	int x1,y1,x2,y2;
-	uint16 colour;
-	uint8 red, green, blue, alpha;
+	uint32 colour;
 	int i;
 
 	x1 = luaL_checkinteger(L,1);
@@ -809,10 +847,6 @@ static int gui_drawbox(lua_State *L) {
 	x2 = luaL_checkinteger(L,3);
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
-	red   = ((colour >> 11) & 31) << 3;
-	green = ((colour >> 5)  & 63) << 2;
-	blue  = ( colour        & 31) << 3;
-	alpha = alpha_touint8(transparency);
 
 	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
 		luaL_error(L,"bad coordinates");
@@ -831,34 +865,22 @@ static int gui_drawbox(lua_State *L) {
 
 	// top surface
 	for (i=x1; i <= x2; i++) {
-		gui_data[(y1*256 + i)*4] = blue;
-		gui_data[(y1*256 + i)*4+1] = green;
-		gui_data[(y1*256 + i)*4+2] = red;
-		gui_data[(y1*256 + i)*4+3] = alpha;
+		gui_drawpixel_fast(i, y1, colour);
 	}
 
 	// bottom surface
 	for (i=x1; i <= x2; i++) {
-		gui_data[(y2*256 + i)*4] = blue;
-		gui_data[(y2*256 + i)*4+1] = green;
-		gui_data[(y2*256 + i)*4+2] = red;
-		gui_data[(y2*256 + i)*4+3] = alpha;
+		gui_drawpixel_fast(i, y2, colour);
 	}
 
 	// left surface
 	for (i=y1; i <= y2; i++) {
-		gui_data[(i*256+x1)*4] = blue;
-		gui_data[(i*256+x1)*4+1] = green;
-		gui_data[(i*256+x1)*4+2] = red;
-		gui_data[(i*256+x1)*4+3] = alpha;
+		gui_drawpixel_fast(x1, i, colour);
 	}
 
 	// right surface
 	for (i=y1; i <= y2; i++) {
-		gui_data[(i*256+x2)*4] = blue;
-		gui_data[(i*256+x2)*4+1] = green;
-		gui_data[(i*256+x2)*4+2] = red;
-		gui_data[(i*256+x2)*4+3] = alpha;
+		gui_drawpixel_fast(x2, i, colour);
 	}
 
 
@@ -959,7 +981,7 @@ static int gui_transparency(lua_State *L) {
 		luaL_error(L, "transparency out of range");
 	}
 	
-	transparency = trans;
+	alphaDefault = (uint8) ((4 - trans) * 255 / 4);
 	return 0;
 }
 
@@ -969,53 +991,48 @@ static int gui_transparency(lua_State *L) {
 
 #include "font.h"
 
-static inline void FontPixToScreen(char p, uint32 *s)
+static inline void FontPixToScreen(char p, uint32 *s, uint32 colour, uint32 borderColour)
 {
-#define CONVERT_16_TO_32(pixel) \
-    (((((pixel) >> 11)        ) << /*RedShift+3*/  19) | \
-     ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
-      (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
-
 	if(p == '#')
 	{
-		*s = CONVERT_16_TO_32(Settings.DisplayColor) | 0xff000000; // TODO: set alpha
+		blend32(s, colour);
 	}
 	else if(p == '.')
 	{
-		static const uint32 black = CONVERT_16_TO_32(BUILD_PIXEL(0,0,0)) | 0xff000000; // TODO: set alpha
-		*s = black;
+		blend32(s, borderColour);
 	}
 }
 
-static void DisplayChar(uint32 *s, uint8 c) {
+static void DisplayChar(uint32 *s, uint8 c, uint32 colour, uint32 borderColour) {
 	extern int font_height, font_width;
 	int line = ((c - 32) >> 4) * font_height;
 	int offset = ((c - 32) & 15) * font_width;
 	int h, w;
 	for(h=0; h<font_height; h++, line++, s+=256-font_width)
 		for(w=0; w<font_width; w++, s++)
-			FontPixToScreen(font [line] [(offset + w)], s);
+			FontPixToScreen(font [line] [(offset + w)], s, colour, borderColour);
 }
 
-static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFromLeft)
+static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFromLeft, uint32 colour, uint32 borderColour)
 {
 
 	extern int font_width, font_height;
 
-	uint32 *Screen = (uint32*) gui_data // text draw position, starting on the screen
+    uint32 *Screen = (uint32*) gui_data // text draw position, starting on the screen
                   + pixelsFromLeft // with this much horizontal offset
                   + linesFromTop*256;
 
-    int len = strlen(string);
-    int max_chars = (256-pixelsFromLeft) / (font_width);
-    int char_count = 0;
+
+	int len = strlen(string);
+	int max_chars = (256-pixelsFromLeft) / (font_width);
+	int char_count = 0;
 
 	// loop through and draw the characters
 	for(int i = 0 ; i < len && char_count < max_chars ; i++, char_count++)
 	{
 		if((unsigned char) string[i]<32) continue;
 
-		DisplayChar(Screen, string[i]);
+		DisplayChar(Screen, string[i], colour, borderColour);
 		Screen += /*Settings.SixteenBit ? (display_fontwidth-display_hfontaccessscale)*sizeof(uint16) :*/ (font_width);
 	}
 }
@@ -1026,9 +1043,15 @@ static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFr
 //  Displays the given text on the screen, using the same font and techniques as the
 //  main HUD.
 static int gui_text(lua_State *L) {
+#define CONVERT_16_TO_32(pixel) \
+    (((((pixel) >> 11)        ) << /*RedShift+3*/  19) | \
+     ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
+      (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
+
 	extern int font_height;
 	const char *msg;
 	int x, y;
+	uint32 colour, borderColour;
 
 	x = luaL_checkinteger(L,1);
 	y = luaL_checkinteger(L,2);
@@ -1037,9 +1060,12 @@ static int gui_text(lua_State *L) {
 	if (x < 0 || x >= 256 || y < 0 || y >= (239 - font_height))
 		luaL_error(L,"bad coordinates");
 
+	colour = gui_optcolour(L,4,(alphaDefault << 24)|CONVERT_16_TO_32(Settings.DisplayColor));
+	borderColour = gui_optcolour(L,5,LUA_BUILD_PIXEL(alphaDefault, 0, 0, 0));
+
 	gui_prepare();
 
-	LuaDisplayString(msg, y, x);
+	LuaDisplayString(msg, y, x, colour, borderColour);
 
 	return 0;
 
@@ -1111,10 +1137,9 @@ static int gui_gdoverlay(lua_State *L) {
 			if (pixels[4 * (y*height+x)] == 127)
 				continue;
 
-			gui_data[(256*(sy)+sx)*4] = pixels[4 * (y*width+x)+3]; // blue
-			gui_data[(256*(sy)+sx)*4+1] = pixels[4 * (y*width+x)+2]; // green
-			gui_data[(256*(sy)+sx)*4+2] = pixels[4 * (y*width+x)+1]; // red
-			gui_data[(256*(sy)+sx)*4+3] = 255; // alpha (do not copy)
+			gui_drawpixel_fast(sx, sy, LUA_BUILD_PIXEL(255,
+				pixels[4 * (y*width+x)+1], pixels[4 * (y*width+x)+2],
+				pixels[4 * (y*width+x)+3]));
 		}
 	
 	}
@@ -1677,7 +1702,7 @@ int S9xLoadLuaCode(const char *filename) {
 	// Initialize settings
 	luaRunning = TRUE;
 	skipRerecords = FALSE;
-	transparency = 0; // opaque
+	alphaDefault = 255; // opaque
 
 	wasPaused = Settings.Paused;
 	Settings.Paused = FALSE;
@@ -1798,10 +1823,10 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 	if (width == 256) {
 		for (y=0; y < height && y < 239; y++) {
 			for (x=0; x < 256; x++) {
+				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
 				const uint8 gui_red   = gui_data[(y*256+x)*4+2];
 				const uint8 gui_green = gui_data[(y*256+x)*4+1];
 				const uint8 gui_blue  = gui_data[(y*256+x)*4];
-				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
 				const uint8 scr_red   = ((screen[y*ppl + x] >> 11) & 31) << 3;
 				const uint8 scr_green = ((screen[y*ppl + x] >> 5)  & 63) << 2;
 				const uint8 scr_blue  = ( screen[y*ppl + x]        & 31) << 3;
@@ -1845,4 +1870,8 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 	}
 
 	return;
+}
+
+void S9xLuaClearGui() {
+	gui_used = false;
 }

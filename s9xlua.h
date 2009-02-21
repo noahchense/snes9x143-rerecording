@@ -16,6 +16,7 @@ int S9xLuaSpeed();
 bool8 S9xLuaRerecordCountSkip();
 
 void S9xLuaGui(uint16 *, int ppl, int width, int height);
+void S9xLuaClearGui();
 
 // And some interesting REVERSE declarations!
 char *S9xGetFreezeFilename(int slot);
