@@ -678,44 +678,22 @@ static inline void gui_drawpixel_internal(int x, int y, uint32 colour) {
 }
 
 // draw a line on gui_data (checks boundaries)
-static void gui_drawline_internal(int x1, int y1, int x2, int y2, uint32 colour) {
+static void gui_drawline_internal(int x1, int y1, int x2, int y2, bool lastPixel, uint32 colour) {
 
 	//gui_prepare();
 
 	// Note: New version of Bresenham's Line Algorithm
 	// http://groups.google.co.jp/group/rec.games.roguelike.development/browse_thread/thread/345f4c42c3b25858/29e07a3af3a450e6?show_docid=29e07a3af3a450e6
 
-	// you can remove horizontal/vertical line exception if you want, that's no problem.
-	if (y1 == y2) { // Horizontal line?
-		int ix;
-		if (x1 > x2) 
-			swap<int>(x1, x2);
-		if (x1 < 0)
-			x1 = 0;
-		if (x2 >= 256)
-			x2 = 256 - 1;
-		for (ix=x1; ix <= x2; ix++)
-			gui_drawpixel_fast(ix, y1, colour);
-	} else if (x1 == x2) { // Vertical line?
-		int iy;
-		if (y1 > y2)
-			swap<int>(y1, y2);
-		if (y1 < 0)
-			y1 = 0;
-		if (y2 >= 239)
-			y2 = 239 - 1;
-		for (iy=y1; iy <= y2; iy++)
-			gui_drawpixel_fast(x1, iy, colour);
-	}
-
-	// max_len <<= 1;
-	// int len = 0;
-
 	int swappedx = 0;
 	int swappedy = 0;
 
-	int xtemp = x2-x1;
-	int ytemp = y2-y1;
+	int xtemp = x1-x2;
+	int ytemp = y1-y2;
+	if (xtemp == 0 && ytemp == 0) {
+		gui_drawpixel_internal(x1, y1, colour);
+		return;
+	}
 	if (xtemp < 0) {
 		xtemp = -xtemp;
 		swappedx = 1;
@@ -728,66 +706,47 @@ static void gui_drawline_internal(int x1, int y1, int x2, int y2, uint32 colour)
 	int delta_x = xtemp << 1;
 	int delta_y = ytemp << 1;
 
-	signed char ix = x2 > x1?1:-1;
-	signed char iy = y2 > y1?1:-1;
+	signed char ix = x1 > x2?1:-1;
+	signed char iy = y1 > y2?1:-1;
 
-	gui_drawpixel_fast(x1, y1, colour);
+	if (lastPixel)
+		gui_drawpixel_internal(x2, y2, colour);
 
 	if (delta_x >= delta_y) {
 		int error = delta_y - (delta_x >> 1);
 
-		while (x1 != x2) {
-			if (error == 0 && !swappedx) {
-				gui_drawpixel_fast(x1+ix, y1, colour);
-				if (!gui_check_boundary(x1+ix, y1))
-					return;
-			}
+		while (x2 != x1) {
+			if (error == 0 && !swappedx)
+				gui_drawpixel_internal(x2+ix, y2, colour);
 			if (error >= 0) {
 				if (error || (ix > 0)) {
-					y1 += iy;
+					y2 += iy;
 					error -= delta_x;
-					// len++;
 				}
 			}
-			x1 += ix;
-			gui_drawpixel_fast(x1, y1, colour);
-			// len += 2;
-			if (!gui_check_boundary(x1, y1)) // || len >= max_len
-				return;
-			if (error == 0 && swappedx) {
-				gui_drawpixel_fast(x1, y1+iy, colour);
-				if (!gui_check_boundary(x1, y1+iy))
-					return;
-			}
+			x2 += ix;
+			gui_drawpixel_internal(x2, y2, colour);
+			if (error == 0 && swappedx)
+				gui_drawpixel_internal(x2, y2+iy, colour);
 			error += delta_y;
 		}
 	}
 	else {
 		int error = delta_x - (delta_y >> 1);
 
-		while (y1 != y2) {
-			if (error == 0 && !swappedy) {
-				gui_drawpixel_fast(x1, y1+iy, colour);
-				if (!gui_check_boundary(x1, y1+iy))
-					return;
-			}
+		while (y2 != y1) {
+			if (error == 0 && !swappedy)
+				gui_drawpixel_internal(x2, y2+iy, colour);
 			if (error >= 0) {
 				if (error || (iy > 0)) {
-					x1 += ix;
+					x2 += ix;
 					error -= delta_y;
-					// len++;
 				}
 			}
-			y1 += iy;
-			gui_drawpixel_fast(x1, y1, colour);
-			// len += 2;
-			if (!gui_check_boundary(x1, y1)) // || len >= max_len
-				return;
-			if (error == 0 && swappedy) {
-				gui_drawpixel_fast(x1+ix, y1, colour);
-				if (!gui_check_boundary(x1+ix, y1))
-					return;
-			}
+			y2 += iy;
+			gui_drawpixel_internal(x2, y2, colour);
+			if (error == 0 && swappedy)
+				gui_drawpixel_internal(x2+ix, y2, colour);
 			error += delta_x;
 		}
 	}
@@ -798,10 +757,159 @@ static void gui_drawbox_internal(int x1, int y1, int x2, int y2, uint32 colour) 
 
 	//gui_prepare();
 
-	gui_drawline_internal(x1, y1, x2, y1, colour);
-	gui_drawline_internal(x1, y2, x2, y2, colour);
-	gui_drawline_internal(x1, y1, x1, y2, colour);
-	gui_drawline_internal(x2, y1, x2, y2, colour);
+	gui_drawline_internal(x1, y1, x2, y1, true, colour);
+	gui_drawline_internal(x1, y2, x2, y2, true, colour);
+	gui_drawline_internal(x1, y1, x1, y2, true, colour);
+	gui_drawline_internal(x2, y1, x2, y2, true, colour);
+}
+
+// draw a circle on gui_data
+static void gui_drawcircle_internal(int x0, int y0, int radius, uint32 colour) {
+
+	//gui_prepare();
+
+	if (radius < 0)
+		radius = -radius;
+	if (radius == 0)
+		return;
+	if (radius == 1) {
+		gui_drawpixel_internal(x0, y0, colour);
+		return;
+	}
+
+	// http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+
+	int f = 1 - radius;
+	int ddF_x = 1;
+	int ddF_y = -2 * radius;
+	int x = 0;
+	int y = radius;
+
+	gui_drawpixel_internal(x0, y0 + radius, colour);
+	gui_drawpixel_internal(x0, y0 - radius, colour);
+	gui_drawpixel_internal(x0 + radius, y0, colour);
+	gui_drawpixel_internal(x0 - radius, y0, colour);
+ 
+	// same pixel shouldn't be drawed twice,
+	// because each pixel has opacity.
+	// so now the routine gets ugly.
+	while(true)
+	{
+		assert(ddF_x == 2 * x + 1);
+		assert(ddF_y == -2 * y);
+		assert(f == x*x + y*y - radius*radius + 2*x - y + 1);
+		if(f >= 0) 
+		{
+			y--;
+			ddF_y += 2;
+			f += ddF_y;
+		}
+		x++;
+		ddF_x += 2;
+		f += ddF_x;
+		if (x < y) {
+			gui_drawpixel_internal(x0 + x, y0 + y, colour);
+			gui_drawpixel_internal(x0 - x, y0 + y, colour);
+			gui_drawpixel_internal(x0 + x, y0 - y, colour);
+			gui_drawpixel_internal(x0 - x, y0 - y, colour);
+			gui_drawpixel_internal(x0 + y, y0 + x, colour);
+			gui_drawpixel_internal(x0 - y, y0 + x, colour);
+			gui_drawpixel_internal(x0 + y, y0 - x, colour);
+			gui_drawpixel_internal(x0 - y, y0 - x, colour);
+		}
+		else if (x == y) {
+			gui_drawpixel_internal(x0 + x, y0 + y, colour);
+			gui_drawpixel_internal(x0 - x, y0 + y, colour);
+			gui_drawpixel_internal(x0 + x, y0 - y, colour);
+			gui_drawpixel_internal(x0 - x, y0 - y, colour);
+			break;
+		}
+		else
+			break;
+	}
+}
+
+// draw fill rect on gui_data
+static void gui_fillbox_internal(int x1, int y1, int x2, int y2, uint32 colour) {
+
+	if (x1 > x2) 
+		swap<int>(x1, x2);
+	if (y1 > y2) 
+		swap<int>(y1, y2);
+	if (x1 < 0)
+		x1 = 0;
+	if (y1 < 0)
+		y1 = 0;
+	if (x2 >= 256)
+		x2 = 256 - 1;
+	if (y2 >= 239)
+		y2 = 239 - 1;
+
+	//gui_prepare();
+
+	int ix, iy;
+	for (iy = y1; iy <= y2; iy++) {
+		for (ix = x1; ix <= x2; ix++) {
+			gui_drawpixel_fast(ix, iy, colour);
+		}
+	}
+}
+
+// fill a circle on gui_data
+static void gui_fillcircle_internal(int x0, int y0, int radius, uint32 colour) {
+
+	//gui_prepare();
+
+	if (radius < 0)
+		radius = -radius;
+	if (radius == 0)
+		return;
+	if (radius == 1) {
+		gui_drawpixel_internal(x0, y0, colour);
+		return;
+	}
+
+	// http://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+
+	int f = 1 - radius;
+	int ddF_x = 1;
+	int ddF_y = -2 * radius;
+	int x = 0;
+	int y = radius;
+
+	gui_drawline_internal(x0, y0 - radius, x0, y0 + radius, true, colour);
+ 
+	while(true)
+	{
+		assert(ddF_x == 2 * x + 1);
+		assert(ddF_y == -2 * y);
+		assert(f == x*x + y*y - radius*radius + 2*x - y + 1);
+		if(f >= 0) 
+		{
+			y--;
+			ddF_y += 2;
+			f += ddF_y;
+		}
+		x++;
+		ddF_x += 2;
+		f += ddF_x;
+
+		if (x < y) {
+			gui_drawline_internal(x0 + x, y0 - y, x0 + x, y0 + y, true, colour);
+			gui_drawline_internal(x0 - x, y0 - y, x0 - x, y0 + y, true, colour);
+			if (f >= 0) {
+				gui_drawline_internal(x0 + y, y0 - x, x0 + y, y0 + x, true, colour);
+				gui_drawline_internal(x0 - y, y0 - x, x0 - y, y0 + x, true, colour);
+			}
+		}
+		else if (x == y) {
+			gui_drawline_internal(x0 + x, y0 - y, x0 + x, y0 + y, true, colour);
+			gui_drawline_internal(x0 - x, y0 - y, x0 - x, y0 + y, true, colour);
+			break;
+		}
+		else
+			break;
+	}
 }
 
 // Helper for a simple hex parser
@@ -927,7 +1035,7 @@ static int gui_drawline(lua_State *L) {
 
 	gui_prepare();
 
-	gui_drawline_internal(x1, y1, x2, y2, colour);
+	gui_drawline_internal(x1, y1, x2, y2, true, colour);
 
 	return 0;
 }
@@ -937,7 +1045,6 @@ static int gui_drawbox(lua_State *L) {
 
 	int x1,y1,x2,y2;
 	uint32 colour;
-	int i;
 
 	x1 = luaL_checkinteger(L,1);
 	y1 = luaL_checkinteger(L,2);
@@ -953,11 +1060,71 @@ static int gui_drawbox(lua_State *L) {
 
 	gui_prepare();
 
-	gui_drawbox_internal(x1, y1, x2, y1, colour);
+	gui_drawbox_internal(x1, y1, x2, y2, colour);
 
 	return 0;
 }
 
+// gui.drawcircle(x0, y0, radius, colour)
+static int gui_drawcircle(lua_State *L) {
+
+	int x, y, r;
+	uint32 colour;
+
+	x = luaL_checkinteger(L,1);
+	y = luaL_checkinteger(L,2);
+	r = luaL_checkinteger(L,3);
+	colour = gui_getcolour(L,4);
+
+	gui_prepare();
+
+	gui_drawcircle_internal(x, y, r, colour);
+
+	return 0;
+}
+
+// gui.fillbox(x1, y1, x2, y2, colour)
+static int gui_fillbox(lua_State *L) {
+
+	int x1,y1,x2,y2;
+	uint32 colour;
+
+	x1 = luaL_checkinteger(L,1);
+	y1 = luaL_checkinteger(L,2);
+	x2 = luaL_checkinteger(L,3);
+	y2 = luaL_checkinteger(L,4);
+	colour = gui_getcolour(L,5);
+
+//	if (!gui_check_boundary(x1, y1))
+//		luaL_error(L,"bad coordinates");
+//
+//	if (!gui_check_boundary(x2, y2))
+//		luaL_error(L,"bad coordinates");
+
+	gui_prepare();
+
+	gui_fillbox_internal(x1, y1, x2, y2, colour);
+
+	return 0;
+}
+
+// gui.fillcircle(x0, y0, radius, colour)
+static int gui_fillcircle(lua_State *L) {
+
+	int x, y, r;
+	uint32 colour;
+
+	x = luaL_checkinteger(L,1);
+	y = luaL_checkinteger(L,2);
+	r = luaL_checkinteger(L,3);
+	colour = gui_getcolour(L,4);
+
+	gui_prepare();
+
+	gui_fillcircle_internal(x, y, r, colour);
+
+	return 0;
+}
 
 // gui.gdscreenshot()
 //
@@ -1616,6 +1783,9 @@ static const struct luaL_reg guilib[] = {
 	{"drawpixel", gui_drawpixel},
 	{"drawline", gui_drawline},
 	{"drawbox", gui_drawbox},
+	{"drawcircle", gui_drawcircle},
+	{"fillbox", gui_fillbox},
+	{"fillcircle", gui_fillcircle},
 	{"text", gui_text},
 
 	{"gdscreenshot", gui_gdscreenshot},

@@ -12,7 +12,7 @@
 
 <div class="section">
 
-<p class="document_version">Document version: lua svn r1</p>
+<p class="document_version">Document version: lua svn r2</p>
 
 <p>See <a href="http://code.google.com/p/snes9x143-rerecording/">Snes9x 1.43 rerecording project on Google Code</a> for the emulator itself.</p>
 
@@ -71,6 +71,9 @@
   <li><a href="#gui.drawpixel">gui.drawpixel</a></li>
   <li><a href="#gui.drawline">gui.drawline</a></li>
   <li><a href="#gui.drawbox">gui.drawbox</a></li>
+  <li><a href="#gui.fillbox">gui.fillbox</a></li>
+  <li><a href="#gui.drawcircle">gui.drawcircle</a></li>
+  <li><a href="#gui.fillcircle">gui.fillcircle</a></li>
   <li><a href="#gui.text">gui.text</a></li>
   <li><a href="#gui.gdscreenshot">gui.gdscreenshot</a></li>
   <li><a href="#gui.gdoverlay">gui.gdoverlay</a></li>
@@ -825,16 +828,32 @@ Draw a line between the two indicated positions.
 
 </div>
 
-<h4 id="gui.drawbox">gui.drawbox</h4>
+<h4><span id="gui.drawbox">gui.drawbox</span>, <span id="gui.fillbox">gui.fillbox</span></h4>
 
 <div class="section">
 
-<pre>gui.drawbox(int x1, int y1, int x2, int y2, type colour)</pre>
+<pre>gui.drawbox(int x1, int y1, int x2, int y2, type colour)
+gui.fillbox(int x1, int y1, int x2, int y2, type colour)</pre>
 
-<p><em class="version_notice">v0.03+ only</em></p>
+<p>gui.drawbox: <em class="version_notice">v0.03+ only</em>, gui.fillbox: <em class="version_notice">svn r2+ only</em></p>
 
 <p>
 Draw a box going through the indicated opposite corners.
+</p>
+
+</div>
+
+<h4><span id="gui.drawcircle">gui.drawcircle</span>, <span id="gui.fillcircle">gui.fillcircle</span></h4>
+
+<div class="section">
+
+<pre>gui.drawcircle(int x, int y, int r, type colour)
+gui.fillcircle(int x, int y, int r, type colour)</pre>
+
+<p><em class="version_notice">svn r2+ only</em></p>
+
+<p>
+Draw a circle of radius <var>r</var>.
 </p>
 
 </div>
