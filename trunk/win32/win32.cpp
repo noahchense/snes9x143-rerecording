@@ -101,6 +101,8 @@
 #include "../soundux.h"
 #include "../movie.h"
 #include "../netplay.h"
+#include "../s9xlua.h"
+#include "../screenshot.h"
 
 #include "wsnes9x.h"
 #include "directx.h"
@@ -110,7 +112,6 @@
 #include "wlanguage.h"
 #include "win32-sound.h"
 #include "lazymacro.h"
-#include "../s9xlua.h"
 #include <direct.h>
 
 #include <io.h>
@@ -1190,12 +1191,18 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	IAPU.ENVXNotifier = false;
 	IAPU.ENDXNotifier = false;
 
+	if(!GFX.Repainting && Settings.TakeScreenshot)
+		GFX.InfoString = ""; // remove text message for screenshot (even if GUI.MessagesInImage=true)
+
 	if((!Settings.AutoDisplayMessages && GUI.MessagesInImage) || Settings.OpenGLEnable || Settings.GlideEnable)
 	{
 		uint32 RealPPL = GFX.Pitch2/2;
 		S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
 		S9xLuaGui((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 	}
+
+	if(!GFX.Repainting && Settings.TakeScreenshot)
+		S9xDoScreenshot(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 
 	// avi writing
 	DoAVIVideoFrame();

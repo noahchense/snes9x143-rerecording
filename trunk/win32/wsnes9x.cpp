@@ -597,6 +597,9 @@ void HotkeyToggleMacro6 ();
 void HotkeyToggleMacro7 ();
 void HotkeyEditMacro ();
 void HotkeyToggleCheats ();
+void HotkeyLoadLuaScript();
+void HotkeyReloadLuaScript();
+void HotkeyStopLuaScript();
 
 bool IsLastCustomKey (const SCustomKey *key)
 {
@@ -757,6 +760,9 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->ToggleMacro[7].handleKeyDown = HotkeyToggleMacro7;
 	keys->EditMacro.handleKeyDown = HotkeyEditMacro;
 	keys->ToggleCheats.handleKeyDown = HotkeyToggleCheats;
+	keys->LoadLuaScript.handleKeyDown = HotkeyLoadLuaScript;
+	keys->ReloadLuaScript.handleKeyDown = HotkeyReloadLuaScript;
+	keys->StopLuaScript.handleKeyDown = HotkeyStopLuaScript;
 
 	// name
 	keys->RecentROM[0].name = _T("Recent ROM 1");
@@ -879,6 +885,9 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->ToggleMacro[7].name = _T("Macro 7");
 	keys->EditMacro.name = _T("Edit Macro");
 	keys->ToggleCheats.name = _T("Toggle Cheats");
+	keys->LoadLuaScript.name = _T("Load Lua Script");
+	keys->ReloadLuaScript.name = _T("Reload Lua Script");
+	keys->StopLuaScript.name = _T("Stop Lua Script");
 
 	// category
 	keys->RecentROM[0].page = HOTKEY_PAGE_FILE;
@@ -998,6 +1007,9 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->ToggleMacro[4].page = HOTKEY_PAGE_TOOLS;
 	keys->ToggleCheats.page = HOTKEY_PAGE_TOOLS;
 	keys->EditMacro.page = HOTKEY_PAGE_TOOLS;
+	keys->LoadLuaScript.page = HOTKEY_PAGE_TOOLS;
+	keys->ReloadLuaScript.page = HOTKEY_PAGE_TOOLS;
+	keys->StopLuaScript.page = HOTKEY_PAGE_TOOLS;
 
 	// default keys
 	keys->RecentROM[0].key = VK_F1; keys->RecentROM[0].modifiers = CUSTKEY_CTRL_MASK;
@@ -2086,6 +2098,13 @@ LRESULT CALLBACK WinProc(
 			if (lstrcmpi(ext, ".smv") == 0) {
 				WinMoviePlay(filename);
 			}
+			else if (lstrcmpi(ext, ".lua") == 0) {
+				if (S9xLoadLuaCode(filename)) {
+					// success, there is nothing to do
+				} else {
+					// MessageBox(hDlg, "Oops", "Script not loaded", MB_OK); // Errors are displayed by the Lua code.
+				}
+			}
 			else {
 				bool extIsValid = false;
 
@@ -2244,22 +2263,14 @@ LRESULT CALLBACK WinProc(
 				int success = 0;
 				DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_LUA_ADD), hWnd, DlgLuaScriptDialog,(LPARAM) &success);
 				if (success) {
-					MENUITEMINFO mii;
-					unsigned int i;
-	
-					ZeroMemory( &mii, sizeof( mii));
-					mii.cbSize = sizeof( mii);
-					mii.fMask = MIIM_STATE;
-    
-					mii.fState = MFS_UNCHECKED;
-					SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_STOP, FALSE, &mii);
-					mii.fState |= MFS_DISABLED;
-					SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
-
-
+					// there is nothing to do
 				}
 				RestoreSNESDisplay();
-
+			}
+			break;
+		case IDD_FILE_LUA_RELOAD: 
+			{
+				S9xLoadLastLuaCode();
 			}
 			break;
 		case IDD_FILE_LUA_STOP:
@@ -2267,18 +2278,6 @@ LRESULT CALLBACK WinProc(
 				// I'm going to assume that Windows will adequately guard against this being executed
 				// uselessly. Even if it wasn't, it's no big deal.
 				S9xLuaStop();
-
-				MENUITEMINFO mii;
-				unsigned int i;
-
-				ZeroMemory( &mii, sizeof( mii));
-				mii.cbSize = sizeof( mii);
-				mii.fMask = MIIM_STATE;
-   
-				mii.fState = MFS_UNCHECKED;
-				SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
-				mii.fState |= MFS_DISABLED;
-				SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_STOP, FALSE, &mii);
 			}
 			break;
 		case ID_FILE_MOVIE_RECORD:
@@ -4142,6 +4141,9 @@ void HotkeyToggleMacro6 () { HotkeyToggleMacro(6); }
 void HotkeyToggleMacro7 () { HotkeyToggleMacro(7); }
 void HotkeyEditMacro () { PostMenuCommand(ID_OPTIONS_INPUT_MACRO); }
 void HotkeyToggleCheats () { PostMenuCommand(ID_CHEAT_DISABLE); }
+void HotkeyLoadLuaScript () { PostMenuCommand(IDD_FILE_LUA_LOAD); }
+void HotkeyReloadLuaScript () { PostMenuCommand(IDD_FILE_LUA_RELOAD); }
+void HotkeyStopLuaScript () { PostMenuCommand(IDD_FILE_LUA_STOP); }
 
 /*****************************************************************************/
 /* WinInit                                                                   */
@@ -5119,7 +5121,15 @@ static void CheckMenuStates ()
     SetMenuItemInfo (GUI.hMenu, ID_FILE_RESET, FALSE, &mii);
     SetMenuItemInfo (GUI.hMenu, ID_CHEAT_ENTER, FALSE, &mii);
     SetMenuItemInfo (GUI.hMenu, ID_CHEAT_SEARCH_MODAL, FALSE, &mii);
-    SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
+
+	bool luaRunning = S9xLuaRunning();
+	mii.fState = MFS_UNCHECKED | (luaRunning ? MFS_DISABLED : 0);
+	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
+	extern char lua_lastfile[];
+	mii.fState = MFS_UNCHECKED | (lua_lastfile[0] == '\0' ? MFS_DISABLED : 0);
+	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_RELOAD, FALSE, &mii);
+	mii.fState = MFS_UNCHECKED | (!luaRunning ? MFS_DISABLED : 0);
+	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_STOP, FALSE, &mii);
 
 	for (i = 0; i < COUNT(idJoypad); i++) {
 		mii.fState = Joypad[i].Enabled ? MFS_CHECKED : MFS_UNCHECKED;
@@ -13159,6 +13169,7 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 	switch (msg) {
 	case WM_INITDIALOG:
 		{
+		DragAcceptFiles(hDlg, true);
 
 		// Nothing very useful to do
 		success = (int*)lParam;
@@ -13208,8 +13219,23 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 				return true;
 			}
 		}
+		break;
 
+	case WM_DROPFILES: {
+		HDROP hDrop;
+		UINT fileNo;
+		UINT fileCount;
+		char filename[PATH_MAX];
 
+		hDrop = (HDROP)wParam;
+		fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0);
+		if (fileCount > 0) {
+			DragQueryFile(hDrop, 0, filename, COUNT(filename));
+			SetWindowText(GetDlgItem(hDlg, IDC_LUA_FILENAME), filename);
+		}
+		DragFinish(hDrop);
+		return true;
+	 }
 	}
 	char message[1024];
 //	sprintf(message, "Unkonwn command %d,%d",msg,wParam);

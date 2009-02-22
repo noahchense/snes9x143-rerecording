@@ -1080,6 +1080,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Run Lua Script...",           IDD_FILE_LUA_LOAD, GRAYED
+        MENUITEM "Reload Lua Script",           IDD_FILE_LUA_RELOAD, GRAYED
         MENUITEM "Stop Lua Script",             IDD_FILE_LUA_STOP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4",               ID_FILE_EXIT

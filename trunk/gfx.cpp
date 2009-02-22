@@ -610,17 +610,16 @@ void S9xEndScreenRefresh ()
 			GFX.Pitch = GFX.Pitch2 = GFX.RealPitch;
 			GFX.PPL = GFX.PPLx2 >> 1;
 		}
-
+#ifndef __WIN32__
 		if(Settings.TakeScreenshot)
 			S9xDoScreenshot(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
-
+#endif
 		if(Settings.AutoDisplayMessages || Settings.OpenGLEnable || Settings.GlideEnable)
 		{
 			uint32 RealPPL = GFX.Pitch2/2;
 			S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
 			S9xLuaGui((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 		}
-
 		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 	}
 	else
