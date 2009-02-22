@@ -92,7 +92,7 @@
 #ifndef _SNES9X_H_
 #define _SNES9X_H_
 
-#define VERSION "1.43+ v15.4 (lua svn r1)"
+#define VERSION "1.43+ v15.4 (lua svn r2)"
 
 #include <stdio.h>
 #include <stdlib.h>
