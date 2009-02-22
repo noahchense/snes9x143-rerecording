@@ -5,6 +5,7 @@
 //#include <unistd.h> // for unlink
 #include <ctype.h>
 #include <assert.h>
+#include <math.h>
 
 #ifdef __linux
 #include <sys/types.h>
@@ -627,6 +628,12 @@ static void gui_prepare() {
 #define LUA_BUILD_PIXEL BUILD_PIXEL_ARGB8888
 #define LUA_DECOMPOSE_PIXEL DECOMPOSE_PIXEL_ARGB8888
 
+template <class T> static void swap(T &one, T &two) {
+	T temp = one;
+	one = two;
+	two = temp;
+}
+
 // write a pixel to buffer
 static inline void blend32(uint32 *dstPixel, uint32 colour)
 {
@@ -652,10 +659,149 @@ static inline void blend32(uint32 *dstPixel, uint32 colour)
 		dst[3] = (uint8) a_new;
 	}
 }
+// check if a pixel is in the lua canvas
+static inline bool gui_check_boundary(int x, int y) {
+	return !(x < 0 || x >= 256 || y < 0 || y >= 239);
+}
+
 // write a pixel to gui_data (do not check boundaries for speedup)
 static inline void gui_drawpixel_fast(int x, int y, uint32 colour) {
 	//gui_prepare();
 	blend32((uint32*) &gui_data[(y*256+x)*4], colour);
+}
+
+// write a pixel to gui_data (check boundaries)
+static inline void gui_drawpixel_internal(int x, int y, uint32 colour) {
+	//gui_prepare();
+	if (gui_check_boundary(x, y))
+		gui_drawpixel_fast(x, y, colour);
+}
+
+// draw a line on gui_data (checks boundaries)
+static void gui_drawline_internal(int x1, int y1, int x2, int y2, uint32 colour) {
+
+	//gui_prepare();
+
+	// Note: New version of Bresenham's Line Algorithm
+	// http://groups.google.co.jp/group/rec.games.roguelike.development/browse_thread/thread/345f4c42c3b25858/29e07a3af3a450e6?show_docid=29e07a3af3a450e6
+
+	// you can remove horizontal/vertical line exception if you want, that's no problem.
+	if (y1 == y2) { // Horizontal line?
+		int ix;
+		if (x1 > x2) 
+			swap<int>(x1, x2);
+		if (x1 < 0)
+			x1 = 0;
+		if (x2 >= 256)
+			x2 = 256 - 1;
+		for (ix=x1; ix <= x2; ix++)
+			gui_drawpixel_fast(ix, y1, colour);
+	} else if (x1 == x2) { // Vertical line?
+		int iy;
+		if (y1 > y2)
+			swap<int>(y1, y2);
+		if (y1 < 0)
+			y1 = 0;
+		if (y2 >= 239)
+			y2 = 239 - 1;
+		for (iy=y1; iy <= y2; iy++)
+			gui_drawpixel_fast(x1, iy, colour);
+	}
+
+	// max_len <<= 1;
+	// int len = 0;
+
+	int swappedx = 0;
+	int swappedy = 0;
+
+	int xtemp = x2-x1;
+	int ytemp = y2-y1;
+	if (xtemp < 0) {
+		xtemp = -xtemp;
+		swappedx = 1;
+	}
+	if (ytemp < 0) {
+		ytemp = -ytemp;
+		swappedy = 1;
+	}
+
+	int delta_x = xtemp << 1;
+	int delta_y = ytemp << 1;
+
+	signed char ix = x2 > x1?1:-1;
+	signed char iy = y2 > y1?1:-1;
+
+	gui_drawpixel_fast(x1, y1, colour);
+
+	if (delta_x >= delta_y) {
+		int error = delta_y - (delta_x >> 1);
+
+		while (x1 != x2) {
+			if (error == 0 && !swappedx) {
+				gui_drawpixel_fast(x1+ix, y1, colour);
+				if (!gui_check_boundary(x1+ix, y1))
+					return;
+			}
+			if (error >= 0) {
+				if (error || (ix > 0)) {
+					y1 += iy;
+					error -= delta_x;
+					// len++;
+				}
+			}
+			x1 += ix;
+			gui_drawpixel_fast(x1, y1, colour);
+			// len += 2;
+			if (!gui_check_boundary(x1, y1)) // || len >= max_len
+				return;
+			if (error == 0 && swappedx) {
+				gui_drawpixel_fast(x1, y1+iy, colour);
+				if (!gui_check_boundary(x1, y1+iy))
+					return;
+			}
+			error += delta_y;
+		}
+	}
+	else {
+		int error = delta_x - (delta_y >> 1);
+
+		while (y1 != y2) {
+			if (error == 0 && !swappedy) {
+				gui_drawpixel_fast(x1, y1+iy, colour);
+				if (!gui_check_boundary(x1, y1+iy))
+					return;
+			}
+			if (error >= 0) {
+				if (error || (iy > 0)) {
+					x1 += ix;
+					error -= delta_y;
+					// len++;
+				}
+			}
+			y1 += iy;
+			gui_drawpixel_fast(x1, y1, colour);
+			// len += 2;
+			if (!gui_check_boundary(x1, y1)) // || len >= max_len
+				return;
+			if (error == 0 && swappedy) {
+				gui_drawpixel_fast(x1+ix, y1, colour);
+				if (!gui_check_boundary(x1+ix, y1))
+					return;
+			}
+			error += delta_x;
+		}
+	}
+}
+
+// draw a rect on gui_data
+static void gui_drawbox_internal(int x1, int y1, int x2, int y2, uint32 colour) {
+
+	//gui_prepare();
+
+	gui_drawline_internal(x1, y1, x2, y1, colour);
+	gui_drawline_internal(x1, y2, x2, y2, colour);
+	gui_drawline_internal(x1, y1, x1, y2, colour);
+	gui_drawline_internal(x2, y1, x2, y2, colour);
 }
 
 // Helper for a simple hex parser
@@ -744,14 +890,6 @@ static uint32 gui_optcolour(lua_State *L, int offset, uint32 defaultColour) {
 	return gui_getcolour_wrapped(L, offset, true, defaultColour);
 }
 
-// I'm going to use this a lot in here
-
-template <class T> static void swap(T &one, T &two) {
-	T temp = one;
-	one = two;
-	two = temp;
-}
-
 // gui.drawpixel(x,y,colour)
 static int gui_drawpixel(lua_State *L) {
 
@@ -760,8 +898,8 @@ static int gui_drawpixel(lua_State *L) {
 
 	uint32 colour = gui_getcolour(L,3);
 
-	if (x < 0 || x >= 256 || y < 0 || y >= 239)
-		luaL_error(L,"bad coordinates");
+//	if (!gui_check_boundary(x, y))
+//		luaL_error(L,"bad coordinates");
 
 	gui_prepare();
 
@@ -781,59 +919,15 @@ static int gui_drawline(lua_State *L) {
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
 
-	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
-		luaL_error(L,"bad coordinates");
-
-	if (x2 < 0 || x2 >= 256 || y2 < 0 || y2 >= 239)
-		luaL_error(L,"bad coordinates");
+//	if (!gui_check_boundary(x1, y1))
+//		luaL_error(L,"bad coordinates");
+//
+//	if (!gui_check_boundary(x2, y2))
+//		luaL_error(L,"bad coordinates");
 
 	gui_prepare();
 
-
-	// Horizontal line?
-	if (y1 == y2) {
-		if (x1 > x2) 
-			swap<int>(x1,x2);
-		int i;
-		for (i=x1; i <= x2; i++) {
-			gui_drawpixel_fast(i, y1, colour);
-		}
-	} else if (x1 == x2) { // Vertical line?
-		if (y1 > y2)
-			swap<int>(y1,y2);
-		int i;
-		for (i=y1; i < y2; i++) {
-			gui_drawpixel_fast(x1, i, colour);
-		}
-	} else {
-		// Some very real slope. We want to increase along the x value, so we swap for that.
-		if (x1 > x2) {
-			swap<int>(x1,x2);
-			swap<int>(y1,y2);
-		}
-
-
-		double slope = ((double)y2-(double)y1) / ((double)x2-(double)x1);
-		int myX = x1, myY = y1;
-		double accum = 0;
-
-		while (myX <= x2) {
-			// Draw the current pixel
-			gui_drawpixel_fast(myX, myY, colour);
-
-			// If it's above 1, we knock 1 off it and go up 1 pixel
-			if (accum >= 1.0) {
-				myY += 1;
-				accum -= 1.0;
-			} else {
-				myX += 1;
-				accum += slope; // Step up
-
-			}
-		}
-
-
-	}
+	gui_drawline_internal(x1, y1, x2, y2, colour);
 
 	return 0;
 }
@@ -851,41 +945,15 @@ static int gui_drawbox(lua_State *L) {
 	y2 = luaL_checkinteger(L,4);
 	colour = gui_getcolour(L,5);
 
-	if (x1 < 0 || x1 >= 256 || y1 < 0 || y1 >= 239)
-		luaL_error(L,"bad coordinates");
-
-	if (x2 < 0 || x2 >= 256 || y2 < 0 || y2 >= 239)
-		luaL_error(L,"bad coordinates");
-
+//	if (!gui_check_boundary(x1, y1))
+//		luaL_error(L,"bad coordinates");
+//
+//	if (!gui_check_boundary(x2, y2))
+//		luaL_error(L,"bad coordinates");
 
 	gui_prepare();
 
-	// For simplicity, we mandate that x1,y1 be the upper-left corner
-	if (x1 > x2)
-		swap<int>(x1,x2);
-	if (y1 > y2)
-		swap<int>(y1,y2);
-
-	// top surface
-	for (i=x1; i <= x2; i++) {
-		gui_drawpixel_fast(i, y1, colour);
-	}
-
-	// bottom surface
-	for (i=x1; i <= x2; i++) {
-		gui_drawpixel_fast(i, y2, colour);
-	}
-
-	// left surface
-	for (i=y1; i <= y2; i++) {
-		gui_drawpixel_fast(x1, i, colour);
-	}
-
-	// right surface
-	for (i=y1; i <= y2; i++) {
-		gui_drawpixel_fast(x2, i, colour);
-	}
-
+	gui_drawbox_internal(x1, y1, x2, y1, colour);
 
 	return 0;
 }
@@ -994,49 +1062,38 @@ static int gui_transparency(lua_State *L) {
 
 #include "font.h"
 
-static inline void FontPixToScreen(char p, uint32 *s, uint32 colour, uint32 borderColour)
-{
-	if(p == '#')
-	{
-		blend32(s, colour);
-	}
-	else if(p == '.')
-	{
-		blend32(s, borderColour);
-	}
-}
-
-static void DisplayChar(uint32 *s, uint8 c, uint32 colour, uint32 borderColour) {
+static void LuaDisplayChar(int x, int y, uint8 c, uint32 colour, uint32 borderColour) {
 	extern int font_height, font_width;
 	int line = ((c - 32) >> 4) * font_height;
 	int offset = ((c - 32) & 15) * font_width;
 	int h, w;
-	for(h=0; h<font_height; h++, line++, s+=256-font_width)
-		for(w=0; w<font_width; w++, s++)
-			FontPixToScreen(font [line] [(offset + w)], s, colour, borderColour);
+	for(h=0; h<font_height; h++, line++) {
+		for(w=0; w<font_width; w++) {
+			char p = font [line] [(offset + w)];
+			if(p == '#')
+				gui_drawpixel_internal(x+w, y+h, colour);
+			else if(p == '.')
+				gui_drawpixel_internal(x+w, y+h, borderColour);
+		}
+	}
 }
 
 static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFromLeft, uint32 colour, uint32 borderColour)
 {
-
 	extern int font_width, font_height;
-
-    uint32 *Screen = (uint32*) gui_data // text draw position, starting on the screen
-                  + pixelsFromLeft // with this much horizontal offset
-                  + linesFromTop*256;
-
 
 	int len = strlen(string);
 	int max_chars = (256-pixelsFromLeft) / (font_width);
 	int char_count = 0;
+	int x = pixelsFromLeft, y = linesFromTop;
 
 	// loop through and draw the characters
 	for(int i = 0 ; i < len && char_count < max_chars ; i++, char_count++)
 	{
 		if((unsigned char) string[i]<32) continue;
 
-		DisplayChar(Screen, string[i], colour, borderColour);
-		Screen += /*Settings.SixteenBit ? (display_fontwidth-display_hfontaccessscale)*sizeof(uint16) :*/ (font_width);
+		LuaDisplayChar(x, y, string[i], colour, borderColour);
+		x += font_width;
 	}
 }
 
@@ -1060,8 +1117,8 @@ static int gui_text(lua_State *L) {
 	y = luaL_checkinteger(L,2);
 	msg = luaL_checkstring(L,3);
 
-	if (x < 0 || x >= 256 || y < 0 || y >= (239 - font_height))
-		luaL_error(L,"bad coordinates");
+//	if (x < 0 || x >= 256 || y < 0 || y >= (239 - font_height))
+//		luaL_error(L,"bad coordinates");
 
 	colour = gui_optcolour(L,4,(alphaDefault << 24)|CONVERT_16_TO_32(Settings.DisplayColor));
 	borderColour = gui_optcolour(L,5,LUA_BUILD_PIXEL(alphaDefault, 0, 0, 0));
