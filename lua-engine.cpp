@@ -71,6 +71,9 @@ static uint8 lua_joypads_used = 0;
 unsigned char lua_watch_bitfield[16384];
 
 
+// the most recent script file
+char lua_lastfile[512] = { '\0' };
+
 static bool8 gui_used = FALSE;
 static uint8 *gui_data = NULL; // BGRA
 
@@ -1622,19 +1625,6 @@ void S9xLuaFrameBoundary() {
 		// Erase running state
 		memset(lua_watch_bitfield, 0, sizeof(lua_watch_bitfield));
 		luaRunning = FALSE;
-#ifdef __WIN32__
-		MENUITEMINFO mii;
-		unsigned int i;
-
-		ZeroMemory( &mii, sizeof( mii));
-		mii.cbSize = sizeof( mii);
-		mii.fMask = MIIM_STATE;
-  
-		mii.fState = MFS_UNCHECKED;
-		SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
-		mii.fState |= MFS_DISABLED;
-		SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_STOP, FALSE, &mii);
-#endif
 	}
 
 }
@@ -1714,10 +1704,26 @@ int S9xLoadLuaCode(const char *filename) {
 	// Set up our protection hook to be executed once every 10,000 bytecode instructions.
 	lua_sethook(thread, S9xLuaHookFunction, LUA_MASKCOUNT, 10000);
 
+	// Save the script filename for reload
+	strcpy(lua_lastfile, filename);
+
 	// We're done.
 	return 1;
 }
 
+/**
+ * Loads and runs the most recent loaded Lua script.
+ */
+int S9xLoadLastLuaCode() {
+	if (lua_lastfile[0] != '\0') {
+		char *filename = strdup(lua_lastfile);
+		int ret = S9xLoadLuaCode(filename);
+		free(filename);
+		return ret;
+	}
+	else
+		return 0;
+}
 
 /**
  * Terminates a running Lua script by killing the whole Lua engine.

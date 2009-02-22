@@ -48,6 +48,7 @@
 #define IDD_FILE_LUA_LOAD               143
 #define IDD_FILE_LUA_STOP               144
 #define IDD_FRAMESKIP_SETTINGS          145
+#define IDD_FILE_LUA_RELOAD             146
 #define IDC_DRIVER                      1001
 #define IDC_BUFLEN                      1002
 #define IDC_RATE                        1003
@@ -670,7 +671,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        146
+#define _APS_NEXT_RESOURCE_VALUE        147
 #define _APS_NEXT_COMMAND_VALUE         40236
 #define _APS_NEXT_CONTROL_VALUE         1383
 #define _APS_NEXT_SYMED_VALUE           101
