@@ -1192,7 +1192,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	IAPU.ENDXNotifier = false;
 
 	if(!GFX.Repainting && Settings.TakeScreenshot)
-		GFX.InfoString = ""; // remove text message for screenshot (even if GUI.MessagesInImage=true)
+		GFX.InfoString = NULL; // remove text message for screenshot (even if GUI.MessagesInImage=true)
 
 	if((!Settings.AutoDisplayMessages && GUI.MessagesInImage) || Settings.OpenGLEnable || Settings.GlideEnable)
 	{
