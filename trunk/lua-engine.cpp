@@ -1011,7 +1011,7 @@ static int gui_drawpixel(lua_State *L) {
 
 	gui_prepare();
 
-	gui_drawpixel_fast(x, y, colour);
+	gui_drawpixel_internal(x, y, colour);
 
 	return 0;
 }
