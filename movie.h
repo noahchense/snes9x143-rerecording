@@ -174,6 +174,8 @@ uint32 S9xMovieGetId ();
 uint32 S9xMovieGetLength ();
 uint32 S9xMovieGetFrameCounter ();
 
+bool MovieGetJoypadNext(int which, uint16 &pad);
+
 END_EXTERN_C
 
 #endif

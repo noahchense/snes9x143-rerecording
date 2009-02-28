@@ -1049,6 +1049,46 @@ void S9xMovieUpdateOnReset ()
 	Movie.RequiresReset = false;
 }
 
+bool MovieGetJoypadNext(int which, uint16 &pad)
+{
+	if (which < 0 || which > 4)
+		return false;
+
+	switch(Movie.State)
+	{
+	case MOVIE_STATE_PLAY:
+		{
+			if(Movie.CurrentFrame>=Movie.MaxFrame)
+				return false;
+			else
+			{
+				if(Movie.ControllersMask & (1<<which)) {
+					uint8 *inputBuf;
+					int padOffset;
+					int i;
+
+					padOffset = 0;
+					for (i = 0; i < which; i++) {
+						if (Movie.ControllersMask & (1<<i)) {
+							padOffset += 2;
+						}
+					}
+
+					inputBuf = &Movie.InputBufferPtr[padOffset];
+					pad = Read16(inputBuf);
+				}
+				else
+					pad = 0;		// pretend the controller is disconnected
+				return true;
+			}
+		}
+		break;
+
+	default:
+		return false;
+	}
+}
+
 void S9xMovieUpdate ()
 {
 movieUpdateStart:

@@ -365,8 +365,8 @@ static int joypad_read(lua_State *L) {
 		luaL_error(L,"Invalid input port (valid range 1-5, specified %d)", which);
 	}
 	
-	// Use the OS-specific code to do the reading.
-	uint32 buttons = S9xReadJoypad(which - 1);
+	extern uint16 S9xReadJoypadNext(int which);
+	uint32 buttons = S9xReadJoypadNext(which - 1);
 	
 	lua_newtable(L);
 	
@@ -1817,6 +1817,8 @@ void S9xLuaFrameBoundary() {
 	frameBoundary = TRUE;
 	frameAdvanceWaiting = FALSE;
 
+	lua_joypads_used = 0;
+
 	numTries = 1000;
 	int result = lua_resume(thread, 0);
 	
@@ -2000,7 +2002,7 @@ int S9xLuaUsingJoypad(int which) {
  */
 int S9xLuaReadJoypad(int which) {
 	if (lua_joypads_used & (1 << which)) {
-		lua_joypads_used &= ~(1 << which);
+		//lua_joypads_used &= ~(1 << which);
 		return lua_joypads[which] | 0x80000000;
 	}
 	else

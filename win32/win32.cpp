@@ -683,16 +683,17 @@ bool S9xGetState (WORD KeyIdent)
     return ((GetKeyState (KeyIdent) & 0x80) == 0);
 }
 
-bool WinReadJoypadNeedsScan = true;
+//bool WinReadJoypadNeedsScan = true;
 uint32 S9xReadJoypad (int which1)
 {
 	if (which1 > 4)
 		return 0;
 
-	if (WinReadJoypadNeedsScan && !Settings.NetPlay) {
-		S9xWinScanJoypads();
-		WinReadJoypadNeedsScan = false;
-	}
+	// scan should be done in wsnes9x.cpp
+	//if (WinReadJoypadNeedsScan && !Settings.NetPlay) {
+	//	S9xWinScanJoypads();
+	//	WinReadJoypadNeedsScan = false;
+	//}
 
 #ifdef NETPLAY_SUPPORT
 	if (Settings.NetPlay)
