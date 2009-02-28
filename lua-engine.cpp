@@ -87,7 +87,7 @@ static int numTries;
 
 // Look in snes9x.h for macros named like SNES9X_UP_MASK to determine the order.
 static const char *button_mappings[] = {
-	"","","","", // These are unused
+	"","b1","b2","b3", // These are normally unused, but supported for custom input display
 	
 	"R", "L", "X", "A", "right", "left", "down", "up", "start", "select", "Y", "B"
 };
@@ -371,7 +371,7 @@ static int joypad_read(lua_State *L) {
 	lua_newtable(L);
 	
 	int i;
-	for (i = 4; i < 16; i++) {
+	for (i = 1; i < 16; i++) {
 		if (buttons & (1<<i)) {
 			lua_pushinteger(L,1);
 			lua_setfield(L, -2, button_mappings[i]);
@@ -404,7 +404,7 @@ static int joypad_set(lua_State *L) {
 	lua_joypads[which-1] = 0;
 
 	int i;
-	for (i=4; i < 16; i++) {
+	for (i=1; i < 16; i++) {
 		lua_getfield(L, 2, button_mappings[i]);
 		if (!lua_isnil(L,-1))
 			lua_joypads[which-1] |= 1 << i;
