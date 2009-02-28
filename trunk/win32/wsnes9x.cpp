@@ -4442,6 +4442,15 @@ VOID CALLBACK FrameTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR d
 	}
 }
 
+static void ProcessInput(void)
+{
+	extern void S9xWinScanJoypads ();
+#ifdef NETPLAY_SUPPORT
+    if (!Settings.NetPlay)
+#endif
+		S9xWinScanJoypads ();
+}
+
 static void WinDisplayString (const char *string, int lines, bool linesFromBottom, int pixelsFromLeft, bool allowWrap);
 
 /*****************************************************************************/
@@ -4755,6 +4764,7 @@ int WINAPI WinMain(
 			if(GUI.FrameAdvanceJustPressed)
 				GUI.FrameAdvanceJustPressed--;
 
+			ProcessInput(); // report input first for joypad.read()
 			if (S9xLuaRunning())
 			{
 				S9xLuaFrameBoundary();
@@ -4765,6 +4775,7 @@ int WINAPI WinMain(
 
 			if(run_loop)
 			{
+				//ProcessInput();
 				S9xMainLoop();
 				DirectX.FrameCount++;
 

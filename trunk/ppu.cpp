@@ -2915,6 +2915,20 @@ void S9xUpdateJustifiers()
 	}
 }
 
+uint16 S9xReadJoypadNext(int which){
+    uint16 pad = 0;
+
+    if (which < 0 || which > 4)
+        return 0;
+
+    if (MovieGetJoypadNext(which, pad))
+        return pad;
+    else if (S9xLuaUsingJoypad(which))
+        return S9xLuaReadJoypad(which);
+    else
+        return S9xReadJoypad(which);
+}
+
 void S9xUpdateJoypadButtons ()
 {
     int i;
@@ -2954,10 +2968,10 @@ void S9xUpdateJoypadButtons ()
 		}
     }
 
-#ifdef __WIN32__
-	extern bool WinReadJoypadNeedsScan;
-	WinReadJoypadNeedsScan = true;
-#endif
+//#ifdef __WIN32__
+//	extern bool WinReadJoypadNeedsScan;
+//	WinReadJoypadNeedsScan = true;
+//#endif
 }
 
 void S9xUpdateJoypadMemory ()

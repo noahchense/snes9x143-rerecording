@@ -12,7 +12,7 @@
 
 <div class="section">
 
-<p class="document_version">Document version: lua svn r2</p>
+<p class="document_version">Document version: lua svn r3</p>
 
 <p>See <a href="http://code.google.com/p/snes9x143-rerecording/">Snes9x 1.43 rerecording project on Google Code</a> for the emulator itself.</p>
 
@@ -425,8 +425,15 @@ case is sensetive. Buttons that are pressed are set to a non-nil value
 (use of the integer 1 is just a convention). Note that "false" is valid,
 but discouraged as testing for logical true will fail.
 </p><p>
+<del datetime="2008-02-28T12:00:00+09:00">
 Currently reading input from a movie file is not possible, but
 a movie will record button presses from Lua.
+</del>
+</p><p>
+<ins datetime="2008-02-28T12:00:00+09:00">
+<em class="version_notice">svn r3+</em>: joypad.read() returns the actual input which will be sent to SNES.
+A movie will record button presses from Lua.
+</ins>
 </p>
 
 <h4 id="joypad.read">joypad.read</h4>
@@ -436,9 +443,15 @@ a movie will record button presses from Lua.
 <pre><code>table joypad.read(int which)</code></pre>
 
 <p>
+<del datetime="2008-02-28T12:00:00+09:00">
 Returns a table indicating which buttons are pressed <em>by the user</em>.
 This is probably the only way to get input to the script by the user.
 This is always user input, even if the joypads have been set by joypad.set.
+</del>
+</p><p>
+<ins datetime="2008-02-28T12:00:00+09:00">
+<em class="version_notice">svn r3+</em>: Returns the actual input which will be sent to SNES.
+</ins>
 </p>
 
 </div>
