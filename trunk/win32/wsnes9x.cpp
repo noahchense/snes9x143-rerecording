@@ -2270,7 +2270,7 @@ LRESULT CALLBACK WinProc(
 			break;
 		case IDD_FILE_LUA_RELOAD: 
 			{
-				S9xLoadLastLuaCode();
+				S9xReloadLuaCode();
 			}
 			break;
 		case IDD_FILE_LUA_STOP:
@@ -4807,6 +4807,9 @@ int WINAPI WinMain(
     }
 	
 loop_exit:
+	//stop any lua we might already have had running
+	S9xLuaStop();
+
 #ifdef USE_GLIDE
     S9xGlideEnable (FALSE);
 #endif
@@ -5134,10 +5137,9 @@ static void CheckMenuStates ()
     SetMenuItemInfo (GUI.hMenu, ID_CHEAT_SEARCH_MODAL, FALSE, &mii);
 
 	bool luaRunning = S9xLuaRunning();
-	mii.fState = MFS_UNCHECKED | (luaRunning ? MFS_DISABLED : 0);
+	mii.fState = MFS_UNCHECKED; // | (luaRunning ? MFS_DISABLED : 0);
 	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
-	extern char lua_lastfile[];
-	mii.fState = MFS_UNCHECKED | (lua_lastfile[0] == '\0' ? MFS_DISABLED : 0);
+	mii.fState = MFS_UNCHECKED;
 	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_RELOAD, FALSE, &mii);
 	mii.fState = MFS_UNCHECKED | (!luaRunning ? MFS_DISABLED : 0);
 	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_STOP, FALSE, &mii);

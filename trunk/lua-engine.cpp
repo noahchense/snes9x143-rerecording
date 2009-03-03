@@ -35,6 +35,9 @@ extern "C" {
 static lua_State *LUA;
 
 // Are we running any code right now?
+static char *luaScriptName = NULL;
+
+// Are we running any code right now?
 static bool8 luaRunning = FALSE;
 
 // True at the frame boundary, false otherwise.
@@ -72,9 +75,6 @@ static uint8 lua_joypads_used = 0;
 unsigned char lua_watch_bitfield[16384];
 
 
-// the most recent script file
-char lua_lastfile[512] = { '\0' };
-
 static bool8 gui_used = FALSE;
 static uint8 *gui_data = NULL; // BGRA
 
@@ -92,6 +92,18 @@ static const char *button_mappings[] = {
 	"R", "L", "X", "A", "right", "left", "down", "up", "start", "select", "Y", "B"
 };
 
+
+/**
+ * Resets emulator speed / pause states after script exit.
+ */
+static void S9xLuaOnStop() {
+	luaRunning = FALSE;
+	lua_joypads_used = 0;
+	gui_used = false;
+	if (wasPaused)
+		Settings.Paused = TRUE;
+	memset(lua_watch_bitfield, 0, sizeof(lua_watch_bitfield));
+}
 
 /**
  * Asks Lua if it wants control of the emulator's speed.
@@ -1714,6 +1726,7 @@ static void S9xLuaHookFunction(lua_State *L, lua_Debug *dbg) {
 
 		if (kill) {
 			luaL_error(L, "Killed by user request.");
+			S9xLuaOnStop();
 		}
 
 		// else, kill the debug hook.
@@ -1826,7 +1839,7 @@ void S9xLuaFrameBoundary() {
 		// Okay, we're fine with that.
 	} else if (result != 0) {
 		// Done execution by bad causes
-		luaRunning = FALSE;
+		S9xLuaOnStop();
 		lua_pushnil(LUA);
 		lua_setfield(LUA, LUA_REGISTRYINDEX, frameAdvanceThread);
 		
@@ -1836,14 +1849,9 @@ void S9xLuaFrameBoundary() {
 #else
 		fprintf(stderr, "Lua thread bombed out: %s\n", lua_tostring(thread,-1));
 #endif
-		if (wasPaused)
-			Settings.Paused = TRUE;
-
 	} else {
+		S9xLuaOnStop();
 		printf("Script died of natural causes.\n");
-		luaRunning = FALSE;
-		if (wasPaused)
-			Settings.Paused = TRUE;
 	}
 
 	// Past here, the snes actually runs, so any Lua code is called mid-frame. We must
@@ -1851,9 +1859,7 @@ void S9xLuaFrameBoundary() {
 	frameBoundary = FALSE;
 
 	if (!frameAdvanceWaiting) {
-		// Erase running state
-		memset(lua_watch_bitfield, 0, sizeof(lua_watch_bitfield));
-		luaRunning = FALSE;
+		S9xLuaOnStop();
 	}
 
 }
@@ -1866,9 +1872,18 @@ void S9xLuaFrameBoundary() {
  * Returns true on success, false on failure.
  */
 int S9xLoadLuaCode(const char *filename) {
+	if (filename != luaScriptName)
+	{
+		if (luaScriptName) free(luaScriptName);
+		luaScriptName = strdup(filename);
+	}
+
+	//stop any lua we might already have had running
+	S9xLuaStop();
+
 	if (!LUA) {
 		LUA = lua_open();
-	        luaL_openlibs(LUA);
+		luaL_openlibs(LUA);
 
 		luaL_register(LUA, "snes9x", snes9xlib);
 		luaL_register(LUA, "memory", memorylib);
@@ -1885,6 +1900,12 @@ int S9xLoadLuaCode(const char *filename) {
 		lua_setfield(LUA, LUA_GLOBALSINDEX, "XOR");
 		lua_pushcfunction(LUA, base_BIT);
 		lua_setfield(LUA, LUA_GLOBALSINDEX, "BIT");
+
+		lua_newtable(LUA);
+		lua_setglobal(LUA,"emu");
+		lua_getglobal(LUA,"emu");
+		lua_newtable(LUA);
+		lua_setfield(LUA,-2,"OnClose");
 
 		
 		lua_newtable(LUA);
@@ -1933,25 +1954,21 @@ int S9xLoadLuaCode(const char *filename) {
 	// Set up our protection hook to be executed once every 10,000 bytecode instructions.
 	lua_sethook(thread, S9xLuaHookFunction, LUA_MASKCOUNT, 10000);
 
-	// Save the script filename for reload
-	strcpy(lua_lastfile, filename);
-
 	// We're done.
 	return 1;
 }
 
 /**
- * Loads and runs the most recent loaded Lua script.
+ * Equivalent to repeating the last S9xLoadLuaCode() call.
  */
-int S9xLoadLastLuaCode() {
-	if (lua_lastfile[0] != '\0') {
-		char *filename = strdup(lua_lastfile);
-		int ret = S9xLoadLuaCode(filename);
-		free(filename);
-		return ret;
+int S9xReloadLuaCode()
+{
+	if (!luaScriptName) {
+		S9xSetInfoString("There's no script to reload.");
+		return 0;
 	}
 	else
-		return 0;
+		return S9xLoadLuaCode(luaScriptName);
 }
 
 /**
@@ -1961,18 +1978,31 @@ int S9xLoadLastLuaCode() {
  *
  */
 void S9xLuaStop() {
+	//already killed
+	if (!LUA) return;
 
-	// Kill it.
-	if (LUA) {
-		lua_close(LUA); // this invokes our garbage collectors for us
-		LUA = NULL;
-		luaRunning = 0;
-		lua_joypads_used = 0;
-		if (wasPaused)
-			Settings.Paused = TRUE;
-		memset(lua_watch_bitfield, 0, sizeof(lua_watch_bitfield));
+	//execute the user's shutdown callbacks
+	//onCloseCallback
+	lua_getglobal(LUA, "emu");
+	lua_getfield(LUA, -1, "OnClose");
+	lua_pushnil(LUA);
+	while (lua_next(LUA, -2) != 0)
+	{
+		lua_call(LUA,0,0);
 	}
 
+	//sometimes iup uninitializes com
+	//MBG TODO - test whether this is really necessary. i dont think it is
+	#ifdef WIN32
+	CoInitialize(0);
+	#endif
+
+	//lua_gc(LUA,LUA_GCCOLLECT,0);
+
+
+	lua_close(LUA); // this invokes our garbage collectors for us
+	LUA = NULL;
+	S9xLuaOnStop();
 }
 
 /**

@@ -7,7 +7,7 @@
 void S9xLuaWrite(uint32 addr);
 void S9xLuaFrameBoundary();
 int S9xLoadLuaCode(const char *filename);
-int S9xLoadLastLuaCode();
+int S9xReloadLuaCode();
 void S9xLuaStop();
 int S9xLuaRunning();
 
