@@ -12,7 +12,7 @@
 
 <div class="section">
 
-<p class="document_version">Document version: lua svn r3</p>
+<p class="document_version">Document version: lua svn r4</p>
 
 <p>See <a href="http://code.google.com/p/snes9x143-rerecording/">Snes9x 1.43 rerecording project on Google Code</a> for the emulator itself.</p>
 
@@ -40,10 +40,13 @@
  <li><a href="#memory">memory</a><ul>
   <li><a href="#memory.readbyte">memory.readbyte</a></li>
   <li><a href="#memory.readword">memory.readword</a></li>
+  <li><a href="#memory.readdword">memory.readdword</a></li>
   <li><a href="#memory.readbytesigned">memory.readbytesigned</a></li>
   <li><a href="#memory.readwordsigned">memory.readwordsigned</a></li>
+  <li><a href="#memory.readdwordsigned">memory.readdwordsigned</a></li>
   <li><a href="#memory.writebyte">memory.writebyte</a></li>
   <li><a href="#memory.writeword">memory.writeword</a></li>
+  <li><a href="#memory.dwriteword">memory.writedword</a></li>
   <li><a href="#memory.readbyterange">memory.readbyterange</a></li>
   <li><a href="#memory.register">memory.register</a></li>
  </ul></li>
@@ -320,12 +323,13 @@ and the user presses frame-advance, they might be confused when nothing happens.
 
 <p>Memory access and manipulation.</p>
 
-<h4><span id="memory.readbyte">memory.readbyte</span>, <span id="memory.readword">memory.readword</span></h4>
+<h4><span id="memory.readbyte">memory.readbyte</span>, <span id="memory.readword">memory.readword</span>, <span id="memory.readdword">memory.readdword</span></h4>
 
 <div class="section">
 
 <pre><code>int memory.readbyte(int address)
-int memory.readword(int address)</code></pre>
+int memory.readword(int address)
+int memory.readdword(int address)</code></pre>
 
 <p>
 Reads a number of bits (8 or 16) and returns the memory contents. The address must be a fully qualified
@@ -335,12 +339,13 @@ the ROM data itself.
 
 </div>
 
-<h4><span id="memory.readbytesigned">memory.readbytesigned</span>, <span id="memory.readwordsigned">memory.readwordsigned</span></h4>
+<h4><span id="memory.readbytesigned">memory.readbytesigned</span>, <span id="memory.readwordsigned">memory.readwordsigned</span>, <span id="memory.readdwordsigned">memory.readdwordsigned</span></h4>
 
 <div class="section">
 
 <pre><code>int memory.readbytesigned(int address)
-int memory.readwordsigned(int address)</code></pre>
+int memory.readwordsigned(int address)
+int memory.readdwordsigned(int address)</code></pre>
 
 <p><em class="version_notice">v0.04+ only</em></p>
 
@@ -353,15 +358,16 @@ For example, a byte at 250 becomes <samp>250-256 = -6</samp>.
 
 </div>
 
-<h4><span id="memory.writebyte">memory.writebyte</span>, <span id="memory.writeword">memory.writeword</span></h4>
+<h4><span id="memory.writebyte">memory.writebyte</span>, <span id="memory.writeword">memory.writeword</span>, <span id="memory.writedword">memory.writedword</span></h4>
 
 <div class="section">
 
 <pre><code>memory.writebyte(int address, int value)
-memory.writeword(int address, int value)</code></pre>
+memory.writeword(int address, int value)
+memory.writedword(int address, int value)</code></pre>
 
 <p>
-Writes a number of bits (8 or 16) to the indicated memory address. The address 
+Writes a number of bits (8, 16 or 32) to the indicated memory address. The address 
 really should be in the range of 0x7e0000 through 0x7fffff, or maybe the
 SRAM memory if you feel so inclined. Writing to other locations is not
 prohibited, but the ROM can't be modified and the SNES hardware might not
@@ -376,7 +382,7 @@ appreciate the memory mapped IO.
 
 <pre><code>string memory.readbyterange(int startaddress, int length)</code></pre>
 
-<p><em class="version_notice">v0.07+ only (not available on svn version at present)</em></p>
+<p><em class="version_notice">v0.07+ only (svn r4+)</em></p>
 
 <p>
 Read a chunk of memory and return it as a string. Good for doing memory

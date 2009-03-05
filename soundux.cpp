@@ -974,6 +974,7 @@ void MixStereo (int sample_count)
 						else
 						{
 							ch->last_block = FALSE;
+							ch->sample_number = APU.DSP[APU_SRCN + J * 0x10]; // SRCN might be different than before, so update it. This apparently fixes Mystical Ninja pipe sound.
 							uint8 *dir = S9xGetSampleAddress (ch->sample_number);
 							ch->block_pointer = READ_WORD(dir + 2);
 						}
@@ -1296,6 +1297,7 @@ void MixMono (int sample_count)
 						else
 						{
 							ch->last_block = FALSE;
+							ch->sample_number = APU.DSP[APU_SRCN + J * 0x10]; // SRCN might be different than before, so update it. This apparently fixes Mystical Ninja pipe sound.
 							uint8 *dir = S9xGetSampleAddress (ch->sample_number);
 							ch->block_pointer = READ_WORD(dir + 2);
 						}
