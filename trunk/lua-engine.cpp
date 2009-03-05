@@ -93,6 +93,26 @@ static const char *button_mappings[] = {
 };
 
 
+INLINE void S9xSetDWord (uint32 DWord, uint32 Address);
+INLINE uint32 S9xGetDWord (uint32 Address);
+
+INLINE uint32 S9xGetDWord (uint32 Address)
+{
+	bool free = true;
+
+	return S9xGetWord(Address, free) | (S9xGetWord(Address+2, free) << 16);
+}
+
+INLINE void S9xSetDWord (uint32 DWord, uint32 Address)
+{
+	bool free = true;
+
+	S9xSetWordWrapped(DWord & 0xffff, Address, free);
+	S9xSetWordWrapped(DWord >> 16, Address+2, free);
+	S9xLuaWriteInform(Address);
+}
+
+
 /**
  * Resets emulator speed / pause states after script exit.
  */
@@ -300,23 +320,21 @@ static int snes9x_message(lua_State *L) {
 }
 
 
-/**
- * Rather than write out all the code for the memory library, 
- * I'm just going to abuse the preprocessor. :)
- */
+static int memory_readbyte(lua_State *L)
+{
+	lua_pushinteger(L, S9xGetByte(luaL_checkinteger(L,1), true));
+	return 1;
+}
 
-#define memread(x,y) static int memory_##x(lua_State *L) {   lua_pushinteger(L, S9x##y(luaL_checkinteger(L,1), true)); return 1; }
-memread(readbyte,GetByte)
-memread(readword,GetWord)
-
-#define memwrite(x,y) static int memory_##x(lua_State *L) {   S9x##y(luaL_checkinteger(L,2), luaL_checkinteger(L,1), true); return 0; }
-memwrite(writebyte,SetByte)
-memwrite(writeword,SetWord)
-
-// Not for the signed versions though
 static int memory_readbytesigned(lua_State *L) {
 	signed char c = (signed char) S9xGetByte(luaL_checkinteger(L,1), true);
 	lua_pushinteger(L, c);
+	return 1;
+}
+
+static int memory_readword(lua_State *L)
+{
+	lua_pushinteger(L, S9xGetWord(luaL_checkinteger(L,1), true));
 	return 1;
 }
 
@@ -324,6 +342,69 @@ static int memory_readwordsigned(lua_State *L) {
 	signed short c = (signed short) S9xGetWord(luaL_checkinteger(L,1), true);
 	lua_pushinteger(L, c);
 	return 1;
+}
+
+static int memory_readdword(lua_State *L)
+{
+	uint32 addr = luaL_checkinteger(L,1);
+	uint32 val = S9xGetDWord(addr);
+
+	// lua_pushinteger doesn't work properly for 32bit system, does it?
+	if (val >= 0x80000000 && sizeof(int) <= 4)
+		lua_pushnumber(L, val);
+	else
+		lua_pushinteger(L, val);
+	return 1;
+}
+
+static int memory_readdwordsigned(lua_State *L) {
+	uint32 addr = luaL_checkinteger(L,1);
+	int32 val = (signed) S9xGetDWord(addr);
+
+	lua_pushinteger(L, val);
+	return 1;
+}
+
+static int memory_readbyterange(lua_State *L) {
+	uint32 address = luaL_checkinteger(L,1);
+	int length = luaL_checkinteger(L,2);
+
+	if(length < 0)
+	{
+		address += length;
+		length = -length;
+	}
+
+	// push the array
+	lua_createtable(L, abs(length), 0);
+
+	// put all the values into the (1-based) array
+	for(int a = address, n = 1; n <= length; a++, n++)
+	{
+		unsigned char value = S9xGetByte(a, true);
+		lua_pushinteger(L, value);
+		lua_rawseti(L, -2, n);
+	}
+
+	return 1;
+}
+
+static int memory_writebyte(lua_State *L)
+{
+	S9xSetByte(luaL_checkinteger(L,2), luaL_checkinteger(L,1), true);
+	return 0;
+}
+
+static int memory_writeword(lua_State *L)
+{
+	S9xSetWord(luaL_checkinteger(L,2), luaL_checkinteger(L,1), true);
+	return 0;
+}
+
+static int memory_writedword(lua_State *L)
+{
+	S9xSetDWord(luaL_checkinteger(L,2), luaL_checkinteger(L,1));
+	return 0;
 }
 
 
@@ -1750,12 +1831,15 @@ static const struct luaL_reg snes9xlib [] = {
 static const struct luaL_reg memorylib [] = {
 
 	{"readbyte", memory_readbyte},
-	{"writebyte", memory_writebyte},
-	{"readword", memory_readword},
-	{"writeword", memory_writeword},
-
-	{"readwordsigned", memory_readwordsigned},
 	{"readbytesigned", memory_readbytesigned},
+	{"readword", memory_readword},
+	{"readwordsigned", memory_readwordsigned},
+	{"readdword", memory_readdword},
+	{"readdwordsigned", memory_readdwordsigned},
+	{"readbyterange", memory_readbyterange},
+	{"writebyte", memory_writebyte},
+	{"writeword", memory_writeword},
+	{"writedword", memory_writedword},
 
 	{"register", memory_register},
 
