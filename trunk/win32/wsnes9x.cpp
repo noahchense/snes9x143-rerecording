@@ -3323,7 +3323,7 @@ LRESULT CALLBACK WinProc(
 						case ID_S9XWATCH_SETTING:
 							RestoreGUIDisplay ();
 							CopyS9xWatchSetting();
-							MessageBox (GUI.hWnd, TEXT(COPIED_S9XWATCH_SETTINGS), TEXT(SNES9X_INFO), MB_OK | MB_ICONINFORMATION);
+							//MessageBox (GUI.hWnd, TEXT(COPIED_S9XWATCH_SETTINGS), TEXT(SNES9X_INFO), MB_OK | MB_ICONINFORMATION);
 							RestoreSNESDisplay ();
 							break;
 #endif // S9XWATCH_HELP
