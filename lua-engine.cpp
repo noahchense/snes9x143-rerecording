@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <math.h>
+#include <direct.h>
 
 #ifdef __linux
 #include <sys/types.h>
@@ -1964,6 +1965,19 @@ int S9xLoadLuaCode(const char *filename) {
 
 	//stop any lua we might already have had running
 	S9xLuaStop();
+
+	// Set current directory from filename (for dofile)
+	char dir[_MAX_PATH];
+	char *slash, *backslash;
+	strcpy(dir, filename);
+	slash = strrchr(dir, '/');
+	backslash = strrchr(dir, '\\');
+	if (!slash || (backslash && backslash < slash))
+		slash = backslash;
+	if (slash) {
+		slash[1] = '\0';    // keep slash itself for some reasons
+		_chdir(dir);
+	}
 
 	if (!LUA) {
 		LUA = lua_open();
