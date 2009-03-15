@@ -231,7 +231,7 @@ int WAVBegin(const char* _filename, struct WAVFile* _wav_out)
 
 	do
 	{
-		filename = new char[strlen(_filename)];
+		filename = new char[strlen(_filename)+1];
 		strcpy(filename, _filename);
 
 		// open the file

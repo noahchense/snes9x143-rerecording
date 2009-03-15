@@ -52,8 +52,8 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="$(ProjectDir)..\..,$(ProjectDir)..\..\zlib,$(ProjectDir)..\unzip,$(ProjectDir)..\..\FMOD\api\inc,$(ProjectDir)..\..\libpng\include,$(ProjectDir)..\..\lua\src"
-				PreprocessorDefinitions="NDEBUG;HAVE_LIBPNG;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;ZSNES_FX;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				PreprocessorDefinitions="NDEBUG;HAVE_LIBPNG;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;ZSNES_FX;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;FMOD_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				StructMemberAlignment="3"
@@ -83,14 +83,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x-ccore.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(ProjectDir)..\..\FMOD\api\lib;$(ProjectDir)..\i386;$(ProjectDir)..\..\libpng\lib;$(ProjectDir)..\..\lua\lib;lua-5.1.4/lib"
+				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
-				DelayLoadDLLs=""
+				DelayLoadDLLs="fmod.dll;fmodexp.dll"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				SubSystem="2"
@@ -162,8 +162,8 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories=".;directx;zlib;libpng-1.2.1;lua-5.1.4/src"
-				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;NDEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;NDEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;FMOD_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				StructMemberAlignment="3"
@@ -193,14 +193,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="directx;lua-5.1.4/lib"
+				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
-				DelayLoadDLLs=""
+				DelayLoadDLLs="fmod.dll;fmodexp.dll"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				SubSystem="2"
@@ -268,8 +268,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;directx;zlib;libpng-1.2.1;lua-5.1.4/src"
-				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;_DEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;_DEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_WIN32_IE=0x0501;_WIN32_WINNT=0x0400;ISOLATION_AWARE_ENABLED=0;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;FMOD_SUPPORT"
 				RuntimeLibrary="1"
 				StructMemberAlignment="3"
 				UsePrecompiledHeader="0"
@@ -298,14 +298,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib"
+				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib lua51.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x-debug.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="directx;lua-5.1.4/lib"
+				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
-				DelayLoadDLLs=""
+				DelayLoadDLLs="fmod.dll;fmodexp.dll"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(TargetDir)$(TargetName).pdb"
 				SubSystem="2"
@@ -424,6 +424,46 @@
 				>
 			</File>
 			<File
+				RelativePath=".\CDirectDraw.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CDirectDraw.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CDirectSound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CDirectSound.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CFMOD.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CFMOD.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CFMODEx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CFMODEx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\CXAudio2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CXAudio2.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Direct3D.cpp"
 				>
 			</File>
@@ -432,51 +472,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\directx.cpp"
-				>
-				<FileConfiguration
-					Name="C core (Deprecated)|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\directx.h"
-				>
-			</File>
-			<File
 				RelativePath=".\InputCustom.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\InputCustom.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IS9xSoundOutput.h"
 				>
 			</File>
 			<File
@@ -564,14 +568,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\win32-sound.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\win32-sound.h"
-				>
-			</File>
-			<File
 				RelativePath=".\win32.cpp"
 				>
 				<FileConfiguration
@@ -608,6 +604,10 @@
 						BrowseInformation="1"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\win32_sound.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\wlanguage.h"
@@ -3695,7 +3695,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3705,7 +3705,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3715,7 +3715,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3730,7 +3730,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3740,7 +3740,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3750,7 +3750,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3765,7 +3765,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3775,7 +3775,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3785,7 +3785,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3800,7 +3800,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3810,7 +3810,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3820,7 +3820,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3835,7 +3835,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3845,7 +3845,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3855,7 +3855,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3870,7 +3870,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3880,7 +3880,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3890,7 +3890,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3905,7 +3905,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3915,7 +3915,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3925,7 +3925,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3940,7 +3940,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3950,7 +3950,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3960,7 +3960,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3975,7 +3975,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3985,7 +3985,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -3995,7 +3995,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4038,7 +4038,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4048,7 +4048,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4058,7 +4058,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4073,7 +4073,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4083,7 +4083,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4093,7 +4093,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4108,7 +4108,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4118,7 +4118,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4128,7 +4128,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4143,7 +4143,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4153,7 +4153,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4163,7 +4163,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4178,7 +4178,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4188,7 +4188,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
@@ -4198,7 +4198,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)&#x0D;&#x0A;"
 						AdditionalDependencies="../i386/offset.h"
 						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>

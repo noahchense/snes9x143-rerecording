@@ -158,23 +158,46 @@
   Nintendo Co., Limited and its subsidiary companies.
 **********************************************************************************/
 
+#ifndef CFMOD_H
+#define CFMOD_H
+#include "fmod.h"
+#include "IS9xSoundOutput.h"
 
+class CFMOD: public IS9xSoundOutput
+{
+	bool initDone;					// has init been called successfully?
 
-#ifndef WIN32_SONUD_H_INCLUDED
-#define WIN32_SONUD_H_INCLUDED
+	FSOUND_STREAM *fmod_stream;		// the stream object
 
-#include <windows.h>
-#include <windowsx.h>
+	int sampleCount;				// samples in syncSoundBuffer
+	int bufferSize;					// size of syncSoundBuffer
+	uint8 *syncSoundBuffer;			// buffer used for SoundSync
 
-#include "../port.h"
-#include "wsnes9x.h"
+	bool InitFMOD();
+	void DeInitFMOD();
 
-extern uint8 *FrameSound;
+	bool InitStream();
+	void DeInitStream();
 
-void S9xMixSamplesEx(uint8 *buffer, int sample_count);
+	// The FMOD API changed the return type of the stream callback function
+	// somewhere between version 3.20 and 3.33. The FMOD API defines a version
+	// string but you can't test for that at compile time. Instead, I've picked on
+	// a symbol that wasn't defined in version 3.20 to test for the change in API.
+	#if !defined (FSOUND_LOADRAW)
+	void
+	#else
+	signed char
+	#endif
+	static F_CALLBACKAPI FMODStreamCallback (FSOUND_STREAM *stream, void *buff, int len, void *param);
 
-void S9xWinInitSound(void);
-void S9xWinDeinitSound(void);
-bool S9xWinIsSoundActive(void);
+public:
+	CFMOD(void);
+	~CFMOD(void);
 
-#endif // !WIN32_SONUD_H_INCLUDED
+	// Inherited from IS9xSoundOutput
+	bool InitSoundOutput(void) { return InitFMOD(); }
+	void DeInitSoundOutput(void) { DeInitFMOD(); }
+	bool SetupSound(uint8 **syncSoundBuffer,int *sample_count);
+};
+
+#endif

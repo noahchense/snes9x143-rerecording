@@ -163,7 +163,7 @@
 #include "win32-snapshot.h"
 #include "lazymacro.h"
 #include "wlanguage.h"
-#include "directx.h"
+#include "CDirectDraw.h"
 #include "../snes9x.h"
 #include "../display.h"
 #include "../ppu.h"
@@ -248,7 +248,7 @@ int CALLBACK DlgInputMacro(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_INITDIALOG:
 		{
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 
 			inputMacroHWND = hDlg;
 			MacroInit();

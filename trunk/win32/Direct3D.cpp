@@ -48,7 +48,7 @@ CDirect3D::~CDirect3D()
 initializes Direct3D (always in window mode)
 IN:
 hWnd	-	the HWND of the window in which we render/the focus window for fullscreen
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::initialize(HWND hWnd)
@@ -255,7 +255,7 @@ void CDirect3D::destroyDrawSurface()
 clears a texture (fills it with zeroes)
 IN:
 texture		-	the texture to be blanked
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::blankTexture(LPDIRECT3DTEXTURE9 texture)
@@ -278,7 +278,7 @@ changes the draw surface size: deletes the old textures, creates a new texture
 and calculate new vertices
 IN:
 iScale	-	the scale that has to fit into the textures
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::changeDrawSurfaceSize(int iScale)
@@ -306,15 +306,15 @@ void CDirect3D::setupVertices()
 	float renderWidthCalc,renderHeightCalc;
 	RECT drawRect;
 	int hExtend = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
-	float snesAspect = (float)SNES_WIDTH/hExtend;
+	float snesAspect = (float)GUI.AspectWidth/hExtend;
 	void *pLockedVertexBuffer;
 
 	if(GUI.Stretch) {
 		if(GUI.AspectRatio) {
 			//fix for hi-res images with FILTER_NONE
 			//where we need to correct the aspect ratio
-			renderWidthCalc = afterRenderWidth;
-			renderHeightCalc = afterRenderHeight;
+			renderWidthCalc = (float)afterRenderWidth;
+			renderHeightCalc = (float)afterRenderHeight;
 			if(renderWidthCalc/renderHeightCalc>snesAspect)
 				renderWidthCalc = renderHeightCalc * snesAspect;
 			else if(renderWidthCalc/renderHeightCalc<snesAspect)
@@ -324,8 +324,8 @@ void CDirect3D::setupVertices()
 			yFactor = (float)dPresentParams.BackBufferHeight / renderHeightCalc;
 			minFactor = xFactor < yFactor ? xFactor : yFactor;
 
-			drawRect.right = renderWidthCalc * minFactor;
-			drawRect.bottom = renderHeightCalc * minFactor;
+			drawRect.right = (LONG)(renderWidthCalc * minFactor);
+			drawRect.bottom = (LONG)(renderHeightCalc * minFactor);
 
 			drawRect.left = (dPresentParams.BackBufferWidth - drawRect.right) / 2;
 			drawRect.top = (dPresentParams.BackBufferHeight - drawRect.bottom) / 2;
@@ -371,7 +371,7 @@ determines if we need to reset the device (if the size changed)
 called with (0,0) whenever we want new settings to take effect
 IN:
 newWidth,newHeight	-	the new window size
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::changeRenderSize(unsigned int newWidth, unsigned int newHeight)
@@ -393,7 +393,7 @@ bool CDirect3D::changeRenderSize(unsigned int newWidth, unsigned int newHeight)
 /*  CDirect3D::resetDevice
 resets the device
 called if surface was lost or the settings/display size require a device reset
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::resetDevice()
@@ -412,6 +412,7 @@ bool CDirect3D::resetDevice()
 	dPresentParams.BackBufferFormat = D3DFMT_UNKNOWN;
 	dPresentParams.FullScreen_RefreshRateInHz = 0;
 	dPresentParams.Windowed = true;
+	dPresentParams.PresentationInterval = GUI.Vsync?D3DPRESENT_INTERVAL_ONE:D3DPRESENT_INTERVAL_IMMEDIATE;
 
 	if(fullscreen) {
 		dPresentParams.BackBufferWidth = GUI.Width;
@@ -466,7 +467,7 @@ void CDirect3D::setSnes9xColorFormat()
 enables/disables fullscreen mode
 IN:
 fullscreen	-	determines if fullscreen is enabled/disabled
-
+-----
 returns true if successful, false otherwise
 */
 bool CDirect3D::setFullscreen(bool fullscreen)

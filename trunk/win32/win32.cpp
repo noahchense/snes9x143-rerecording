@@ -87,8 +87,6 @@
   Nintendo Co., Limited and its subsidiary companies.
 *******************************************************************************/
 
-
-
 #include "../snes9x.h"
 #include "../memmap.h"
 #include "../debug.h"
@@ -105,12 +103,13 @@
 #include "../screenshot.h"
 
 #include "wsnes9x.h"
-#include "directx.h"
+#include "CDirectDraw.h"
+#include "CDirectSound.h"
+
 #include "render.h"
 #include "WAVOutput.h"
 #include "AVIOutput.h"
 #include "wlanguage.h"
-#include "win32-sound.h"
 #include "lazymacro.h"
 #include <direct.h>
 
@@ -154,6 +153,7 @@ static void BuildAVIVideoFrame1X (void);
 static void BuildAVIVideoFrame2X (void);
 static void BuildAVIVideoFrame1XHiRes (void);
 static void BuildAVIVideoFrame2XHiRes (void);
+bool ReInitSound(int mode);
 
 #define BMP_PITCH(width, bpp)   ((((width)*(bpp)+31)/8)&~3)
 
@@ -437,6 +437,8 @@ void S9xMessage (int type, int, const char *str)
 			break;
 	}
 }
+
+extern uint8 *syncSoundBuffer;
 
 static RECT dstRect = { 0, 512, 0, 448 };
 
@@ -1032,10 +1034,10 @@ void S9xSetPalette( void)
 	//            }
 	//        }
 
-			DirectX.lpDDSPrimary2->GetPalette (&lpDDTemp);
-			if (lpDDTemp != DirectX.lpDDPalette)
-				DirectX.lpDDSPrimary2->SetPalette (DirectX.lpDDPalette);
-			DirectX.lpDDPalette->SetEntries (0, 0, 256, S9xPaletteEntry);
+			DirectDraw.lpDDSPrimary2->GetPalette (&lpDDTemp);
+			if (lpDDTemp != DirectDraw.lpDDPalette)
+				DirectDraw.lpDDSPrimary2->SetPalette (DirectDraw.lpDDPalette);
+			DirectDraw.lpDDPalette->SetEntries (0, 0, 256, S9xPaletteEntry);
 		}
 	}
 }
@@ -1102,12 +1104,12 @@ bool8 S9xInitUpdate (void)
     if (GUI.outputMethod==DIRECTDRAW && (GUI.Scale == FILTER_NONE/* || GUI.Scale == FILTER_NORMALIZE*/) &&
         (GUI.Stretch || !GUI.FullScreen) &&
         !GUI.NeedDepthConvert &&
-        ((DirectX.lpDDSOffScreen2 &&
-          LockSurface2 (DirectX.lpDDSOffScreen2, &Dst))))
+        ((DirectDraw.lpDDSOffScreen2 &&
+          LockSurface2 (DirectDraw.lpDDSOffScreen2, &Dst))))
     {
         GFX.RealPitch = GFX.Pitch = GFX.Pitch2 = Dst.Pitch;
         GFX.Screen = Dst.Surface;
-        DirectX.lpDDSOffScreen2->Unlock (Dst.Surface);
+        DirectDraw.lpDDSOffScreen2->Unlock (Dst.Surface);
         locked_surface = TRUE;
     }
     else
@@ -1251,7 +1253,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 		} else {
 			if (locked_surface)
 			{
-				lpDDSurface2 = DirectX.lpDDSOffScreen2;
+				lpDDSurface2 = DirectDraw.lpDDSOffScreen2;
 				PrimarySurfaceLockFailed = true;
 				srcRect.top	= 0;
 				srcRect.bottom = Height - (GUI.HeightExtend?0:15);
@@ -1263,10 +1265,10 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 				DDSCAPS caps;
 				caps.dwCaps = DDSCAPS_BACKBUFFER;
 				
-				if (DirectX.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) != DD_OK ||
+				if (DirectDraw.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) != DD_OK ||
 					pDDSurface == NULL)
 				{
-					lpDDSurface2 = DirectX.lpDDSPrimary2;
+					lpDDSurface2 = DirectDraw.lpDDSPrimary2;
 				}
 				else 
 					lpDDSurface2 = pDDSurface;
@@ -1275,7 +1277,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 				//if (GUI.Stretch || GUI.Scale == FILTER_NORMALIZE || !GUI.FullScreen ||
 				//	!LockSurface2 (lpDDSurface2, &Dst))
 				{
-					lpDDSurface2 = DirectX.lpDDSOffScreen2;
+					lpDDSurface2 = DirectDraw.lpDDSOffScreen2;
 					if (!LockSurface2 (lpDDSurface2, &Dst))
 						return (false);
 					
@@ -1355,7 +1357,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 						int width = dstRect.right - dstRect.left;
 						int height = dstRect.bottom - dstRect.top;
 
-						int oldWidth = SNES_WIDTH;
+						int oldWidth = GUI.AspectWidth;
 						int oldHeight = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
 						int newWidth, newHeight;
 
@@ -1420,16 +1422,16 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 				DDSCAPS caps;
 				caps.dwCaps = DDSCAPS_BACKBUFFER;
 				
-				if (DirectX.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) != DD_OK ||
+				if (DirectDraw.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) != DD_OK ||
 					pDDSurface == NULL)
 				{
-					lpDDSurface2 = DirectX.lpDDSPrimary2;
+					lpDDSurface2 = DirectDraw.lpDDSPrimary2;
 				}
 				else 
 					lpDDSurface2 = pDDSurface;
 
 				// actually draw it onto the screen (unless in fullscreen mode; see UpdateBackBuffer() for that)
-				while (lpDDSurface2->Blt (&dstRect, DirectX.lpDDSOffScreen2, &srcRect, DDBLT_WAIT, NULL) == DDERR_SURFACELOST)
+				while (lpDDSurface2->Blt (&dstRect, DirectDraw.lpDDSOffScreen2, &srcRect, DDBLT_WAIT, NULL) == DDERR_SURFACELOST)
 					lpDDSurface2->Restore ();
 			}
 			
@@ -1479,7 +1481,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 				}
 			}
 			
-			DirectX.lpDDSPrimary2->Flip (NULL, DDFLIP_WAIT);
+			DirectDraw.lpDDSPrimary2->Flip (NULL, DDFLIP_WAIT);
 		}
 	}
     else
@@ -1546,6 +1548,9 @@ void InitSnes9X( void)
     S9xSetWinPixelFormat ();
     S9xGraphicsInit();
 
+	//InitializeCriticalSection(&GUI.SoundCritSect); // must be called before process config file
+	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
 	S9xWinInitSound();
 
 #ifdef USE_GLIDE
@@ -1572,6 +1577,8 @@ void DeinitS9x()
 	if(SubZBuffer)
 		delete [] SubZBuffer;
 	S9xWinDeinitSound();
+	DeleteCriticalSection(&GUI.SoundCritSect);
+	CoUninitialize();
 	if(GUI.GunSight)
 		DestroyCursor(GUI.GunSight);//= LoadCursor (hInstance, MAKEINTRESOURCE (IDC_CURSOR_SCOPE));
     if(GUI.Arrow)
@@ -1627,57 +1634,57 @@ void S9xSetWinPixelFormat ()
 	else
 	{
 
-        GUI.ScreenDepth = DirectX.DDPixelFormat.dwRGBBitCount;
+        GUI.ScreenDepth = DirectDraw.DDPixelFormat.dwRGBBitCount;
         if (GUI.ScreenDepth == 15)
             GUI.ScreenDepth = 16;
 
-        GUI.RedShift = ffs (DirectX.DDPixelFormat.dwRBitMask);
-        GUI.GreenShift = ffs (DirectX.DDPixelFormat.dwGBitMask);
-        GUI.BlueShift = ffs (DirectX.DDPixelFormat.dwBBitMask);
+        GUI.RedShift = ffs (DirectDraw.DDPixelFormat.dwRBitMask);
+        GUI.GreenShift = ffs (DirectDraw.DDPixelFormat.dwGBitMask);
+        GUI.BlueShift = ffs (DirectDraw.DDPixelFormat.dwBBitMask);
 
-        if((DirectX.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
+        if((DirectDraw.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
            GUI.ScreenDepth == 16 &&
-           DirectX.DDPixelFormat.dwRBitMask == 0xF800 &&
-           DirectX.DDPixelFormat.dwGBitMask == 0x07E0 &&
-           DirectX.DDPixelFormat.dwBBitMask == 0x001F)
+           DirectDraw.DDPixelFormat.dwRBitMask == 0xF800 &&
+           DirectDraw.DDPixelFormat.dwGBitMask == 0x07E0 &&
+           DirectDraw.DDPixelFormat.dwBBitMask == 0x001F)
         {
             S9xSetRenderPixelFormat (RGB565);
             Init_2xSaI (565);
         }
         else
-            if( (DirectX.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
+            if( (DirectDraw.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
                 GUI.ScreenDepth == 16 &&
-                DirectX.DDPixelFormat.dwRBitMask == 0x7C00 &&
-                DirectX.DDPixelFormat.dwGBitMask == 0x03E0 &&
-                DirectX.DDPixelFormat.dwBBitMask == 0x001F)
+                DirectDraw.DDPixelFormat.dwRBitMask == 0x7C00 &&
+                DirectDraw.DDPixelFormat.dwGBitMask == 0x03E0 &&
+                DirectDraw.DDPixelFormat.dwBBitMask == 0x001F)
             {
                 S9xSetRenderPixelFormat (RGB555);
                 Init_2xSaI (555);
             }
             else
-                if((DirectX.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
+                if((DirectDraw.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
                    GUI.ScreenDepth == 16 &&
-                   DirectX.DDPixelFormat.dwRBitMask == 0x001F &&
-                   DirectX.DDPixelFormat.dwGBitMask == 0x07E0 &&
-                   DirectX.DDPixelFormat.dwBBitMask == 0xF800)
+                   DirectDraw.DDPixelFormat.dwRBitMask == 0x001F &&
+                   DirectDraw.DDPixelFormat.dwGBitMask == 0x07E0 &&
+                   DirectDraw.DDPixelFormat.dwBBitMask == 0xF800)
                 {
                     S9xSetRenderPixelFormat (BGR565);
                     Init_2xSaI (565);
                 }
                 else
-                    if( (DirectX.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
+                    if( (DirectDraw.DDPixelFormat.dwFlags&DDPF_RGB) != 0 &&
                         GUI.ScreenDepth == 16 &&
-                        DirectX.DDPixelFormat.dwRBitMask == 0x001F &&
-                        DirectX.DDPixelFormat.dwGBitMask == 0x03E0 &&
-                        DirectX.DDPixelFormat.dwBBitMask == 0x7C00)
+                        DirectDraw.DDPixelFormat.dwRBitMask == 0x001F &&
+                        DirectDraw.DDPixelFormat.dwGBitMask == 0x03E0 &&
+                        DirectDraw.DDPixelFormat.dwBBitMask == 0x7C00)
                     {
                         S9xSetRenderPixelFormat (BGR555);
                         Init_2xSaI (555);
                     }
                     else
-                        if (DirectX.DDPixelFormat.dwRGBBitCount == 8 ||
-                            DirectX.DDPixelFormat.dwRGBBitCount == 24 ||
-                            DirectX.DDPixelFormat.dwRGBBitCount == 32)
+                        if (DirectDraw.DDPixelFormat.dwRGBBitCount == 8 ||
+                            DirectDraw.DDPixelFormat.dwRGBBitCount == 24 ||
+                            DirectDraw.DDPixelFormat.dwRGBBitCount == 32)
                         {
                             S9xSetRenderPixelFormat (RGB565);
                             Init_2xSaI (565);
@@ -2028,6 +2035,7 @@ void S9xAutoSaveSRAM ()
 void S9xSetPause (uint32 mask)
 {
     Settings.ForcedPause |= mask;
+	S9xSetSoundMute(TRUE);
 }
 
 void S9xClearPause (uint32 mask)
@@ -2255,7 +2263,17 @@ void DoWAVOpen(const char* filename)
 	// create new writer
 	WAVCreate(&GUI.WAVOut);
 
-	WAVSetSoundFormat(&DirectX.wfx, GUI.WAVOut);
+	WAVEFORMATEX wfx;
+
+	wfx.wFormatTag = WAVE_FORMAT_PCM;
+	wfx.nChannels = Settings.Stereo ? 2 : 1;
+	wfx.nSamplesPerSec = Settings.SoundPlaybackRate;
+	wfx.nBlockAlign = (Settings.SixteenBitSound ? 2 : 1) * (Settings.Stereo ? 2 : 1);
+	wfx.wBitsPerSample = Settings.SixteenBitSound ? 16 : 8;
+	wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+	wfx.cbSize = 0;
+
+	WAVSetSoundFormat(&wfx, GUI.WAVOut);
 
 	if(!WAVBegin(filename, GUI.WAVOut))
 	{
@@ -2342,9 +2360,19 @@ void DoAVIOpen(const char* filename)
 
 	AVISetVideoFormat(&bi, GUI.AVIOut);
 
+	WAVEFORMATEX wfx;
+
+	wfx.wFormatTag = WAVE_FORMAT_PCM;
+	wfx.nChannels = Settings.Stereo ? 2 : 1;
+	wfx.nSamplesPerSec = Settings.SoundPlaybackRate;
+	wfx.nBlockAlign = (Settings.SixteenBitSound ? 2 : 1) * (Settings.Stereo ? 2 : 1);
+	wfx.wBitsPerSample = Settings.SixteenBitSound ? 16 : 8;
+	wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+	wfx.cbSize = 0;
+
 	if(!Settings.Mute && S9xWinIsSoundActive())
 	{
-		AVISetSoundFormat(&DirectX.wfx, GUI.AVIOut);
+		AVISetSoundFormat(&wfx, GUI.AVIOut);
 	}
 
 	if(!AVIBegin(filename, GUI.AVIOut))
@@ -2354,8 +2382,8 @@ void DoAVIOpen(const char* filename)
 		return;
 	}
 
-//	avi_sound_samples_per_update = (DirectX.wfx.nSamplesPerSec * frameskip) / framerate;
-	avi_sound_bytes_per_sample = DirectX.wfx.nBlockAlign;
+//	avi_sound_samples_per_update = (wfx.nSamplesPerSec * frameskip) / framerate;
+	avi_sound_bytes_per_sample = wfx.nBlockAlign;
 
 	// init buffers
 	avi_buffer = new uint8[avi_image_size];
@@ -2401,6 +2429,26 @@ static void DoAVIVideoFrame(void)
 {
 	if(GFX.Repainting || !GUI.AVIOut)
 	{
+		return;
+	}
+
+	// check configuration
+	const WAVEFORMATEX* pwfex = NULL;
+	WAVEFORMATEX wfx;
+	wfx.wFormatTag = WAVE_FORMAT_PCM;
+    wfx.nChannels = Settings.Stereo ? 2 : 1;
+    wfx.nSamplesPerSec = Settings.SoundPlaybackRate;
+    wfx.nBlockAlign = (Settings.SixteenBitSound ? 2 : 1) * (Settings.Stereo ? 2 : 1);
+    wfx.wBitsPerSample = Settings.SixteenBitSound ? 16 : 8;
+    wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+    wfx.cbSize = 0;
+	if(//avi_width != Width ||
+		//avi_height != Height ||
+		avi_skip_frames != Settings.SkipFrames ||
+		(AVIGetSoundFormat(GUI.AVIOut, &pwfex) && memcmp(pwfex, &wfx, sizeof(WAVEFORMATEX))))
+	{
+		DoAVIClose(1);
+		ReInitSound(1);			//reenable sound output
 		return;
 	}
 

@@ -1224,13 +1224,13 @@ BEGIN
             MENUITEM SEPARATOR
             POPUP "&Buffer Length"
             BEGIN
-                MENUITEM "&10ms",                       ID_SOUND_25MS
-                MENUITEM "&20ms",                       ID_SOUND_50MS, GRAYED
-                MENUITEM "&40ms (recommended)",         ID_SOUND_100MS, GRAYED
-                MENUITEM "&80ms",                       ID_SOUND_200MS, GRAYED
-                MENUITEM "1&60ms",                      ID_SOUND_500MS, GRAYED
-                MENUITEM "&320ms",                      ID_SOUND_1S, GRAYED
-                MENUITEM "64&0ms",                      ID_SOUND_2S, GRAYED
+                MENUITEM "Mix Interval * &1",           ID_SOUND_25MS
+                MENUITEM "Mix Interval * &2",           ID_SOUND_50MS, GRAYED
+                MENUITEM "Mix Interval * &4",           ID_SOUND_100MS, GRAYED
+                MENUITEM "Mix Interval * &8",           ID_SOUND_200MS, GRAYED
+                MENUITEM "Mix Interval * 1&6",          ID_SOUND_500MS, GRAYED
+                MENUITEM "Mix Interval * &32",          ID_SOUND_1S, GRAYED
+                MENUITEM "Mix Interva&l * 64",          ID_SOUND_2S, GRAYED
             END
             POPUP "Mix Interval"
             BEGIN
@@ -1251,7 +1251,7 @@ BEGIN
                 MENUITEM "150ms",                       ID_SOUND_MIXINTERVAL_150MS
             END
             MENUITEM SEPARATOR
-            MENUITEM "&Settings...",                ID_SOUND_OPTIONS, GRAYED
+            MENUITEM "&Settings...",                ID_SOUND_OPTIONS
         END
         MENUITEM SEPARATOR
         POPUP "&Emulator"

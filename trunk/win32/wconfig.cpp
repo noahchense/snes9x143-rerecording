@@ -167,7 +167,7 @@ void WinSetDefaultValues ()
 	GUI.tripleBuffering = false;
 	GUI.FullScreen = false;
 	GUI.Stretch	= false;
-	GUI.PausedFramesBeforeMutingSound =	20;
+	//GUI.PausedFramesBeforeMutingSound =	20;
 	GUI.FlipCounter	= 0;
 	GUI.NumFlipFrames =	1;
 	GUI.ddrawUseVideoMemory	= false;
@@ -291,6 +291,8 @@ void WinSetDefaultValues ()
 	GUI.PlatformSnapIntoTempDir = true;
 	for(int i = 0; i < MAX_RECENT_MACROS_LIST_SIZE; i++)
 		GUI.RecentMacros[i][0] = '\0';
+
+	GUI.EmulatedFullScreen = false;
 
 	GUI.AVIDoubleScale = false;
 
@@ -973,6 +975,7 @@ void WinRegisterConfigItems()
 	AddBool("Window:LockResize", GUI.windowResizeLocked, false);
 	AddBoolC("Stretch:Enabled", GUI.Stretch, true, "true to stretch the game image to fill the window or screen");
 	AddBoolC("Stretch:MaintainAspectRatio", GUI.AspectRatio, true, "prevents stretching from changing the aspect ratio");
+	AddUIntC("Stretch:AspectRatioBaseWidth", GUI.AspectWidth, 256, "base width for aspect ratio calculation (AR=AspectRatioBaseWidth/224), default is 256");
 	AddBoolC("Stretch:UseVideoMemory", GUI.ddrawUseVideoMemory, true, "allows bilinear filtering of stretching. Depending on your video card and the window size, this may result in a lower framerate.");
 	AddBoolC("Stretch:LocalVidMem", GUI.ddrawUseLocalVidMem, true, "determines the location of video memory, if UseVideoMemory = true. May increase or decrease rendering performance, depending on your setup and which filter and stretching options are active.");
 	AddUIntC("Stretch:D3DFilter", GUI.d3dFilter, D3DFilter::BILINEAR, "0=Nearest, 1=Bilinear");
@@ -982,7 +985,9 @@ void WinRegisterConfigItems()
 	AddUInt("Fullscreen:Depth", GUI.Depth, 16);
 	AddUInt("Fullscreen:RefreshRate", GUI.RefreshRate, 60);
 	AddBool("Fullscreen:TripleBuffering", GUI.tripleBuffering, false);
+	AddBoolC("Fullscreen:EmulateFullscreen", GUI.EmulateFullscreen, false,"true makes snes9x create a window that spans the entire screen when going fullscreen");
 	AddBoolC("HideMenu", GUI.HideMenu, false, "true to auto-hide the menu bar on startup.");
+	AddBoolC("Vsync", GUI.Vsync, false, "true to enable Vsync, only available with Direct3D");
 #undef CATEGORY
 #define CATEGORY "Settings"
 	AddUIntC("FrameSkip", Settings.SkipFrames, AUTO_FRAMERATE, "200=automatic, 0=none, 1=skip every other, ...");
@@ -1066,7 +1071,7 @@ void WinRegisterConfigItems()
 	AddBool2("Stereo", Settings.Stereo, true);
 	AddBool("SixteenBitSound", Settings.SixteenBitSound, true);
 	AddUIntC("AltDecode", Settings.AltSampleDecode, 0, "use alternate sample decoder: valid options are 0, 1, or 2");
-	AddUIntC("BufferSize", Settings.SoundBufferSize, 4, "sound buffer size, in units of 25 milliseconds");
+	AddUIntC("BufferSize", Settings.SoundBufferSize, 4, "sound buffer size - the mixing interval is multiplied by this (and an additional *4 in case of DirectSound) ");
 	AddInvBool2C("Echo", Settings.DisableSoundEcho, true, "on to enable DSP echo effects");
 	AddBool("FixFrequency", Settings.FixFrequency, false);
 	AddBoolC("Interpolate", Settings.InterpolatedSound, true, "true for interpolation of sound samples");
@@ -1081,9 +1086,9 @@ void WinRegisterConfigItems()
 	AddBoolC("WIPAPUTiming", Settings.UseWIPAPUTiming, false, "true to use WIP1 APU timing (prevents movie desync)");
 #undef CATEGORY
 #define	CATEGORY "Sound\\Win"
-	AddUIntC("SoundDriver", Settings.SoundDriver, 0, "0=Snes9xDirectSound (recommended), 1=fmodDirectSound, 2=fmodWaveSound, 3=fmodA3DSound");
+	AddUIntC("SoundDriver", Settings.SoundDriver, 0, "0=Snes9xDirectSound (recommended), 1=fmodDirectSound, 2=fmodWaveSound, 3=fmodA3DSound, 4=XAudio2");
 	AddBoolC("MuteFrameAdvance", GUI.FAMute, false, "true to prevent Snes9x from outputting sound when the Frame Advance command is in use");
-	AddUInt("PausedFramesBeforeMutingSound", GUI.PausedFramesBeforeMutingSound, 20);
+	//AddUInt("PausedFramesBeforeMutingSound", GUI.PausedFramesBeforeMutingSound, 20);
 	AddUInt("SoundMixInterval", Settings.SoundMixInterval, 10);
 	AddBoolC("NotifySoundDSPRead", GUI.NotifySoundDSPRead, false, "true to report sound DSP read (help to decide movie sync settings)");
 	AddBoolC("FlexibleSoundMix", GUI.FlexibleSoundMixMaster, true, "false to generate sound samples more precisely, that may prevent desyncs on some games, but the playing sound will be noisy (still it's safe for avi recording)");
@@ -1210,6 +1215,8 @@ static ConfigFile loaded_config_file;
 
 void WinLoadConfigFile(ConfigFile& conf)
 {
+	EnterCriticalSection(&GUI.SoundCritSect);
+
 	WinPreLoad(conf);
 
 	WinSetDefaultValues();
@@ -1220,11 +1227,15 @@ void WinLoadConfigFile(ConfigFile& conf)
 	loaded_config_file = conf;
 
 	WinPostLoad(conf);
+
+	LeaveCriticalSection(&GUI.SoundCritSect);
 }
 
 void WinSaveConfigFile()
 {
 	if(readOnlyConfig) return; // if user has lock on file, don't let Snes9x overwrite it
+
+	EnterCriticalSection(&GUI.SoundCritSect);
 
 	ConfigFile&	conf = loaded_config_file;
 	conf.ClearUnused();
@@ -1242,6 +1253,8 @@ void WinSaveConfigFile()
 	if(wasLocked) WinLockConfigFile();
 
 	WinPostSave(conf);
+
+	LeaveCriticalSection(&GUI.SoundCritSect);
 }
 
 
