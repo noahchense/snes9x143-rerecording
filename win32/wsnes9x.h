@@ -104,6 +104,9 @@
 #include <tchar.h>
 #include <ddraw.h>
 #include <mmsystem.h>
+
+#include "../port.h"
+
 #ifndef __BORLANDC__
 
 #ifndef __MINGW32__
@@ -199,7 +202,6 @@ struct sGUI {
     HINSTANCE hInstance;
 
     DWORD hFrameTimer;
-    DWORD hSoundTimer;
     DWORD hHotkeyTimer;
     HANDLE ClientSemaphore;
     HANDLE FrameTimerSemaphore;
@@ -207,7 +209,7 @@ struct sGUI {
 
     BYTE Language;
 
-    unsigned long PausedFramesBeforeMutingSound;
+    //unsigned long PausedFramesBeforeMutingSound;
     int  Width;
     int  Height;
     int  Depth;
@@ -293,13 +295,23 @@ struct sGUI {
 	bool ddrawUseLocalVidMem;
     bool tripleBuffering;
 	D3DFilter d3dFilter;
+	bool Vsync; // XXX: unused - OV2: used in Direct3D mode
 
 	struct WAVFile* WAVOut;
 
 	// avi writing
 	struct AVIFile* AVIOut;
 	bool AVIDoubleScale;
+
 	OutputMethod outputMethod;
+	int AspectWidth;
+	bool EmulateFullscreen;
+	bool EmulatedFullScreen;
+	long FrameCount;
+	long LastFrameCount;
+	unsigned long IdleCount;
+	// used for sync sound synchronization
+	CRITICAL_SECTION SoundCritSect;
 
 	MacroInputType MacroInputMode;
 	bool PauseWithMacro;
@@ -497,10 +509,13 @@ extern SCustomKeys CustomKeys;
 
 enum
 {
-    WIN_SNES9X_DIRECT_SOUND_DRIVER=0,
-    WIN_FMOD_DIRECT_SOUND_DRIVER,
-    WIN_FMOD_WAVE_SOUND_DRIVER,
-    WIN_FMOD_A3D_SOUND_DRIVER
+	WIN_SNES9X_DIRECT_SOUND_DRIVER=0,
+	WIN_FMOD_DIRECT_SOUND_DRIVER,
+	WIN_FMOD_WAVE_SOUND_DRIVER,
+	WIN_FMOD_A3D_SOUND_DRIVER,
+	WIN_XAUDIO2_SOUND_DRIVER,
+	WIN_FMODEX_DEFAULT_DRIVER,
+	WIN_FMODEX_ASIO_DRIVER
 };
 
 #define S9X_REG_KEY_BASE MY_REG_KEY
@@ -551,5 +566,11 @@ bool GetFilterHiResSupport(RenderFilter filterID);
 #define IS_GL_MODE(f) (false)
 #endif
 #define IS_GL_OR_GLIDE(f) ((IS_GLIDE_MODE(f)) || (IS_GL_MODE(f)))
+
+extern uint8 *FrameSound;
+bool FlexibleSoundMixMode();
+void S9xWinInitSound();
+void S9xWinDeinitSound();
+bool S9xWinIsSoundActive();
 
 #endif // !defined(SNES9X_H_INCLUDED)

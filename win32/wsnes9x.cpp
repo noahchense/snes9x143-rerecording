@@ -100,8 +100,11 @@
 #include <objidl.h>
 #include <shlwapi.h>
 
+#define COMPILE_MULTIMON_STUBS
+#include <multimon.h>
+
 #include "wsnes9x.h"
-#include "directx.h"
+#include "CDirectDraw.h"
 #include "../snes9x.h"
 #include "../memmap.h"
 #include "../cpuexec.h"
@@ -297,6 +300,7 @@ typedef struct sExtList
 	bool compressed;
 	struct sExtList* next;
 } ExtList;
+HANDLE SoundEvent;
 
 ExtList* valid_ext=NULL;
 void MakeExtFile(void);
@@ -317,8 +321,8 @@ extern "C" void Trace ();
 static const char *rom_filename = NULL;
 
 CDirect3D Direct3D;
+CDirectDraw DirectDraw;
 
-CDirectX DirectX;
 struct SJoypad Joypad[10] = {
     {
         true,					/* Joypad 1 enabled */
@@ -1219,7 +1223,8 @@ void DoWAVOpen(const char* filename);
 void DoWAVClose(int reason);
 void DoAVIOpen(const char* filename);
 void DoAVIClose(int reason);
-bool8 SetupSound( long rate, bool8 sixteen_bit, bool8 stereo);
+bool ReInitSound(int mode);
+bool SetupSound(void);
 void RestoreGUIDisplay ();
 void RestoreSNESDisplay ();
 void FreezeUnfreeze (int slot, bool8 freeze);
@@ -1345,9 +1350,9 @@ void SwitchToGDI()
 	if (GUI.outputMethod==DIRECTDRAW && !VOODOO_MODE && !OPENGL_MODE)
     {
         IPPU.ColorsChanged = true;
-        DirectX.lpDD->FlipToGDISurface();
+        DirectDraw.lpDD->FlipToGDISurface();
         GUI.FlipCounter = 0;
-        DirectX.lpDDSPrimary2->SetPalette (NULL);
+        DirectDraw.lpDDSPrimary2->SetPalette (NULL);
     }
 }
 
@@ -1358,7 +1363,7 @@ static void S9xClearSurface (LPDIRECTDRAWSURFACE2 lpDDSurface)
     memset (&fx, 0, sizeof (fx));
     fx.dwSize = sizeof (fx);
 	
-    while (lpDDSurface->Blt (NULL, DirectX.lpDDSPrimary2, NULL, DDBLT_WAIT, NULL) == DDERR_SURFACELOST)
+    while (lpDDSurface->Blt (NULL, DirectDraw.lpDDSPrimary2, NULL, DDBLT_WAIT, NULL) == DDERR_SURFACELOST)
         lpDDSurface->Restore ();
 }
 
@@ -1375,8 +1380,8 @@ void UpdateBackBuffer()
         memset (&fx, 0, sizeof (fx));
         fx.dwSize = sizeof (fx);
 		
-        while (DirectX.lpDDSPrimary2->Blt (NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &fx) == DDERR_SURFACELOST)
-            DirectX.lpDDSPrimary2->Restore ();
+        while (DirectDraw.lpDDSPrimary2->Blt (NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &fx) == DDERR_SURFACELOST)
+            DirectDraw.lpDDSPrimary2->Restore ();
         
         if (GetMenu (GUI.hWnd) != NULL)
             DrawMenuBar (GUI.hWnd);
@@ -1387,14 +1392,14 @@ void UpdateBackBuffer()
 		
         LPDIRECTDRAWSURFACE2 pDDSurface;
 		
-        if (DirectX.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) == DD_OK &&
+        if (DirectDraw.lpDDSPrimary2->GetAttachedSurface (&caps, &pDDSurface) == DD_OK &&
             pDDSurface != NULL)
         {
             S9xClearSurface (pDDSurface);
-            DirectX.lpDDSPrimary2->Flip (NULL, DDFLIP_WAIT);
-            while (DirectX.lpDDSPrimary2->GetFlipStatus (DDGFS_ISFLIPDONE) != DD_OK)
+            DirectDraw.lpDDSPrimary2->Flip (NULL, DDFLIP_WAIT);
+            while (DirectDraw.lpDDSPrimary2->GetFlipStatus (DDGFS_ISFLIPDONE) != DD_OK)
                 Sleep (0);
-            if(DirectX.DoubleBuffered)
+            if(DirectDraw.DoubleBuffered)
                 S9xClearSurface (pDDSurface);
         }
     }
@@ -1437,6 +1442,29 @@ void ToggleFullScreen ()
     }
     else
 #endif
+	if(GUI.EmulateFullscreen) {
+		HMONITOR hm;
+		MONITORINFO mi;
+		GUI.EmulatedFullScreen = !GUI.EmulatedFullScreen;
+		if(GUI.EmulatedFullScreen) {
+			GetWindowRect (GUI.hWnd, &GUI.window_size);
+			if(GetMenu(GUI.hWnd)!=NULL)
+				SetMenu(GUI.hWnd,NULL);
+			SetWindowLong (GUI.hWnd, GWL_STYLE, WS_POPUP|WS_VISIBLE);
+			hm = MonitorFromWindow(GUI.hWnd,MONITOR_DEFAULTTONEAREST);
+			mi.cbSize = sizeof(mi);
+			GetMonitorInfo(hm,&mi);
+			SetWindowPos (GUI.hWnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_DRAWFRAME|SWP_FRAMECHANGED);
+		} else {
+			bool maximized = GUI.window_maximized;
+			SetWindowLong( GUI.hWnd, GWL_STYLE, WS_POPUPWINDOW|WS_CAPTION|
+                   WS_THICKFRAME|WS_VISIBLE|WS_MINIMIZEBOX|WS_MAXIMIZEBOX);
+			SetMenu(GUI.hWnd,GUI.hMenu);
+			SetWindowPos (GUI.hWnd, HWND_NOTOPMOST, GUI.window_size.left, GUI.window_size.top, GUI.window_size.right - GUI.window_size.left, GUI.window_size.bottom - GUI.window_size.top, SWP_DRAWFRAME|SWP_FRAMECHANGED);
+			if(maximized)
+				ShowWindow(GUI.hWnd, SW_MAXIMIZE);
+		}
+	} else {
 #ifdef USE_OPENGL
 		if (OPENGL_MODE)
 		{
@@ -1510,7 +1538,7 @@ void ToggleFullScreen ()
 					GetWindowRect (GUI.hWnd, &GUI.window_size);
 			}
 			GUI.FullScreen = !GUI.FullScreen;
-			if (!DirectX.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate, !GUI.FullScreen, GUI.tripleBuffering))
+			if (!DirectDraw.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate, !GUI.FullScreen, GUI.tripleBuffering))
 			{
 				MessageBox( GUI.hWnd, Languages[ GUI.Language].errModeDD, TEXT("Snes9X - DirectDraw(2)"), MB_OK | MB_ICONSTOP);
 				S9xClearPause (PAUSE_TOGGLE_FULL_SCREEN);
@@ -1533,21 +1561,22 @@ void ToggleFullScreen ()
 					GUI.window_size.bottom - GUI.window_size.top, TRUE);
 			}
 		}
+	}
 
-		if (!GUI.FullScreen) {
-			if(maximized)
-				ShowWindow(GUI.hWnd, SW_MAXIMIZE);
-		}
+	if (!GUI.FullScreen) {
+		if(maximized)
+			ShowWindow(GUI.hWnd, SW_MAXIMIZE);
+	}
 
-		S9xGraphicsDeinit();
-		S9xSetWinPixelFormat ();
-		S9xInitUpdate();
-		S9xGraphicsInit();
-		
-		IPPU.RenderThisFrame = true;
-		UpdateBackBuffer();
-		
-		S9xClearPause (PAUSE_TOGGLE_FULL_SCREEN);
+	S9xGraphicsDeinit();
+	S9xSetWinPixelFormat ();
+	S9xInitUpdate();
+	S9xGraphicsInit();
+
+	IPPU.RenderThisFrame = true;
+	UpdateBackBuffer();
+
+	S9xClearPause (PAUSE_TOGGLE_FULL_SCREEN);
 }
 
 void S9xDisplayStateChange (const char *str, bool8 on)
@@ -1587,7 +1616,7 @@ static void UpdateScale(RenderFilter & Scale, RenderFilter & NextScale)
 			&& !S9xOpenGLInit ()
 #endif
 			) || (!IS_GL_OR_GLIDE(NextScale) &&
-			(GUI.outputMethod==DIRECT3D)?!Direct3D.initialize(GUI.hWnd):!DirectX.InitDirectX()
+			(GUI.outputMethod==DIRECT3D)?!Direct3D.initialize(GUI.hWnd):!DirectDraw.InitDirectDraw()
 			))
 		{
 			Scale = FILTER_NONE;
@@ -1765,7 +1794,7 @@ int HandleKeyMessage(WPARAM wParam, LPARAM lParam, int modifiers)
 	switch (wParam)
 	{
 		case VK_ESCAPE:
-			if(GUI.FullScreen)
+			if(GUI.FullScreen && !GUI.EmulateFullscreen)
 			{
 				// exit fullscreen
 				ToggleFullScreen();
@@ -2163,6 +2192,7 @@ LRESULT CALLBACK WinProc(
 				ofn.lpstrInitialDir = szPathName;
 				if(GetSaveFileName( &ofn ))
 				{
+					//ReInitSound(0);			// disable sound output 
 					DoWAVOpen(szFileName);
 				}
 				RestoreSNESDisplay ();// re-enter after dialog
@@ -2170,6 +2200,7 @@ LRESULT CALLBACK WinProc(
 			break;
 		case ID_FILE_STOP_WAV:
 			DoWAVClose(0);
+			//ReInitSound(1);				// reenable sound output
 			break;
 
 		case ID_FILE_WRITE_AVI:
@@ -2195,6 +2226,7 @@ LRESULT CALLBACK WinProc(
 				ofn.lpstrInitialDir = szPathName;
 				if(GetSaveFileName( &ofn ))
 				{
+					//ReInitSound(0);			// disable sound output 
 					DoAVIOpen(szFileName);
 				}
 				RestoreSNESDisplay ();// re-enter after dialog
@@ -2202,6 +2234,7 @@ LRESULT CALLBACK WinProc(
 			break;
 		case ID_FILE_STOP_AVI:
 			DoAVIClose(0);
+			//ReInitSound(1);				// reenable sound output
 			break;
 
 		case ID_AVI_DOUBLE_SCALE:
@@ -2450,7 +2483,7 @@ LRESULT CALLBACK WinProc(
 				//if (!VOODOO_MODE && !GUI.FullScreen)
 				//	GetWindowRect (GUI.hWnd, &GUI.window_size);
 				DialogBox(g_hInst, MAKEINTRESOURCE(IDD_NEWDISPLAY), hWnd, DlgFunky);
-				//_DirectXConfig (DirectX.lpDD, &Settings, &GUI, &showFPS);
+				//_DirectXConfig (DirectDraw.lpDD, &Settings, &GUI, &showFPS);
 				
 				//Settings.DisplayFrameRate = showFPS;
 				SwitchToGDI();
@@ -2636,9 +2669,7 @@ LRESULT CALLBACK WinProc(
 				if (SoundRates[i].ident == (int) wParam)
 				{
 					Settings.SoundPlaybackRate = SoundRates [i].rate;
-					if (!SetupSound (Settings.SoundPlaybackRate, 
-						Settings.SixteenBitSound, 
-						Settings.Stereo))
+					if (!ReInitSound(1)) // !SetupSound()
 					{	MessageBox( GUI.hWnd, Languages[ GUI.Language].errInitDS, TEXT(SNES9X_DXS), MB_OK | MB_ICONINFORMATION);	}
 					break;
 				}
@@ -2656,42 +2687,35 @@ LRESULT CALLBACK WinProc(
 
 		case ID_SOUND_MUTE:
 			Settings.Mute = !Settings.Mute; // independent from so.mute_sound, so doesn't need reset
-//			SetupSound (Settings.SoundPlaybackRate, Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
 			break;
         case ID_SOUND_25MS:
             Settings.SoundBufferSize = 1;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_50MS:
             Settings.SoundBufferSize = 2;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_100MS:
             Settings.SoundBufferSize = 4;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_200MS:
             Settings.SoundBufferSize = 8;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_500MS:
             Settings.SoundBufferSize = 16;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_1S:
             Settings.SoundBufferSize = 32;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
         case ID_SOUND_2S:
             Settings.SoundBufferSize = 64;
-            SetupSound (Settings.SoundPlaybackRate, 
-				Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
             break;
 			
 		case ID_SOUND_MIXINTERVAL_10MS:
@@ -2714,17 +2738,24 @@ LRESULT CALLBACK WinProc(
 			for (i = 0; i < COUNT(MixIntervals); i++) {
 				if (menuID == MixIntervals[i].ident) {
 					Settings.SoundMixInterval = MixIntervals[i].ms;
-					SetupSound(Settings.SoundPlaybackRate, Settings.SixteenBitSound, Settings.Stereo);
+					ReInitSound(1);
 					break;
 				}
 			}
 		}	break;
+		case ID_SOUND_STEREO:
+			Settings.Stereo = !Settings.Stereo;
+			ReInitSound(1);
+			break;
+		case ID_SOUND_REVERSE_STEREO:
+			Settings.ReverseStereo = !Settings.ReverseStereo;
+			break;
 		case ID_SOUND_MUTEFRAMEADVANCE:
 			GUI.FAMute = !GUI.FAMute;
 			break;
 		case ID_SOUND_16BIT:
 			Settings.SixteenBitSound = !Settings.SixteenBitSound;
-			SetupSound (Settings.SoundPlaybackRate, Settings.SixteenBitSound, Settings.Stereo);
+			ReInitSound(1);
 			break;
 		case ID_SOUND_INTERPOLATED:
 			Settings.InterpolatedSound = !Settings.InterpolatedSound;
@@ -2760,17 +2791,17 @@ LRESULT CALLBACK WinProc(
 					{
 						if (!Settings.NextAPUEnabled)
 						{
-                        if (MessageBox (GUI.hWnd, TEXT(WINPROC_SND_OFF),
-														TEXT(SNES9X_SNDQ),
-														MB_YESNO | MB_ICONQUESTION) == IDNO)
-                        {
-                            Settings.NextAPUEnabled = orig.NextAPUEnabled;
-                        }
-                        else
-                        {
-                            Settings.APUEnabled = FALSE;
-                            SetupSound (0, FALSE, FALSE);
-                        }
+							if (MessageBox (GUI.hWnd, TEXT(WINPROC_SND_OFF),
+															TEXT(SNES9X_SNDQ),
+															MB_YESNO | MB_ICONQUESTION) == IDNO)
+							{
+								Settings.NextAPUEnabled = orig.NextAPUEnabled;
+							}
+							else
+							{
+								Settings.APUEnabled = FALSE;
+								ReInitSound(0);
+							}
 						}
 						else
 						{
@@ -2784,16 +2815,9 @@ LRESULT CALLBACK WinProc(
 						}
 					}
 					else
-						if (orig.SixteenBitSound != Settings.SixteenBitSound ||
-							orig.Stereo != Settings.Stereo ||
-							orig.SoundPlaybackRate != Settings.SoundPlaybackRate ||
-							orig.SoundBufferSize != Settings.SoundBufferSize ||
-							orig.SoundDriver != Settings.SoundDriver ||
-							orig.SoundMixInterval != Settings.SoundMixInterval)
-						{							
-							SetupSound (Settings.SoundPlaybackRate, 
-                                Settings.SixteenBitSound, 
-                                Settings.Stereo);
+						if (memcmp(&orig,&Settings,sizeof(SSettings)))
+						{
+							ReInitSound(1);
 						}
 				}
 				RestoreSNESDisplay ();
@@ -2839,7 +2863,7 @@ LRESULT CALLBACK WinProc(
 
 							GUI.outputMethod = DIRECTDRAW;
 							Direct3D.deInitialize();
-							DirectX.InitDirectX();
+							DirectDraw.InitDirectDraw();
 							RestoreSNESDisplay();
 
 							if (wasFullScreen)
@@ -2847,7 +2871,7 @@ LRESULT CALLBACK WinProc(
 
 							S9xSetWinPixelFormat();
 							S9xInitUpdate();
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDERMETHOD_DIRECT3D: {
 							bool wasFullScreen = GUI.FullScreen;
@@ -2856,7 +2880,7 @@ LRESULT CALLBACK WinProc(
 								ToggleFullScreen();
 
 							GUI.outputMethod = DIRECT3D;
-							DirectX.DeInitializeDirectDraw();
+							DirectDraw.DeInitializeDirectDraw();
 							Direct3D.initialize(GUI.hWnd);
 							Direct3D.changeRenderSize(0,0);
 
@@ -2865,7 +2889,7 @@ LRESULT CALLBACK WinProc(
 
 							S9xSetWinPixelFormat();
 							S9xInitUpdate();
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDEROPTIONS_DDRAWUSEVIDEOMEMORY: {
 							GUI.ddrawUseVideoMemory = !GUI.ddrawUseVideoMemory;
@@ -2875,7 +2899,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDEROPTIONS_DDRAWUSELOCALVIDEOMEM: {
 							GUI.ddrawUseLocalVidMem = !GUI.ddrawUseLocalVidMem;
@@ -2885,7 +2909,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDEROPTIONS_TRIPLEBUFFERING: {
 							GUI.tripleBuffering = !GUI.tripleBuffering;
@@ -2895,7 +2919,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDEROPTIONS_D3DNOFILTER: {
 							GUI.d3dFilter = NEAREST;
@@ -2905,7 +2929,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_RENDEROPTIONS_D3DBILINEAR: {
 							GUI.d3dFilter = BILINEAR;
@@ -2915,7 +2939,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_WINDOW_STRETCH: {
 							GUI.Stretch = !GUI.Stretch;
@@ -2925,7 +2949,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_WINDOW_ASPECTRATIO: {
 							GUI.AspectRatio = !GUI.AspectRatio;
@@ -2935,7 +2959,7 @@ LRESULT CALLBACK WinProc(
 							else
 								RestoreSNESDisplay ();
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_WINDOW_X1: {
 							int newWidth = SNES_WIDTH;
@@ -2986,12 +3010,12 @@ LRESULT CALLBACK WinProc(
 							Settings.Mode7Interpolate = !Settings.Mode7Interpolate;
 							S9xDisplayStateChange (WINPROC_MODE7INTER, Settings.Mode7Interpolate);
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 							break;
 						case ID_VIDEO_TEXTINIMAGE:
 							GUI.MessagesInImage = !GUI.MessagesInImage;
 
-							if(DirectX.Clipped) S9xReRefresh();
+							if(DirectDraw.Clipped) S9xReRefresh();
 							break;
 						case ID_VIDEO_LAYERS_BG1:
 							Settings.BG_Forced ^= 1;
@@ -3072,9 +3096,7 @@ LRESULT CALLBACK WinProc(
 							if (Settings.NetPlayServer)
 							{
 								S9xNPReset ();
-								SetupSound (Settings.SoundPlaybackRate, 
-									Settings.SixteenBitSound, 
-									Settings.Stereo);
+								ReInitSound(1);
 							}
 							else
 								if (!Settings.NetPlay)
@@ -3086,9 +3108,7 @@ LRESULT CALLBACK WinProc(
 										S9xMovieRecordReset();
 									else
 										S9xSoftReset();
-									SetupSound (Settings.SoundPlaybackRate, 
-										Settings.SixteenBitSound, 
-										Settings.Stereo);
+									ReInitSound(1);
 								}
 								if(!S9xMovieRecording())
 									Settings.Paused = false;
@@ -3395,7 +3415,7 @@ LRESULT CALLBACK WinProc(
 										RestoreSNESDisplay();
 
 									// refresh screen, so the user can see the new filter
-									if(DirectX.Clipped) S9xReRefresh();
+									if(DirectDraw.Clipped) S9xReRefresh();
 								}
 							}
 							else if (menuID >= ID_RECENT_MIN && menuID <= ID_RECENT_MAX)
@@ -3441,7 +3461,7 @@ LRESULT CALLBACK WinProc(
 		bool maximized = GUI.window_maximized;
 		ShowWindow(GUI.hWnd, SW_RESTORE);
 		GUI.window_maximized = maximized;
-		if (!VOODOO_MODE && !GUI.FullScreen)
+		if (!VOODOO_MODE && !GUI.FullScreen && !GUI.EmulatedFullScreen && !GUI.window_maximized)
 			GetWindowRect (GUI.hWnd, &GUI.window_size);
 	}	break;
 
@@ -3461,7 +3481,7 @@ LRESULT CALLBACK WinProc(
 			// refresh screen
 			if ((Settings.Paused || Settings.ForcedPause) && !Settings.StopEmulation)
 			{
-				if(DirectX.Clipped) S9xReRefresh();
+				if(DirectDraw.Clipped) S9xReRefresh();
 			}
 
 			EndPaint (GUI.hWnd, &paint);
@@ -3516,7 +3536,7 @@ LRESULT CALLBACK WinProc(
 		{
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0); // XXX: refresh drawing rect?
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 		}
 		break;
 	case WM_ACTIVATEAPP: {
@@ -3525,7 +3545,7 @@ LRESULT CALLBACK WinProc(
 		{
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0); // XXX: refresh drawing rect?
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 		}
 		return 0;
 	}
@@ -3573,6 +3593,12 @@ LRESULT CALLBACK WinProc(
 		//	GetWindowRect (GUI.hWnd, &GUI.window_size);
 		//}
 		break;
+	case WM_ENTERSIZEMOVE:
+		S9xSetPause(PAUSE_MENU);
+		break;
+	case WM_EXITSIZEMOVE:
+		S9xClearPause(PAUSE_MENU);
+		break;
 	case WM_DISPLAYCHANGE:
 		// FIXME: SetDisplayMode often crashes snes9x, So I finally decided to do...nothing.
 		// It allows snes9x to toggle the mode, even while another snes9x process is running.
@@ -3590,7 +3616,7 @@ LRESULT CALLBACK WinProc(
 		{
 			if (!VOODOO_MODE && !OPENGL_MODE &&
 				(GUI.outputMethod==DIRECT3D)?Direct3D.changeRenderSize(0,0):
-				DirectX.SetDisplayMode (GUI.Width, GUI.Height, GUI.Depth,
+				DirectDraw.SetDisplayMode (GUI.Width, GUI.Height, GUI.Depth,
 				!GUI.FullScreen, GUI.tripleBuffering))
 			{
 				S9xGraphicsDeinit();
@@ -4282,27 +4308,6 @@ void S9xExtraUsage ()
 {
 }
 
-extern long _rate;
-extern bool _sixteen_bit;
-extern bool _stereo;
-extern long _buffernos;
-extern long _buffersize;
-extern long _samplecount;
-extern long _bytecount;
-extern unsigned long _interval;
-
-volatile unsigned long LastSound = 0;
-uint32 next_frame_time = 0;
-
-VOID CALLBACK SoundTimer (UINT idEvent, UINT uMsg, DWORD_PTR dwUser,
-                          DWORD_PTR dw1, DWORD_PTR dw2)
-{
-    void ProcessSound (void);
-	
-    if (Settings.SoundDriver == WIN_SNES9X_DIRECT_SOUND_DRIVER)
-        ProcessSound ();
-}
-
 // handles joystick hotkey presses
 VOID CALLBACK HotkeyTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
@@ -4380,12 +4385,12 @@ VOID CALLBACK FrameTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR d
     while ((!useTicksTimer && (PCEnd      - PCStart     ) >= PCFrameTime) ||
 		   ( useTicksTimer && (PCEndTicks - PCStartTicks) >= PCFrameTime * 1000000 / PCBase))
 	{
-        if (DirectX.FrameCount == DirectX.LastFrameCount)
-            DirectX.IdleCount++;
+        if (GUI.FrameCount == GUI.LastFrameCount)
+            GUI.IdleCount++;
         else
         {
-            DirectX.IdleCount = 0;
-            DirectX.LastFrameCount = DirectX.FrameCount;
+            GUI.IdleCount = 0;
+            GUI.LastFrameCount = GUI.FrameCount;
         }
 
 #ifdef NETPLAY_SUPPORT
@@ -4473,6 +4478,8 @@ int WINAPI WinMain(
 	FILE* ferr = freopen("stderr.txt", "w", stderr);
 	if(ferr) setvbuf(ferr, NULL, _IONBF, 0);
 
+	InitializeCriticalSection(&GUI.SoundCritSect);
+
 	DWORD wSoundTimerRes;
 
 	InitCustomKeys(&CustomKeys); // must be called before WinRegisterConfigItems
@@ -4491,24 +4498,7 @@ int WINAPI WinMain(
 	{
 		SetMenu (GUI.hWnd, NULL);
 	}
-	// GUI.hWnd = _MainWindow ();
-	//    SetMenu (GUI.hWnd, GUI.hMenu);
-    //_InitDLL (GUI.hWnd);
-    
-/*    if (_GUIVersion () != GUI_VERSION)
-    {
-	MessageBox (GUI.hWnd, "Incorrect version of Snes9XW.dll dynamic-link library file found.\n\nPlease check you extracted both the Snes9XW.exe and Snes9XW.dll\nfiles into the same directory from the Snes9XW distribution\nzip file.", "Snes9X - Incorrect Snes9XW.dll Version", MB_OK | MB_ICONSTOP);
-	return false; 
-    }
-*/	
-    DirectX.InitDirectSound ();
-	
-    if (!SetupSound (Settings.SoundPlaybackRate, Settings.SixteenBitSound, 
-		Settings.Stereo))
-    {	
-        MessageBox( GUI.hWnd, Languages[ GUI.Language].errInitDS, TEXT("Snes9X - DirectSound"), MB_OK | MB_ICONINFORMATION);
-    }
-	
+
 #ifdef USE_GLIDE
     if (VOODOO_MODE)
     {
@@ -4542,14 +4532,14 @@ int WINAPI WinMain(
 	S9xCustomDisplayString = WinDisplayString;
 
     if (!VOODOO_MODE && !OPENGL_MODE &&
-        (GUI.outputMethod==DIRECT3D)?!Direct3D.initialize(GUI.hWnd):!DirectX.InitDirectX()
+        (GUI.outputMethod==DIRECT3D)?!Direct3D.initialize(GUI.hWnd):!DirectDraw.InitDirectDraw()
         )
     {
         MessageBox (GUI.hWnd, Languages[ GUI.Language].errInitDD, TEXT("Snes9X - DirectX"), MB_OK | MB_ICONSTOP);
         return false; 
     }
 	if(GUI.outputMethod==DIRECT3D)
-		DirectX.Clipped = true;
+		DirectDraw.Clipped = true;
     
     if (!GUI.FullScreen)
     {
@@ -4560,12 +4550,12 @@ int WINAPI WinMain(
     }
 	
     if ((GUI.outputMethod==DIRECTDRAW) && !VOODOO_MODE && !OPENGL_MODE && 
-        !DirectX.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
+        !DirectDraw.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
 		!GUI.FullScreen, GUI.tripleBuffering))
     {
         MessageBox( GUI.hWnd, Languages[ GUI.Language].errModeDD, TEXT("Snes9X - DirectDraw(7)"), MB_OK | MB_ICONSTOP);
         GUI.FullScreen = FALSE;
-        if (!DirectX.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
+        if (!DirectDraw.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
 			!GUI.FullScreen, GUI.tripleBuffering))
             return (false);
     }
@@ -4580,8 +4570,8 @@ int WINAPI WinMain(
     S9xSetFilters ();
     S9xSetRecentGames ();
     ShowWindow (GUI.hWnd, maximized ? SW_MAXIMIZE : SW_SHOWNORMAL);
-    SetForegroundWindow (GUI.hWnd);
-    SetFocus (GUI.hWnd);
+    /*SetForegroundWindow (GUI.hWnd);
+    SetFocus (GUI.hWnd);*/
 
 	// hack for borders-not-shown bug (Windows bug?) on startup
 	if(!maximized)
@@ -4625,7 +4615,6 @@ int WINAPI WinMain(
 	
     Settings.StopEmulation = TRUE;
     GUI.hFrameTimer = timeSetEvent (20, 0, FrameTimer, 0, TIME_PERIODIC);
-    GUI.hSoundTimer = timeSetEvent (5, 0, SoundTimer, 0, TIME_PERIODIC);
 	GUI.hHotkeyTimer = timeSetEvent (32, 0, HotkeyTimer, 0, TIME_PERIODIC);
 
     GUI.FrameTimerSemaphore = CreateSemaphore (NULL, 0, 10, NULL);
@@ -4683,6 +4672,8 @@ int WINAPI WinMain(
                 TranslateMessage (&msg);
                 DispatchMessage (&msg);
             }
+
+			S9xSetSoundMute(Settings.ForcedPause || (Settings.Paused && (!Settings.FrameAdvance || GUI.FAMute)));
         }
 		
 #ifdef NETPLAY_SUPPORT
@@ -4777,7 +4768,7 @@ int WINAPI WinMain(
 			{
 				//ProcessInput();
 				S9xMainLoop();
-				DirectX.FrameCount++;
+				GUI.FrameCount++;
 
 				// FIXME?: These will fix 1 frame lag of watch, 
 				// though painting twice is not smart, really.
@@ -4819,9 +4810,6 @@ loop_exit:
     if (GUI.hHotkeyTimer)
         timeKillEvent (GUI.hHotkeyTimer);
 
-    if (GUI.hSoundTimer)
-        timeKillEvent (GUI.hSoundTimer);
-	
     if( GUI.hFrameTimer)
     {	
         timeKillEvent (GUI.hFrameTimer);
@@ -4859,13 +4847,14 @@ loop_exit:
 		S9xGlideDeinit();
 	else if (Settings.OpenGLEnable)
 #else
-		if (Settings.OpenGLEnable)
-#endif 
-#ifdef USE_OPENGL
-			S9xOpenGLDeinit();
+	if (Settings.OpenGLEnable)
 #endif
+	{
+#ifdef USE_OPENGL
+		S9xOpenGLDeinit();
+#endif
+	}
 		S9xGraphicsDeinit();
-		S9xDeinitAPU();
 		WinDeleteRecentGamesList ();
 		DeinitS9x();
 
@@ -4885,7 +4874,7 @@ void RestoreGUIDisplay ()
 #endif
     if ((GUI.outputMethod==DIRECTDRAW) && !VOODOO_MODE && !OPENGL_MODE && GUI.FullScreen && 
         (GUI.Width < 640 || GUI.Height < 400) &&
-        !DirectX.SetDisplayMode (640, 480, 1, 0, 60, !GUI.FullScreen, false))
+        !DirectDraw.SetDisplayMode (640, 480, 1, 0, 60, !GUI.FullScreen, false))
     {
         MessageBox (GUI.hWnd, Languages[ GUI.Language].errModeDD, TEXT("Snes9X - DirectDraw(1)"), MB_OK | MB_ICONSTOP);
         S9xClearPause (PAUSE_RESTORE_GUI);
@@ -4898,7 +4887,7 @@ void RestoreGUIDisplay ()
 void RestoreSNESDisplay ()
 {
     if ((GUI.outputMethod==DIRECTDRAW) && !VOODOO_MODE && !OPENGL_MODE && 
-        !DirectX.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
+        !DirectDraw.SetDisplayMode (GUI.Width, GUI.Height, max(GetFilterScale(GUI.Scale), GetFilterScale(GUI.ScaleHiRes)), GUI.Depth, GUI.RefreshRate,
 		!GUI.FullScreen, GUI.tripleBuffering))
     {
         MessageBox (GUI.hWnd, Languages[ GUI.Language].errModeDD, TEXT("Snes9X - DirectDraw(4)"), MB_OK | MB_ICONSTOP);
@@ -5220,7 +5209,7 @@ static void CheckMenuStates ()
     SetMenuItemInfo( GUI.hMenu, ID_CHEAT_DISABLE, FALSE, &mii);
 
 	bool soundIsActive = Settings.APUEnabled;
-//	bool soundIsActive = !(!DirectX.DSAvailable || Settings.Mute || !Settings.APUEnabled);
+//	bool soundIsActive = !(/*!DirectSound.DSAvailable ||*/ Settings.Mute || !Settings.APUEnabled);
 
 	for (i = 0; i < COUNT(SoundRates); i++) {
 		mii.fState = (SoundRates [i].rate == Settings.SoundPlaybackRate) ? MFS_CHECKED : MFS_UNCHECKED;
@@ -5299,7 +5288,7 @@ static void CheckMenuStates ()
 	mii.fState = soundIsActive ? MFS_ENABLED : MFS_DISABLED;
 	SetMenuItemInfo (GUI.hMenu, ID_CHANNELS_ENABLEALL, FALSE, &mii);
 
-	mii.fState = soundIsActive ? MFS_ENABLED : MFS_DISABLED;
+	mii.fState = (soundIsActive && (Settings.SoundDriver<1||Settings.SoundDriver>3)) ? MFS_ENABLED : MFS_DISABLED;
 	SetMenuItemInfo (GUI.hMenu, ID_SOUND_25MS, FALSE, &mii);
 	SetMenuItemInfo (GUI.hMenu, ID_SOUND_50MS, FALSE, &mii);
 	SetMenuItemInfo (GUI.hMenu, ID_SOUND_100MS, FALSE, &mii);
@@ -5324,7 +5313,7 @@ static void CheckMenuStates ()
 
 	for (i = 0; i < COUNT(MixIntervals); i++) {
 		mii.fState = (MixIntervals[i].ms == Settings.SoundMixInterval) ? MFS_CHECKED : MFS_UNCHECKED;
-		if (!soundIsActive)
+		if (!soundIsActive || !(Settings.SoundDriver<1||Settings.SoundDriver>3))
 			mii.fState |= MFS_DISABLED;
 		SetMenuItemInfo (GUI.hMenu, MixIntervals[i].ident, FALSE, &mii);
 	}
@@ -5442,7 +5431,7 @@ bool8 LoadROM (const char *filename)
     if (Memory.LoadROM (filename))
     {
 		S9xStartCheatSearch (&Cheat);
-        SetupSound (Settings.SoundPlaybackRate, Settings.SixteenBitSound, Settings.Stereo);
+        ReInitSound(1);
         ResetFrameTimer ();
         return (TRUE);
     }
@@ -5513,6 +5502,8 @@ void EnableServer (bool8 enable)
             {
                 S9xClearPause (PAUSE_NETPLAY_CONNECT);
             }
+
+			S9xSetSoundMute(Settings.ForcedPause || (Settings.Paused && (!Settings.FrameAdvance || GUI.FAMute)));
         }
         else
         {
@@ -6009,15 +6000,38 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		hBmp=(HBITMAP)LoadImage(NULL, TEXT("Jerremy.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 		set= (struct SSettings *)lParam;
 		// FIXME: these strings should come from wlanguage.h
 #ifndef MK_APU
 		//SetDlgItemText(hDlg,IDC_LINEAR_INTER, "Linear &Interpolation of Sample Data");
 #endif
-		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,0,(LPARAM)TEXT("Snes9x DirectSound"));
-		SendDlgItemMessage(hDlg, IDC_DRIVER,CB_SETCURSEL,set->SoundDriver,0);
+		int pos;
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("Snes9x DirectSound"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_SNES9X_DIRECT_SOUND_DRIVER);
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("XAudio2"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_XAUDIO2_SOUND_DRIVER);
+#ifdef FMOD_SUPPORT
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("FMOD DirectSound"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_FMOD_DIRECT_SOUND_DRIVER);
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("FMOD Windows Multimedia"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_FMOD_WAVE_SOUND_DRIVER);
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("FMOD A3D"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_FMOD_A3D_SOUND_DRIVER);
+#elif defined FMODEX_SUPPORT
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("FMOD Ex Default"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_FMODEX_DEFAULT_DRIVER);
+		pos = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_INSERTSTRING,-1,(LPARAM)TEXT("FMOD Ex ASIO"));
+		SendDlgItemMessage(hDlg, IDC_DRIVER, CB_SETITEMDATA,pos,WIN_FMODEX_ASIO_DRIVER);
+#endif
+		SendDlgItemMessage(hDlg, IDC_DRIVER,CB_SETCURSEL,0,0);
+		for(pos = 0;pos<SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCOUNT,0,0);pos++) {
+			if(SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETITEMDATA,pos,0)==set->SoundDriver) {
+				SendDlgItemMessage(hDlg, IDC_DRIVER,CB_SETCURSEL,pos,0);
+				break;
+			}
+		}
 		
 		SendDlgItemMessage(hDlg, IDC_SKIP_TYPE, CB_INSERTSTRING,0,(LPARAM)TEXT("Skip style #1"));
 		SendDlgItemMessage(hDlg, IDC_SKIP_TYPE, CB_INSERTSTRING,1,(LPARAM)TEXT("Skip style #2"));
@@ -6032,7 +6046,7 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,2,(LPARAM)TEXT("16 KHz"));
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,3,(LPARAM)TEXT("22 KHz"));
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,4,(LPARAM)TEXT("30 KHz"));
-		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,5,(LPARAM)TEXT("32 KHz"));
+		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,5,(LPARAM)TEXT("32 KHz (SNES)"));
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,6,(LPARAM)TEXT("35 KHz"));
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,7,(LPARAM)TEXT("44 KHz"));
 		SendDlgItemMessage(hDlg, IDC_RATE, CB_INSERTSTRING,8,(LPARAM)TEXT("48 KHz"));
@@ -6073,13 +6087,13 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		
 		SendDlgItemMessage(hDlg,IDC_MIX,CB_SETCURSEL,((set->SoundMixInterval/10)-1),0);
 		
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,0,(LPARAM)TEXT("10 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,1,(LPARAM)TEXT("20 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,2,(LPARAM)TEXT("40 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,3,(LPARAM)TEXT("80 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,4,(LPARAM)TEXT("160 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,5,(LPARAM)TEXT("320 ms"));
-		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,6,(LPARAM)TEXT("640 ms"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,0,(LPARAM)TEXT("Mix Interval * 1"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,1,(LPARAM)TEXT("Mix Interval * 2"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,2,(LPARAM)TEXT("Mix Interval * 4"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,3,(LPARAM)TEXT("Mix Interval * 8"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,4,(LPARAM)TEXT("Mix Interval * 16"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,5,(LPARAM)TEXT("Mix Interval * 32"));
+		SendDlgItemMessage(hDlg, IDC_BUFLEN, CB_INSERTSTRING,6,(LPARAM)TEXT("Mix Interval * 64"));
 		
 		switch(set->SoundBufferSize)
 		{
@@ -6137,11 +6151,11 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		if(!set->DisableMasterVolume)
 			SendDlgItemMessage(hDlg,IDC_MASTER_VOL,BM_SETCHECK,BST_CHECKED,0);
 		
-		if(set->SoundDriver)
+		if(set->SoundDriver>0&&set->SoundDriver<4)
 		{
 			EnableWindow(GetDlgItem(hDlg, IDC_MIX), false);
 			EnableWindow(GetDlgItem(hDlg, IDC_BUFLEN), false);
-			EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), false);
+			//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), false);
 		}
 		
 		if(!IsDlgButtonChecked(hDlg,IDC_SPC700ON))
@@ -6195,7 +6209,8 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 			case IDOK:
 				{
-					set->SoundDriver=SendDlgItemMessage(hDlg, IDC_DRIVER,CB_GETCURSEL,0,0);
+					set->SoundDriver=SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETITEMDATA,
+										SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCURSEL, 0,0),0);
 					set->SoundSkipMethod=(unsigned char)SendDlgItemMessage(hDlg,IDC_SKIP_TYPE,CB_GETCURSEL,0,0);
 					set->SixteenBitSound=IsDlgButtonChecked(hDlg, IDC_16BIT);
 					//set->AltSampleDecode=IsDlgButtonChecked(hDlg, IDC_ANTIRES);
@@ -6240,7 +6255,8 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 						set->APUEnabled = wasEnabled;
 					}
 
-					SetupSound (Settings.SoundPlaybackRate, Settings.SixteenBitSound, Settings.Stereo);
+					// already done in WinProc on return
+					// ReInitSound(1); 
 
 				}	/* FALL THROUGH */
 
@@ -6297,12 +6313,14 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 							//	EnableWindow(GetDlgItem(hDlg, IDC_CACHING), TRUE);
 							if(IsDlgButtonChecked(hDlg,IDC_STEREO))
 								EnableWindow(GetDlgItem(hDlg, IDC_REV_STEREO), TRUE);
-							if(0==SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCURSEL, 0,0))
+							int i = SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETITEMDATA,
+										SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCURSEL, 0,0),0);
+							if(i<1||i>3)
 							{
 								//enable stuff.
 								EnableWindow(GetDlgItem(hDlg, IDC_MIX), true);
 								EnableWindow(GetDlgItem(hDlg, IDC_BUFLEN), true);
-								EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), true);
+								//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), true);
 								
 							}
 							return true;
@@ -6316,12 +6334,13 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 					{
 						//get index
 						int i;
-						i=SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCURSEL, 0,0);
-						if(i)
+						i=SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETITEMDATA,
+										SendDlgItemMessage(hDlg, IDC_DRIVER, CB_GETCURSEL, 0,0),0);
+						if(i>0&&i<4)
 						{
 							EnableWindow(GetDlgItem(hDlg, IDC_MIX), false);
 							EnableWindow(GetDlgItem(hDlg, IDC_BUFLEN), false);
-							EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), false);
+							//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), false);
 						}
 						//disable if index...
 						else
@@ -6329,7 +6348,7 @@ INT_PTR CALLBACK DlgSoundConf(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 							//enable stuff.
 							EnableWindow(GetDlgItem(hDlg, IDC_MIX), true);
 							EnableWindow(GetDlgItem(hDlg, IDC_BUFLEN), true);
-							EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), true);
+							//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), true);
 							
 						}
 						return true;
@@ -6377,7 +6396,7 @@ INT_PTR CALLBACK DlgSP7PackConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("Gogo.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 
@@ -6460,7 +6479,7 @@ INT_PTR CALLBACK SPC7110rtc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		
 		rtc= (struct SPC7110RTC *)lParam;
 		
@@ -6681,7 +6700,7 @@ INT_PTR CALLBACK DlgInfoProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("anomie.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			char temp[100];
@@ -7171,7 +7190,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			TCHAR buf[2048];//find better way of dealing.
 			sprintf(buf,TEXT(DISCLAIMER_TEXT),VERSION);
@@ -7285,7 +7304,7 @@ INT_PTR CALLBACK DlgEmulatorProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPar
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("MKendora.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			SetWindowText(hDlg, TEXT(EMUSET_TITLE));
@@ -7361,7 +7380,7 @@ INT_PTR CALLBACK DlgEmulatorProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPar
 					TCHAR path[MAX_PATH];
 					_fullpath(path, paths[which], MAX_PATH);
 					TCHAR title[]=TEXT(SETTINGS_TITLE_SELECTFOLDER);
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -7372,7 +7391,7 @@ INT_PTR CALLBACK DlgEmulatorProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPar
 
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					absToRel(paths[which], path, S9xGetDirectory(DEFAULT_DIR));
  					SetDlgItemText(hDlg, IDC_CUSTOM_FOLDER_FIELD, paths[which]);
 				}
@@ -7425,7 +7444,7 @@ INT_PTR CALLBACK DlgSeekProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("ThisPortIsAMess.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			sprintf(frame_number_text, "%d .. %d", (int)S9xMovieGetFrameCounter(), (int)S9xMovieGetLength());
@@ -7983,7 +8002,7 @@ INT_PTR CALLBACK DlgOpenROMProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			initDone = false;
 
@@ -8894,7 +8913,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("LinkHylia.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			SetDlgItemText(hDlg, IDC_STAR_OCEAN, GUI.StarOceanPack);
@@ -8943,7 +8962,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Star Ocean Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -8951,7 +8970,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_STAR_OCEAN, path);
 				}
 				break;
@@ -8963,7 +8982,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Street Fighter Alpha 2 Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -8971,7 +8990,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_SFA2, path);
 				}
 				break;
@@ -8983,7 +9002,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Street Fighter Alpha 2 Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -8991,7 +9010,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_SFA2E, path);
 				}
 				break;
@@ -9003,7 +9022,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Street Fighter Zero 2 Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -9011,7 +9030,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_SFZ2, path);
 				}
 				break;
@@ -9023,7 +9042,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Far East of Eden Zero Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -9031,7 +9050,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_FEOEZ, path);
 				}
 				break;
@@ -9043,7 +9062,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="Momotarou Densetsu Happy Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -9051,7 +9070,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_MDH, path);
 				}
 				break;
@@ -9063,7 +9082,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="FEOEZ - Shounen Jump no Shou Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -9071,7 +9090,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_SJNS, path);
 				}
 				break;
@@ -9083,7 +9102,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					ZeroMemory(&bi, sizeof(BROWSEINFO));
 					char path[MAX_PATH];
 					char title[]="FEOEZ - Shounen Jump no Shou Graphics Pack";
-					CoInitialize(NULL);
+					//CoInitialize(NULL);
 					bi.hwndOwner=hDlg;
 					bi.pszDisplayName=path;
 					bi.lpszTitle=title;
@@ -9091,7 +9110,7 @@ INT_PTR CALLBACK DlgPackConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 					SHGetPathFromIDList(iidl, path);
 					SHGetMalloc(&lpm);
 					lpm->Free(iidl);
-					CoUninitialize();
+					//CoUninitialize();
 					SetDlgItemText(hDlg, IDC_SPL4, path);
 				}
 				break;
@@ -9195,7 +9214,7 @@ INT_PTR CALLBACK DlgNetConnect(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		SetWindowText(hDlg,NPCON_TITLE);
 		SetDlgItemText(hDlg,IDC_LABEL_SERVERADDY,NPCON_LABEL_SERVERADDY);
 		SetDlgItemText(hDlg,IDC_LABEL_PORTNUM,NPCON_LABEL_PORTNUM);
@@ -9452,7 +9471,7 @@ INT_PTR CALLBACK DlgNPOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		SetWindowText(hDlg,NPOPT_TITLE);
 		SetDlgItemText(hDlg,IDC_LABEL_PORTNUM,NPOPT_LABEL_PORTNUM);
 		SetDlgItemText(hDlg,IDC_LABEL_PAUSEINTERVAL,NPOPT_LABEL_PAUSEINTERVAL);
@@ -9685,6 +9704,7 @@ void UpdateModeListBox(HWND hListView)
 	ListView_DeleteAllItems(hListView);
 	ListView_DeleteColumn(hListView,1);
 	ListView_DeleteColumn(hListView,0);
+	dm.clear();
 
 	if(GUI.outputMethod==DIRECTDRAW) {
 		ZeroMemory(&col, sizeof(LVCOLUMN));
@@ -9710,7 +9730,7 @@ void UpdateModeListBox(HWND hListView)
 	if(GUI.outputMethod==DIRECT3D)
 		Direct3D.fillModesListView(hListView,&dm);
 	else
-		DirectX.lpDD->EnumDisplayModes(DDEDM_REFRESHRATES,NULL,hListView,(LPDDENUMMODESCALLBACK)EnumModesCallback);
+		DirectDraw.lpDD->EnumDisplayModes(DDEDM_REFRESHRATES,NULL,hListView,(LPDDENUMMODESCALLBACK)EnumModesCallback);
 }
 
 INT_PTR CALLBACK DlgFrameSkipSettings(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -9880,7 +9900,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_INITDIALOG:
 		in_display_dlg = true;
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 
 		prevOutputMethod = GUI.outputMethod;
 		prevScale = GUI.Scale;
@@ -9898,8 +9918,8 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		sprintf(s,"Current: %dx%d %dbit %dHz",GUI.Width,GUI.Height,GUI.Depth,GUI.RefreshRate);
 		SendDlgItemMessage(hDlg,IDC_CURRMODE,WM_SETTEXT,0,(LPARAM)s);
 
-		if((GUI.outputMethod==DIRECTDRAW) && DirectX.lpDD==NULL)
-			DirectDrawCreate( NULL, &DirectX.lpDD, NULL);
+		if((GUI.outputMethod==DIRECTDRAW) && DirectDraw.lpDD==NULL)
+			DirectDrawCreate( NULL, &DirectDraw.lpDD, NULL);
 
 		if(GUI.tripleBuffering)
 			SendDlgItemMessage(hDlg, IDC_DBLBUFFER, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -10011,7 +10031,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0);
 
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 
 
 			// make video memory option match stretching option, but allow it to be changed via the other checkbox
@@ -10032,7 +10052,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0);
 
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			break;
 
 		case IDC_MESSAGES_IN_IMAGE:
@@ -10045,7 +10065,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 
 			// refresh screen, so the user can see the new mode
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			break;
 
 		case IDC_ASPECT:
@@ -10055,7 +10075,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0);
 
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			break;
 
 		case IDC_BILINEARMD7:
@@ -10065,7 +10085,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0);
 
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			break;
 
 		case IDC_HEIGHT_EXTEND:
@@ -10075,18 +10095,23 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(GUI.outputMethod==DIRECT3D)
 				Direct3D.changeRenderSize(0,0);
 
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			break;
 
 		case IDC_OUTPUTMETHOD:
 			if(!in_display_dlg) break;
 			if(HIWORD(wParam)==CBN_SELCHANGE) {
-				GUI.outputMethod=(OutputMethod)SendDlgItemMessage(hDlg,IDC_OUTPUTMETHOD,CB_GETCURSEL,0,0);
+				OutputMethod newOut = (OutputMethod)SendDlgItemMessage(hDlg,IDC_OUTPUTMETHOD,CB_GETCURSEL,0,0);
+				if(GUI.outputMethod==newOut)
+					break;
+				if(GUI.FullScreen)
+					ToggleFullScreen();
+				GUI.outputMethod=newOut;
 				if(GUI.outputMethod==DIRECT3D) {
 					CheckDlgButton(hDlg,IDC_VIDEOCARD,(GUI.d3dFilter==BILINEAR)?TRUE:FALSE);
 					EnableWindow(GetDlgItem(hDlg, IDC_LOCALVIDMEM), FALSE);
 					EnableWindow(GetDlgItem(hDlg, IDC_TESTMODE), FALSE);
-					DirectX.DeInitializeDirectDraw();
+					DirectDraw.DeInitializeDirectDraw();
 					Direct3D.initialize(GUI.hWnd);
 					Direct3D.changeRenderSize(0,0);
 				} else {
@@ -10094,13 +10119,14 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 					EnableWindow(GetDlgItem(hDlg, IDC_TESTMODE), TRUE);
 					EnableWindow(GetDlgItem(hDlg, IDC_LOCALVIDMEM), IsDlgButtonChecked(hDlg, IDC_VIDEOCARD)==BST_CHECKED);
 					Direct3D.deInitialize();
-					DirectX.InitDirectX();
+					DirectDraw.InitDirectDraw();
 					RestoreSNESDisplay();
 				}
 				UpdateModeListBox(GetDlgItem(hDlg,IDC_VIDMODELIST));
 				S9xSetWinPixelFormat();
 				S9xInitUpdate();
-				if(DirectX.Clipped) S9xReRefresh();
+				if(DirectDraw.Clipped) S9xReRefresh();
+				UpdateWindow(GUI.hWnd);
 			}
 			break;
 		case IDC_FILTERBOX:
@@ -10126,7 +10152,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				// refresh screen, so the user can see the new filter
 				// (assuming the dialog box isn't completely covering the game window)
-				if(DirectX.Clipped) S9xReRefresh();
+				if(DirectDraw.Clipped) S9xReRefresh();
 
 				// set hi-res combo box to match the lo-res output filter as best as possible
 //				if(GetFilterHiResSupport(GUI.Scale))
@@ -10193,7 +10219,7 @@ updateFilterBox2:
 
 				// refresh screen, so the user can see the new filter
 				// (assuming the dialog box isn't completely covering the game window)
-				if(DirectX.Clipped) S9xReRefresh();
+				if(DirectDraw.Clipped) S9xReRefresh();
 			}
 			break;
 
@@ -10269,7 +10295,7 @@ updateFilterBox2:
 				Settings.Mode7Interpolate = prevMode7Interpolate;
 				GUI.HeightExtend = prevHeightExtend;
 
-//				if(DirectX.Clipped) S9xReRefresh();
+//				if(DirectDraw.Clipped) S9xReRefresh();
 			}
 
 			EndDialog(hDlg,0);
@@ -10283,14 +10309,14 @@ updateFilterBox2:
 			if(GUI.outputMethod==DIRECT3D)
 				return false;
 
-			//DirectX.lpDD->SetCooperativeLevel(hDlg,DDSCL_FULLSCREEN|DDSCL_ALLOWMODEX|DDSCL_EXCLUSIVE|DDSCL_ALLOWREBOOT);
+			//DirectDraw.lpDD->SetCooperativeLevel(hDlg,DDSCL_FULLSCREEN|DDSCL_ALLOWMODEX|DDSCL_EXCLUSIVE|DDSCL_ALLOWREBOOT);
 			index=ListView_GetSelectionMark(GetDlgItem(hDlg,IDC_VIDMODELIST));
 			if(index != -1)
 			{
 				sprintf(temp,"%dx%d %dbit %dHz",(int)dm.at(index).width,(int)dm.at(index).height,(int)dm.at(index).depth,(int)dm.at(index).rate);
 
 				// XXX: TODO: set the selected refresh rate too! (this defaults to highest possible rate instead)
-				if(DirectX.lpDD->SetDisplayMode(dm.at(index).width,dm.at(index).height,dm.at(index).depth)!=DD_OK)
+				if(DirectDraw.lpDD->SetDisplayMode(dm.at(index).width,dm.at(index).height,dm.at(index).depth)!=DD_OK)
 				{
 
 					MessageBox(hDlg,"There was an error testing the selected mode","DD_NOTOK",MB_OK);
@@ -10375,7 +10401,7 @@ updateFilterBox2:
 
 
 				// XXX: TODO: set the selected refresh rate too! (this defaults to highest possible rate instead)
-				DirectX.lpDD->SetDisplayMode(GUI.Width,GUI.Height,GUI.Depth);
+				DirectDraw.lpDD->SetDisplayMode(GUI.Width,GUI.Height,GUI.Depth);
 			}
 			else
 			{
@@ -10530,7 +10556,7 @@ switch(msg)
 		}
 		return true;
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		SetWindowText(hDlg,INPUTCONFIG_TITLE);
 		SetDlgItemText(hDlg,IDC_JPTOGGLE,INPUTCONFIG_JPTOGGLE);
 		SetDlgItemText(hDlg,IDC_OK,BUTTON_OK);
@@ -10783,7 +10809,7 @@ switch(msg)
 		}
 		return true;
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		SetWindowText(hDlg,HOTKEYS_TITLE);
 
 		// insert hotkey page list items
@@ -10935,7 +10961,7 @@ INT_PTR CALLBACK DlgCheater(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("funkyass.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			ListView_SetExtendedListViewStyle(GetDlgItem(hDlg, IDC_CHEAT_LIST), LVS_EX_FULLROWSELECT|LVS_EX_CHECKBOXES);
@@ -11821,7 +11847,7 @@ INT_PTR CALLBACK DlgCheatSearch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 	{
 	case WM_INITDIALOG:
 		{
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 			if(val_type==0)
 				val_type=1;
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("Raptor.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
@@ -12730,7 +12756,7 @@ INT_PTR CALLBACK DlgCheatSearchAdd(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			TCHAR buf [12];
 			new_cheat=(struct ICheat*)lParam;
@@ -13269,7 +13295,7 @@ INT_PTR CALLBACK DlgOpenMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			SetCurrentDirectory(S9xGetDirectory(DEFAULT_DIR));
 			_fullpath (movieDirectory, GUI.MovieDir, MAX_PATH);
@@ -13299,7 +13325,7 @@ INT_PTR CALLBACK DlgOpenMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			SendDlgItemMessage(hDlg,IDC_READONLY,BM_SETCHECK,GUI.MovieReadOnly ? BST_CHECKED : BST_UNCHECKED,0);
 
-			EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), WIN_SNES9X_DIRECT_SOUND_DRIVER==Settings.SoundDriver); // can't sync sound to CPU unless using "Snes9x DirectSound" driver
+			//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), Settings.SoundDriver<1||Settings.SoundDriver>3); // can't sync sound to CPU unless using "Snes9x DirectSound" driver
 
 			SendDlgItemMessage(hDlg,IDC_SEEK_TO_FRAME,BM_SETCHECK,BST_UNCHECKED,0);
 			EnableWindow(GetDlgItem(hDlg, IDC_FRAME_NUMBER), FALSE);
@@ -13470,7 +13496,7 @@ INT_PTR CALLBACK DlgCreateMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 	{
 	case WM_INITDIALOG:
 		{
-			if(DirectX.Clipped) S9xReRefresh();
+			if(DirectDraw.Clipped) S9xReRefresh();
 			SetCurrentDirectory(S9xGetDirectory(DEFAULT_DIR));
 			_fullpath (movieDirectory, GUI.MovieDir, MAX_PATH);
 			mkdir(movieDirectory);
@@ -13516,7 +13542,7 @@ INT_PTR CALLBACK DlgCreateMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, Settings.SoundSync ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SetWindowText(GetDlgItem(hDlg, IDC_LOADEDFROMMOVIE), _T(""));
 
-			EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), WIN_SNES9X_DIRECT_SOUND_DRIVER==Settings.SoundDriver); // can't sync sound to CPU unless using "Snes9x DirectSound" driver
+			//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), Settings.SoundDriver<1||Settings.SoundDriver>3); // can't sync sound to CPU unless using "Snes9x DirectSound" driver
 
 			SendDlgItemMessage(hDlg,IDC_RECORD_RESET,BM_SETCHECK, (WPARAM)(GUI.MovieStartFromReset ? BST_CHECKED : BST_UNCHECKED), 0);
 			SendDlgItemMessage(hDlg,IDC_RECORD_NOW,BM_SETCHECK, (WPARAM)(GUI.MovieStartFromReset ? BST_UNCHECKED : BST_CHECKED), 0);
@@ -13678,7 +13704,7 @@ INT_PTR CALLBACK DlgStringInputProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 	switch(msg)
 	{
 	case WM_INITDIALOG:
-		if(DirectX.Clipped) S9xReRefresh();
+		if(DirectDraw.Clipped) S9xReRefresh();
 		{
 			hBmp=(HBITMAP)LoadImage(NULL, TEXT("Tsundere.bmp"), IMAGE_BITMAP, 0,0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
 			SetDlgItemText(hDlg, IDC_STRING_INPUT, WinStringInputBuf);

@@ -99,7 +99,7 @@
 #include "../snes9x.h"
 #include <memory.h>
 #include "render.h"
-#include "directx.h"
+#include "CDirectDraw.h"
 #include "../ppu.h"
 #if defined(USE_GLIDE) || defined(USE_OPENGL)
 #include "../3d.h"
