@@ -850,6 +850,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1053,6 +1054,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1099,6 +1101,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1939,6 +1942,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -3683,68 +3687,331 @@
 			Name="i386"
 			>
 			<File
-				RelativePath="..\i386\2xsaimmx.obj"
-				>
-			</File>
-			<File
-				RelativePath="..\i386\bilinear.obj"
-				>
-			</File>
-			<File
-				RelativePath="..\i386\c4.obj"
+				RelativePath="..\i386\2XSAIMMX.ASM"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="C core (Deprecated)|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\cpuexec.obj"
+				RelativePath="..\i386\bilinear.asm"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="C core (Deprecated)|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\cpuops.obj"
+				RelativePath="..\i386\C4.ASM"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="C core (Deprecated)|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\fxemu2.obj"
+				RelativePath="..\i386\cpuexec.S"
 				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\fxemu2b.obj"
+				RelativePath="..\i386\cpuops.S"
 				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\fxemu2c.obj"
+				RelativePath="..\i386\fxemu2.asm"
 				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\fxtable.obj"
+				RelativePath="..\i386\fxemu2b.asm"
 				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\i386\fxemu2c.asm"
+				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\i386\fxtable.asm"
+				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\offsets.cpp"
 				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					ExcludedFromBuild="true"
@@ -3763,38 +4030,177 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\sa1ops.obj"
+				RelativePath="..\i386\sa1ops.S"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="C core (Deprecated)|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; gcc -c -DEXECUTE_SUPERFX_PER_LINE -DVAR_CYCLES -DMICROSOFT_C -DSPC700_C -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -Ii386 i386/$(InputFileName) -o win32/$(IntDir)/i386_$(InputName).obj"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\i386\sfxproc.obj"
-				>
-			</File>
-			<File
-				RelativePath="..\i386\spc.obj"
-				>
-			</File>
-			<File
-				RelativePath="..\i386\zsnes.obj"
-				>
-			</File>
-			<File
-				RelativePath="..\i386\zsnesc4.obj"
+				RelativePath="..\i386\sfxproc.asm"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="C core (Deprecated)|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\i386\SPC.ASM"
+				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\i386\ZSNES.ASM"
+				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\i386\zsnesc4.asm"
+				>
+				<FileConfiguration
+					Name="C core (Deprecated)|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="cd .. &amp; nasmw -d__DJGPP__=1 -dZSNES_FX -f win32 -i . -i i386 -o win32/$(IntDir)/i386_$(InputName).obj i386/$(InputFileName)"
+						AdditionalDependencies="../i386/offset.h"
+						Outputs="$(IntDir)/i386_$(InputName).obj"
 					/>
 				</FileConfiguration>
 			</File>
