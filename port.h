@@ -209,7 +209,7 @@ typedef long int32;
 #   define RIGHTSHIFT_IS_SAR
 # endif
 
-# if 0//defined(_MSC_VER) && (_MSC_VER >= 1400 && _MSC_VER <= 1500) /* VC8.0 || VC9.0 */
+# if defined(_MSC_VER) && (_MSC_VER >= 1400 && _MSC_VER <= 1500) /* VC8.0 || VC9.0 */
 /* sar64 seems to cause fatal error C1063, so disable it. */
 #   ifdef RIGHTSHIFT_IS_SAR
 #     undef RIGHTSHIFT_IS_SAR
