@@ -1018,6 +1018,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
 		Settings.DisplayPressedKeys=conf.GetBool("Display::DisplayInput", false)?1:0;
 	Settings.DisplayFrame=conf.GetBool("Display::DisplayFrameCount", false);
 	Settings.DisplayLagCounter=conf.GetBool("Display::DisplayLagCounter", true);
+	Settings.OldFashionedFrameCounter=conf.GetBool("Display::OldFashionedFrameCounter", false);
 	Settings.CounterInFrames=conf.GetBool("Display::CounterInFrames", true);
 	Settings.AutoDisplayMessages=conf.GetBool("Display::MessagesInImage", true);
     if(conf.Exists("ROM::Interleaved")){

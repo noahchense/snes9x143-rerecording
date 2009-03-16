@@ -387,6 +387,7 @@ struct SSettings{
     bool8  DisplayFrame;
     bool8  DisplayLagCounter;
     bool8  DisplayWatchedAddresses;
+    bool8  OldFashionedFrameCounter;
     bool8  CounterInFrames;
     uint32 HighSpeedSeek;
     uint32 TurboSkipFrames;

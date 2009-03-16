@@ -4057,13 +4057,20 @@ void S9xDisplayMessages(uint16 *screen, int ppl, int width, int height, int scal
     if (Settings.DisplayPressedKeys==2)
         S9xDisplayPressedKeys();
 
-    if (Settings.DisplayFrame
+    if (Settings.DisplayFrame || (Settings.OldFashionedFrameCounter && Settings.DisplayLagCounter)
 #ifdef NETPLAY_SUPPORT
 	|| Settings.NetPlay
 #endif
-	)
-		DisplayString(GFX.FrameDisplayString, 2, false, 1, false);
-		DisplayString(GFX.LagCounterString, 3, false, 1, false);
+	) {
+		if (Settings.OldFashionedFrameCounter)
+			DisplayString(GFX.FrameDisplayString, 4, true, 1, false);
+		else
+			DisplayString(GFX.FrameDisplayString, 2, false, 1, false);
+	}
+	if (Settings.DisplayLagCounter) {
+		if (!Settings.OldFashionedFrameCounter)
+			DisplayString(GFX.LagCounterString, 3, false, 1, false);
+	}
 
 	if (GFX.InfoString && *GFX.InfoString)
 		DisplayString(GFX.InfoString, 5, true, 1, !S9xMovieActive()
