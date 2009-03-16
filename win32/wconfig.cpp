@@ -960,6 +960,7 @@ void WinRegisterConfigItems()
 	AddBoolC("DisplayInput", Settings.DisplayPressedKeys, false, "true to show which buttons are pressed");
 	AddBoolC("DisplayFrameCount", Settings.DisplayFrame, true, "true to show the frame count when a movie is playing");
 	AddBoolC("DisplayLagCounter", Settings.DisplayLagCounter, true, "true to notify when input was not used by the SNES (such as lag or loading frames)");
+	AddBool("OldFashionedFrameCounter", Settings.OldFashionedFrameCounter, false);
 	AddBoolC("CounterInFrames", Settings.CounterInFrames, true, "true to show frame count instead of h:mm:ss.ms");
 #undef CATEGORY
 #define CATEGORY "Display\\Win"

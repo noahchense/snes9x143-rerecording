@@ -682,23 +682,29 @@ static char *FrameCountToTime(char *str, int frame, int fps)
 
 void S9xUpdateFrameCounter (int offset)
 {
+	static char tmpBuf[1024];
+
 //	offset++;
 	extern bool8 pad_read;
 	if (!Settings.DisplayFrame)
 		*GFX.FrameDisplayString = 0;
 	else if (Movie.State == MOVIE_STATE_RECORD) {
 		if (Settings.CounterInFrames)
-			sprintf(GFX.FrameDisplayString, "%d", max(0,(int)(Movie.CurrentFrame+offset)));
+			sprintf(tmpBuf, "%d", max(0,(int)(Movie.CurrentFrame+offset)));
 		else
-			FrameCountToTime(GFX.FrameDisplayString, max(0,(int)(Movie.CurrentFrame)), Memory.ROMFramesPerSecond);
-		strcat(GFX.FrameDisplayString, " [Rec]");
+			FrameCountToTime(tmpBuf, max(0,(int)(Movie.CurrentFrame)), Memory.ROMFramesPerSecond);
+		sprintf(GFX.FrameDisplayString, "%s%s", Settings.OldFashionedFrameCounter ? "Recording frame: " : "", tmpBuf);
+		if (!Settings.OldFashionedFrameCounter)
+			strcat(GFX.FrameDisplayString, " [Rec]");
 	}
 	else if (Movie.State == MOVIE_STATE_PLAY) {
 		if (Settings.CounterInFrames)
-			sprintf(GFX.FrameDisplayString, "%d/%d", max(0,(int)(Movie.CurrentFrame+offset)), Movie.MaxFrame);
+			sprintf(tmpBuf, "%d%s%d", max(0,(int)(Movie.CurrentFrame+offset)), Settings.OldFashionedFrameCounter ? " / " : "/", Movie.MaxFrame);
 		else
-			FrameCountToTime(GFX.FrameDisplayString, max(0,(int)(Movie.CurrentFrame)), Memory.ROMFramesPerSecond);
-		strcat(GFX.FrameDisplayString, " [Play]");
+			FrameCountToTime(tmpBuf, max(0,(int)(Movie.CurrentFrame)), Memory.ROMFramesPerSecond);
+		sprintf(GFX.FrameDisplayString, "%s%s", Settings.OldFashionedFrameCounter ? "Playing frame: " : "", tmpBuf);
+		if (!Settings.OldFashionedFrameCounter)
+			strcat(GFX.FrameDisplayString, " [Play]");
 	}
 #ifdef NETPLAY_SUPPORT
 	else if(Settings.NetPlay) {
@@ -728,6 +734,13 @@ void S9xUpdateFrameCounter (int offset)
 			FrameCountToTime(GFX.LagCounterString, max(0,(int)(IPPU.LagCounter)), Memory.ROMFramesPerSecond);
 		if (!pad_read)
 			strcat(GFX.LagCounterString, " *");
+	}
+
+	if (Settings.OldFashionedFrameCounter && *GFX.LagCounterString != 0) {
+		if (*GFX.FrameDisplayString != 0)
+			strcat(GFX.FrameDisplayString, " | ");
+		strcat(GFX.FrameDisplayString, GFX.LagCounterString);
+		*GFX.LagCounterString = 0;
 	}
 }
 

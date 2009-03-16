@@ -119,7 +119,7 @@
 #include "direct3d.h"
 extern CDirect3D Direct3D;
 
-#define GENERATE_OFFSETS_H
+//#define GENERATE_OFFSETS_H
 
 #ifdef GENERATE_OFFSETS_H
 FILE *offsets_h = NULL;
