@@ -40,23 +40,23 @@ NEWSYM SfxProcAsmStart
     test byte[SfxCarry],1
     jz .nosfxcarry
     or word[SfxSFR],04h
-.nosfxcarry
+.nosfxcarry:
     cmp word[SfxSignZero],0
     jne .nozero
     or word[SfxSFR],02h
-.nozero
+.nozero:
     test word[SfxSignZero],8000h
     jz .noneg
     or word[SfxSFR],08h
-.noneg
+.noneg:
     cmp byte[SfxOverflow],0
     je .noof
     or word[SfxSFR],10h
-.noof
+.noof:
     cmp byte[SfxB],0
     je .bzero
     or word[SfxSFR],1000h
-.bzero
+.bzero:
 %endmacro
 
 
@@ -114,7 +114,7 @@ NEWSYM initsfxregsr
     add edi,[regptr]
     mov eax,cacheregr
     mov ecx,200h
-.loop
+.loop:
     mov [edi],eax
     add edi,4
     dec ecx
@@ -175,7 +175,7 @@ NEWSYM initsfxregsw
     add edi,[regptw]
     mov eax,cacheregw
     mov ecx,200h
-.loop
+.loop:
     mov [edi],eax
     add edi,4
     dec ecx
@@ -307,17 +307,17 @@ NEWSYM reg3031r
     je .alwaysclear
     cmp dword[ChangeOps],-350*240
     jl .noclear
-.alwaysclear
+.alwaysclear:
     and byte[SfxSFR+1],07fh        ; clear IRQ flag
     jmp .cleared
-.noclear
+.noclear:
     cmp dword[ChangeOps],-350*240*4
     jge .clear
     mov dword[ChangeOps],-350*240*4
     jmp .cleared
-.clear
+.clear:
     add dword[ChangeOps],350*240
-.cleared
+.cleared:
     mov al,[SfxSFR+1]
     ret
 SECTION .bss
@@ -362,15 +362,15 @@ NEWSYM reg303Ar       ; SCMR (Screen Mode Register)
     je .objmode
     mov eax,[sfx128lineloc]
     jmp .donelines
-.lines160
+.lines160:
     mov eax,[sfx160lineloc]
     jmp .donelines
-.lines192
+.lines192:
     mov eax,[sfx192lineloc]
     jmp .donelines
-.objmode
+.objmode:
     mov eax,[sfxobjlineloc]
-.donelines
+.donelines:
     mov [sfxclineloc],eax
     ret
 NEWSYM reg303Br       ; VCR (Version Code Register)
@@ -511,7 +511,7 @@ NEWSYM reg3030w
     jz .noexec
     mov dword [NumberOfOpcodes],100
     call StartSFX
-.noexec
+.noexec:
     ret
 NEWSYM reg3031w
     mov [SfxSFR+1],al

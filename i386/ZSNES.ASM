@@ -164,9 +164,9 @@ NEWSYM preparesfx
     	je .yessfxcounter
     	cmp dword[esi],'Stun'
     	jne .nosfxcounter
-.yessfxcounter
+.yessfxcounter:
 	mov byte[SFXCounter],1
-.nosfxcounter
+.nosfxcounter:
 
     	; make table
     	mov byte[SfxAC],0
@@ -174,7 +174,7 @@ NEWSYM preparesfx
     	cmp dword[eax+02B80h],0AB6CAB6Ch
     	jne .noac
     	mov byte[SfxAC],1
-.noac
+.noac:
 	call UpdateSFX
 
 	pop ebp
@@ -239,14 +239,14 @@ S9xSuperFXExec:
     test al,10h
     jz .noaccess
     jmp .noram
-.ram
+.ram:
     test al,08h
     jz .noaccess
-.noram
+.noram:
     mov eax,[NumberOfOpcodes2]
     mov [NumberOfOpcodes],eax
     call MainLoop
-.noaccess
+.noaccess:
     pop ebp
     pop edi
     pop esi
@@ -264,7 +264,7 @@ S9xSuperFXPreSaveState:
     mov edx,dword[RegRAM]
     add edx,7000h
     mov ebx,[PHnum2writesfxreg]
-.loop
+.loop:
     mov al,[ecx]
     mov [edx],al
     inc ecx
@@ -288,7 +288,7 @@ S9xSuperFXPostLoadState:
     mov edx,dword[RegRAM]
     add edx,7000h
     mov ebx,[PHnum2writesfxreg]
-.loop
+.loop:
     mov al,[edx]
     mov [ecx],al
     inc ecx
@@ -337,15 +337,15 @@ NEWSYM UpdatePORSCMR
    je .objmode
    mov eax,[sfx128lineloc]
    jmp .donelines
-.lines160
+.lines160:
    mov eax,[sfx160lineloc]
    jmp .donelines
-.lines192
+.lines192:
    mov eax,[sfx192lineloc]
    jmp .donelines
-.objmode
+.objmode:
    mov eax,[sfxobjlineloc]
-.donelines
+.donelines:
    mov [sfxclineloc],eax
 
    mov al,[SfxSCMR]
@@ -389,11 +389,11 @@ NEWSYM UpdateCLSR
    test byte[SfxCLSR],01h
    jz .nohighsfx
    mov dword [NumberOfOpcodes2],700 ;700
-.nohighsfx
+.nohighsfx:
     cmp byte[SFXCounter],1
     je .noyi
     mov dword [NumberOfOpcodes2],0FFFFFFFh
-.noyi
+.noyi:
    ret
 
 NEWSYM UpdateSFX

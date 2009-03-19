@@ -50,7 +50,7 @@ NEWSYM FxOpb06      ; BGE    branch on greater or equals        ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -67,7 +67,7 @@ NEWSYM FxOpb07      ; BLT    branch on lesss than       ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -81,7 +81,7 @@ NEWSYM FxOpb08      ; BNE    branch on not equal        ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -95,7 +95,7 @@ NEWSYM FxOpb09      ; BEQ    branch on equal (z=1)      ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -109,7 +109,7 @@ NEWSYM FxOpb0A      ; BPL    branch on plus     ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -123,7 +123,7 @@ NEWSYM FxOpb0B      ; BMI    branch on minus    ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -137,7 +137,7 @@ NEWSYM FxOpb0C      ; BCC    branch on carry clear      ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -151,7 +151,7 @@ NEWSYM FxOpb0D      ; BCS    branch on carry set        ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -165,7 +165,7 @@ NEWSYM FxOpb0E      ; BVC    branch on overflow clear   ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -179,7 +179,7 @@ NEWSYM FxOpb0F      ; BVS    branch on overflow set     ; Verified.
    add ebp,eax
    call [FxTableb+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTableb+ecx*4]
    ret
@@ -226,7 +226,7 @@ NEWSYM FxOpb1E      ; TO RN  set register n as destination register
    mov edi,SfxR0
    UpdateR14
    ret
-.VersionB
+.VersionB:
    mov eax,[esi]            ; Read Source
    mov dword[withr15sk],1
    mov [SfxR0+14*4],eax             ; Write
@@ -249,7 +249,7 @@ NEWSYM FxOpb1F      ; TO RN  set register n as destination register
    add ebp,[SfxR15]
    mov edi,SfxR0
    ret
-.VersionB
+.VersionB:
    mov eax,[esi]            ; Read Source
    mov ebp,[SfxCPB]
    mov dword[withr15sk],1
@@ -334,7 +334,7 @@ NEWSYM FxOpbBF      ; FROM rn   set source register
    call [FxTableb+ecx*4]
    mov esi,SfxR0
    ret
-.VersionB
+.VersionB:
    FETCHPIPE
    mov eax,ebp
    sub eax,[SfxCPB]
@@ -366,7 +366,7 @@ NEWSYM FxOpc06      ; BGE    branch on greater or equals        ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -383,7 +383,7 @@ NEWSYM FxOpc07      ; BLT    branch on lesss than       ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -397,7 +397,7 @@ NEWSYM FxOpc08      ; BNE    branch on not equal        ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -411,7 +411,7 @@ NEWSYM FxOpc09      ; BEQ    branch on equal (z=1)      ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -425,7 +425,7 @@ NEWSYM FxOpc0A      ; BPL    branch on plus     ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -439,7 +439,7 @@ NEWSYM FxOpc0B      ; BMI    branch on minus    ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -453,7 +453,7 @@ NEWSYM FxOpc0C      ; BCC    branch on carry clear      ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -467,7 +467,7 @@ NEWSYM FxOpc0D      ; BCS    branch on carry set        ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -481,7 +481,7 @@ NEWSYM FxOpc0E      ; BVC    branch on overflow clear   ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret
@@ -495,7 +495,7 @@ NEWSYM FxOpc0F      ; BVS    branch on overflow set     ; Verified.
    add ebp,eax
    call [FxTablec+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTablec+ecx*4]
    ret

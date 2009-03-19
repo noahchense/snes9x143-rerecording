@@ -270,8 +270,13 @@ void CXAudio2::ProcessSound()
 	BYTE *curBuffer;
 	while(emptyBuffers) {
 		curBuffer = SoundBuffer + currentBufferPos;
-		//if(Settings.SoundSync)
-		{
+		if (IsSoundMuted()) {
+			if (so.sixteen_bit)
+				SecureZeroMemory(curBuffer, buffer_sampleCount * 2);
+			else
+				memset(curBuffer, 0x80, buffer_sampleCount);
+		}
+		else {
 			EnterCriticalSection(&GUI.SoundCritSect);
 			UINT32 mixed_bytes = 0;
 			if(so.samples_mixed_so_far) {
@@ -282,8 +287,6 @@ void CXAudio2::ProcessSound()
 			so.samples_mixed_so_far = 0;
 			LeaveCriticalSection(&GUI.SoundCritSect);
 		}
-		//else
-		//	S9xMixSamplesNoLimitWrapped(curBuffer,buffer_sampleCount);
 		PushBuffer(bufferSize,curBuffer,(void *)curBuffer);
 		currentBufferPos = (currentBufferPos + bufferSize) % sum_bufferSize;
 		InterlockedDecrement(&emptyBuffers);

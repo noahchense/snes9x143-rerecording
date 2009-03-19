@@ -228,7 +228,7 @@ NEWSYM InitFxTables
    xor ebx,ebx
    mov ecx,64
    mov eax,PLOTJmpa
-.ploop
+.ploop:
    mov edx,ebx
    push ebx
    and edx,03h
@@ -242,36 +242,36 @@ NEWSYM InitFxTables
    je .colors256
    mov ebx,FxOp4C1284b
    jmp .end
-.colors4
+.colors4:
    mov ebx,FxOp4C1282b
    jmp .end
-.colors256
+.colors256:
    test bl,20h
    jnz .lowercheck
    mov ebx,FxOp4C1288b
    jmp .end
-.lowercheck
+.lowercheck:
    mov ebx,FxOp4C1288bl
    jmp .end
-.dither
+.dither:
    cmp dl,0
    je .colors4d
    cmp dl,3
    je .colors256d
    mov ebx,FxOp4C1284bd
    jmp .end
-.colors4d
+.colors4d:
    mov ebx,FxOp4C1282bd
    jmp .end
-.colors256d
+.colors256d:
    test bl,20h
    jnz .lowercheckd
    mov ebx,FxOp4C1288bd
    jmp .end
-.lowercheckd
+.lowercheckd:
    mov ebx,FxOp4C1288bdl
    jmp .end
-.zerocheck
+.zerocheck:
    test bl,08h
    jnz .ditherz
    cmp dl,0
@@ -280,35 +280,35 @@ NEWSYM InitFxTables
    je .colors256z
    mov ebx,FxOp4C1284bz
    jmp .end
-.colors4z
+.colors4z:
    mov ebx,FxOp4C1282bz
    jmp .end
-.colors256z
+.colors256z:
    test bl,20h
    jnz .lowercheckz
    mov ebx,FxOp4C1288bz
    jmp .end
-.lowercheckz
+.lowercheckz:
    mov ebx,FxOp4C1288bzl
    jmp .end
-.ditherz
+.ditherz:
    cmp dl,0
    je .colors4dz
    cmp dl,3
    je .colors256dz
    mov ebx,FxOp4C1284bzd
    jmp .end
-.colors4dz
+.colors4dz:
    mov ebx,FxOp4C1282bzd
    jmp .end
-.colors256dz
+.colors256dz:
    test bl,20h
    jnz .lowercheckdz
    mov ebx,FxOp4C1288bzd
    jmp .end
-.lowercheckdz
+.lowercheckdz:
    mov ebx,FxOp4C1288bzdl
-.end
+.end:
    mov [eax],ebx
    pop ebx
    inc ebx
@@ -319,7 +319,7 @@ NEWSYM InitFxTables
    xor ebx,ebx
    mov ecx,64
    mov eax,PLOTJmpb
-.ploop2
+.ploop2:
    mov edx,ebx
    push ebx
    and edx,03h
@@ -333,36 +333,36 @@ NEWSYM InitFxTables
    je .colors2562
    mov ebx,FxOpd4C1284b
    jmp .end2
-.colors42
+.colors42:
    mov ebx,FxOpd4C1282b
    jmp .end2
-.colors2562
+.colors2562:
    test bl,20h
    jnz .lowercheck2
    mov ebx,FxOpd4C1288b
    jmp .end2
-.lowercheck2
+.lowercheck2:
    mov ebx,FxOpd4C1288bl
    jmp .end2
-.dither2
+.dither2:
    cmp dl,0
    je .colors4d2
    cmp dl,3
    je .colors256d2
    mov ebx,FxOpd4C1284bd
    jmp .end2
-.colors4d2
+.colors4d2:
    mov ebx,FxOpd4C1282bd
    jmp .end2
-.colors256d2
+.colors256d2:
    test bl,20h
    jnz .lowercheckd2
    mov ebx,FxOpd4C1288bd
    jmp .end2
-.lowercheckd2
+.lowercheckd2:
    mov ebx,FxOpd4C1288bdl
    jmp .end2
-.zerocheck2
+.zerocheck2:
    test bl,08h
    jnz .ditherz2
    cmp dl,0
@@ -371,35 +371,35 @@ NEWSYM InitFxTables
    je .colors256z2
    mov ebx,FxOpd4C1284bz
    jmp .end2
-.colors4z2
+.colors4z2:
    mov ebx,FxOpd4C1282bz
    jmp .end2
-.colors256z2
+.colors256z2:
    test bl,20h
    jnz .lowercheckz2
    mov ebx,FxOpd4C1288bz
    jmp .end2
-.lowercheckz2
+.lowercheckz2:
    mov ebx,FxOpd4C1288bzl
    jmp .end2
-.ditherz2
+.ditherz2:
    cmp dl,0
    je .colors4dz2
    cmp dl,3
    je .colors256dz2
    mov ebx,FxOpd4C1284bzd
    jmp .end2
-.colors4dz2
+.colors4dz2:
    mov ebx,FxOpd4C1282bzd
    jmp .end2
-.colors256dz2
+.colors256dz2:
    test bl,20h
    jnz .lowercheckdz2
    mov ebx,FxOpd4C1288bzd
    jmp .end2
-.lowercheckdz2
+.lowercheckdz2:
    mov ebx,FxOpd4C1288bzdl
-.end2
+.end2:
    mov [eax],ebx
    pop ebx
    inc ebx
@@ -411,7 +411,7 @@ NEWSYM InitFxTables
    mov eax,fxxand
    mov ecx,256
    xor ebx,ebx
-.loopat
+.loopat:
    push ecx
    mov ecx,ebx
    and ecx,07h
@@ -429,46 +429,46 @@ NEWSYM InitFxTables
    mov eax,fxbit01
    mov ecx,256
    xor ebx,ebx
-.loopb01
+.loopb01:
    xor edx,edx
    test ebx,01h
    jz .nob0
    or edx,0FFh
-.nob0
+.nob0:
    test ebx,02h
    jz .nob1
    or edx,0FF00h
-.nob1
+.nob1:
    mov [eax],edx
    xor edx,edx
    test ebx,04h
    jz .nob2
    or edx,0FFh
-.nob2
+.nob2:
    test ebx,08h
    jz .nob3
    or edx,0FF00h
-.nob3
+.nob3:
    mov [eax+256*4],edx
    xor edx,edx
    test ebx,10h
    jz .nob4
    or edx,0FFh
-.nob4
+.nob4:
    test ebx,20h
    jz .nob5
    or edx,0FF00h
-.nob5
+.nob5:
    mov [eax+256*8],edx
    xor edx,edx
    test ebx,40h
    jz .nob6
    or edx,0FFh
-.nob6
+.nob6:
    test ebx,80h
    jz .nob7
    or edx,0FF00h
-.nob7
+.nob7:
    mov [eax+256*12],edx
    add eax,4
    inc ebx
@@ -484,8 +484,8 @@ NEWSYM InitFxTables
    mov [sfx128lineloc],esi
    xor eax,eax
    xor ebx,ebx
-.nexty
-.nextx
+.nexty:
+.nextx:
    cmp eax,128
    jae .over
    push eax
@@ -499,18 +499,18 @@ NEWSYM InitFxTables
    pop ebx
    pop eax
    jmp .notover
-.over
+.over:
    mov dword[esi],0FFFFFFFFh
    add esi,4
-.notover
+.notover:
    inc al
    jnz .nextx
    inc bl
    jnz .nexty
    ; 160 line mode
    mov [sfx160lineloc],esi
-.nexty2
-.nextx2
+.nexty2:
+.nextx2:
    cmp eax,160
    jae .over2
    push eax
@@ -527,18 +527,18 @@ NEWSYM InitFxTables
    pop ebx
    pop eax
    jmp .notover2
-.over2
+.over2:
    mov dword[esi],0FFFFFFFFh
    add esi,4
-.notover2
+.notover2:
    inc al
    jnz .nextx2
    inc bl
    jnz .nexty2
    ; 192 line mode
    mov [sfx192lineloc],esi
-.nexty3
-.nextx3
+.nexty3:
+.nextx3:
    cmp eax,192
    jae .over3
    push eax
@@ -555,18 +555,18 @@ NEWSYM InitFxTables
    pop ebx
    pop eax
    jmp .notover3
-.over3
+.over3:
    mov dword[esi],0FFFFFFFFh
    add esi,4
-.notover3
+.notover3:
    inc al
    jnz .nextx3
    inc bl
    jnz .nexty3
    ; obj mode
    mov [sfxobjlineloc],esi
-.nexty4
-.nextx4
+.nexty4:
+.nextx4:
    push eax
    push ebx
    and ebx,80h
@@ -597,7 +597,7 @@ NEWSYM InitFxTables
    mov eax,[romdata]
    xor ebx,ebx
    mov ecx,256
-.loopc
+.loopc:
    mov [SfxMemTable+ebx*4],eax
    inc ebx
    dec ecx
@@ -607,7 +607,7 @@ NEWSYM InitFxTables
    add eax,200000h
    xor ebx,ebx
    mov ecx,64
-.loop
+.loop:
    mov [SfxMemTable+ebx*4],eax
    add eax,65536
    inc ebx
@@ -616,7 +616,7 @@ NEWSYM InitFxTables
 
    mov eax,[romdata]
    mov ecx,64
-.loop2
+.loop2:
    mov [SfxMemTable+ebx*4],eax
    add eax,65536
    inc ebx
@@ -638,7 +638,7 @@ NEWSYM InitFxTables
    xor ebx,ebx
    mov ebx,80h
    mov ecx,64
-.loops
+.loops:
    mov [SfxMemTable+ebx*4],eax
    add eax,65536
    inc ebx
@@ -647,7 +647,7 @@ NEWSYM InitFxTables
 
    mov eax,[romdata]
    mov ecx,64
-.loop2s
+.loop2s:
    mov [SfxMemTable+ebx*4],eax
    add eax,65536
    inc ebx

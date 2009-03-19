@@ -36,7 +36,7 @@
    call [FxTableb+ecx*4]
    mov edi,SfxR0
    ret
-.VersionB
+.VersionB:
    mov eax,[esi]            ; Read Source
    mov dword[withr15sk],1
    inc ebp                ; Increase program counter
@@ -54,7 +54,7 @@
    call [FxTable+ecx*4]
    mov esi,SfxR0
    ret
-.VersionB
+.VersionB:
    mov eax,[SfxR0+%1*4]             ; Read
    inc ebp
    mov [edi],eax        ; Write Destination
