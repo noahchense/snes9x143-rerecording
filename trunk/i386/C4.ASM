@@ -47,21 +47,21 @@ C4ProcessVectors:
     ja .ret
     cmp dx,0
     jne .nozero
-.ret
+.ret:
     ret
-.nozero
+.nozero:
     cmp dx,10h
     jb .less
     mov dx,10h
-.less
+.less:
     mov esi,[C4Ram]
     add esi,800h
-.loop
+.loop:
     mov ecx,100h
     xor ebx,ebx
     xor eax,eax
     movsx bx,byte[edi]
-.spotloop
+.spotloop:
     add ah,80h
     mov byte[esi],ah
     sub ah,80h
@@ -98,18 +98,18 @@ C4Edit:
     mov byte[pressed+1Ah],0
     inc byte[C4ObjSelec]
     inc byte[C4Temp]
-.notpressed
+.notpressed:
     cmp byte[pressed+1Bh],0
     je .notpressed2
     mov byte[pressed+1Bh],0
     dec byte[C4ObjSelec]
     dec byte[C4Temp]
-.notpressed2
+.notpressed2:
     cmp byte[pressed+19h],0
     je .notpressed3
     mov byte[pressed+19h],0
     xor byte[C4Pause],1
-.notpressed3
+.notpressed3:
 
     ; Setup variables
     mov esi,[C4Ram]
@@ -120,12 +120,12 @@ C4Edit:
     dec al
     mov byte[C4ObjSelec],al
     jmp .notof
-.notneg
+.notneg:
     cmp byte[C4ObjSelec],al
     jb .notof
     xor al,al
     mov [C4ObjSelec],al
-.notof
+.notof:
 
     ; Draw the dots on-screen
     xor eax,eax
@@ -137,7 +137,7 @@ C4Edit:
     test byte[eax+6],40h
     jz .notflip
     mov byte[.flipped],1
-.notflip
+.notflip:
 
 ;              00/01 - x position relative to BG scroll value
 ;              02/03 - y position relative to BG scroll value
@@ -162,81 +162,81 @@ C4Edit:
     mov byte[pressed+14h],0
     pushad
     mov ecx,15
-.next
+.next:
     add ebx,4
     dec byte[ebx+1]
     loop .next
     popad
-.notmove
+.notmove:
     cmp byte[pressed+21h],0
     je .notmove2
     mov byte[pressed+21h],0
     pushad
     mov ecx,15
-.next2
+.next2:
     add ebx,4
     cmp byte[.flipped],0
     je .noflipx
     add byte[ebx],2
-.noflipx
+.noflipx:
     dec byte[ebx]
     loop .next2
     popad
-.notmove2
+.notmove2:
     cmp byte[pressed+22h],0
     je .notmove3
     mov byte[pressed+22h],0
     pushad
     mov ecx,15
-.next3
+.next3:
     add ebx,4
     inc byte[ebx+1]
     loop .next3
     popad
-.notmove3
+.notmove3:
     cmp byte[pressed+23h],0
     je .notmove4
     mov byte[pressed+23h],0
     pushad
     mov ecx,15
-.next4
+.next4:
     add ebx,4
     cmp byte[.flipped],0
     je .noflipx2
     sub byte[ebx],2
-.noflipx2
+.noflipx2:
     inc byte[ebx]
     loop .next4
     popad
-.notmove4
+.notmove4:
     cmp byte[pressed+10h],0
     je .notcopy
     mov byte[pressed+10h],0
     pushad
     mov edx,C4DataCopy
     mov ecx,64
-.copylp
+.copylp:
     mov al,[ebx]
     mov [edx],al
     inc ebx
     inc edx
     loop .copylp
     popad
-.notcopy
+.notcopy:
     cmp byte[pressed+11h],0
     je .notpaste
     mov byte[pressed+11h],0
     pushad
     mov edx,C4DataCopy
     mov ecx,64
-.pastelp
+.pastelp:
     mov al,[edx]
     mov [ebx],al
     inc ebx
     inc edx
     loop .pastelp
     popad
-.notpaste
+.notpaste:
 
     ;  - = remove sub-object, + = add sub-object
     ;  ; = previous sub-object, ' = next sub-object
@@ -246,24 +246,24 @@ C4Edit:
     cmp byte[ebx],0
     je .notpressed4
     dec byte[ebx]
-.notpressed4
+.notpressed4:
     cmp byte[pressed+0Dh],0
     je .notpressed5
     mov byte[pressed+0Dh],0
     cmp byte[ebx],15
     je .notpressed5
     inc byte[ebx]
-.notpressed5
+.notpressed5:
     cmp byte[pressed+27h],0
     je .notpressed6
     mov byte[pressed+27h],0
     dec byte[C4SObjSelec]
-.notpressed6
+.notpressed6:
     cmp byte[pressed+28h],0
     je .notpressed7
     mov byte[pressed+28h],0
     inc byte[C4SObjSelec]
-.notpressed7
+.notpressed7:
 
     ; get current sub-object displacement (0 if no sub-objects)
     xor ecx,ecx
@@ -276,11 +276,11 @@ C4Edit:
     dec cl
     mov byte[C4SObjSelec],cl
     jmp .sobjokay
-.sobjokay2
+.sobjokay2:
     cmp byte[C4SObjSelec],cl
     jb .sobjokay
     mov byte[C4SObjSelec],0
-.sobjokay
+.sobjokay:
 
     xor ecx,ecx
     mov cl,byte[C4SObjSelec]
@@ -296,7 +296,7 @@ C4Edit:
     je .notpressed8
     mov byte[pressed+17h],0
     dec byte[ebx+1]
-.notpressed8
+.notpressed8:
     cmp byte[pressed+24h],0
     je .notpressed9
     mov byte[pressed+24h],0
@@ -304,7 +304,7 @@ C4Edit:
     cmp byte[.flipped],0
     je .notpressed9
     add byte[ebx],2
-.notpressed9
+.notpressed9:
     cmp byte[pressed+26h],0
     je .notpressed11
     mov byte[pressed+26h],0
@@ -312,36 +312,36 @@ C4Edit:
     cmp byte[.flipped],0
     je .notpressed11
     sub byte[ebx],2
-.notpressed11
+.notpressed11:
     cmp byte[pressed+25h],0
     je .notpressed10
     mov byte[pressed+25h],0
     inc byte[ebx+1]
-.notpressed10
+.notpressed10:
     cmp byte[pressed+16h],0
     je .notpressed12
     mov byte[pressed+16h],0
     xor byte[ebx+3],2
-.notpressed12
+.notpressed12:
     cmp byte[pressed+18h],0
     je .notpressed13
     mov byte[pressed+18h],0
     xor byte[ebx+3],1
-.notpressed13
+.notpressed13:
     cmp byte[pressed+34h],0
     je .notpressed14
     mov byte[pressed+34h],0
     dec byte[ebx+2]
-.notpressed14
+.notpressed14:
     cmp byte[pressed+35h],0
     je .notpressed15
     mov byte[pressed+35h],0
     inc byte[ebx+2]
-.notpressed15
+.notpressed15:
 
     mov cl,[ebx]
     mov ch,[ebx+1]
-.nosubobjs
+.nosubobjs:
     mov edx,ecx
     xor ebx,ebx
     xor ecx,ecx
@@ -367,7 +367,7 @@ C4Edit:
     mov [esi+16],ax
     mov [esi+288*8*2],ax
     mov [esi+16+288*8*2],ax
-.skipall
+.skipall:
     ret
 
 SECTION .data
@@ -392,7 +392,7 @@ C4AddSprite:
     cmp dl,0FCh
     jne .nosprite
     inc dword[C4usprptr]
-.nosprite
+.nosprite:
     ret
 
 C4ConvOAM:
@@ -429,7 +429,7 @@ C4ConvOAM:
     mov eax,[C4sprites]
     sub dword[C4count],eax
 
-.loop
+.loop:
     push ecx
     push esi
 ;              00/01 - x position relative to BG scroll value
@@ -459,19 +459,19 @@ C4ConvOAM:
     cmp byte[C4Timer],0
     je .flash
     jmp .noflash
-.notstage1
+.notstage1:
     jmp .notstage2
     cmp ah,4
     jne .notstage2
     cmp byte[C4Timer2],0
     je .flash
-.noflash
+.noflash:
     and al,0F1h
     or al,2
     jmp .notstage2
-.flash
+.flash:
     and al,0F1h
-.notstage2
+.notstage2:
     mov [C4SprAttr],al
     mov al,[esi+6]
     or [C4SprAttr],al
@@ -490,14 +490,14 @@ C4ConvOAM:
     jz near .singlespr
     mov [C4SprCnt],al
     inc ecx
-.nextspr
+.nextspr:
     xor ebx,ebx
     movsx bx,byte[ecx+1]
     test byte[C4SprAttr],40h
     jz .notflipx
     neg bx
     sub bx,8
-.notflipx
+.notflipx:
     add bx,[C4SprX]
     xor dh,dh
     test byte[ecx],20h
@@ -506,7 +506,7 @@ C4ConvOAM:
     test byte[C4SprAttr],40h
     jz .no16x16
     sub bx,8
-.no16x16
+.no16x16:
     cmp bx,-16
     jl near .nosprite
     cmp bx,272
@@ -515,21 +515,21 @@ C4ConvOAM:
     test bx,100h
     jz .not512b
     or dh,01010101b
-.not512b
+.not512b:
     xor ebx,ebx
     movsx bx,byte[ecx+2]
     test byte[C4SprAttr],80h
     jz .notflipy
     neg bx
     sub bx,8
-.notflipy
+.notflipy:
     add bx,[C4SprY]
     test byte[ecx],20h
     jz .no16x16b
     test byte[C4SprAttr],80h
     jz .no16x16b
     sub bx,8
-.no16x16b
+.no16x16b:
     cmp bx,-16
     jl near .nosprite
     cmp bx,224
@@ -542,23 +542,23 @@ C4ConvOAM:
     mov bl,[C4SprOAM]
     add bl,[ecx+3]
     call C4AddSprite
-.nosprite
+.nosprite:
     add ecx,4
     dec byte[C4SprCnt]
     jnz near .nextspr
     jmp .donemultispr
-.singlespr
+.singlespr:
     mov dh,10101010b
     test byte[C4SprX+1],1
     jz .not512
     or dh,01010101b
-.not512
+.not512:
     mov al,[C4SprX]
     mov ah,[C4SprY]
     mov bl,[C4SprOAM]
     mov bh,[C4SprAttr]
     call C4AddSprite
-.donemultispr
+.donemultispr:
     pop esi
     pop ecx
 
@@ -569,11 +569,11 @@ C4ConvOAM:
     add esi,16
     dec cl
     jnz near .loop
-.none
+.none:
     mov esi,oamram
     mov edi,[C4Ram]
     mov ecx,544
-.next
+.next:
     mov al,[edi]
     mov [esi],al
     inc edi
@@ -622,10 +622,10 @@ NEWSYM C4ProcessSprites
 ;    jne .noincdisp
     mov dword[C4count],32
     sub ecx,[C4sprites]
-.noincdisp
+.noincdisp:
     add esi,[C4ObjDisp]
     ; Clear OAM to-be ram
-.next
+.next:
     mov byte[esi+1],0E0h
     add esi,4
     dec ecx
@@ -658,7 +658,7 @@ NEWSYM InitC4
     add dword[C4RamW],8192*4
     add dword[C4Ram],8192*8
     mov ecx,8192
-.c4loop
+.c4loop:
     mov dword[esi],C4ReadReg
     mov dword[esi+8192*4],C4WriteReg
     mov dword[esi+8192*8],0
@@ -669,7 +669,7 @@ NEWSYM InitC4
     mov dword[esi+1F4Fh*4],C4RegFunction
     mov esi,[C4Data]
     mov ecx,16*4096
-.c4loopb
+.c4loopb:
     mov dword[esi],0
     add esi,4
     loop .c4loopb
@@ -684,10 +684,10 @@ C4ClearSpr:
 ;    sub cx,6000h
 ;    add eax,ecx
     shl ch,3
-.scloop2
+.scloop2:
     mov cl,byte[C4SprPos]
     shl cl,2
-.scloop
+.scloop:
     mov byte[edi],0
     mov byte[edi+2000h],0
     inc edi
@@ -700,33 +700,33 @@ C4ClearSpr:
 C4SprBitPlane:
     mov edi,eax
     shl ebx,2
-.scloop3
+.scloop3:
     mov ch,[C4SprPos]
     push esi
-.scloop4
+.scloop4:
     push esi
     mov cl,8
-.loop
+.loop:
     mov dh,8
     mov dl,80h
     mov eax,[esi]
-.nextd
+.nextd:
     test al,1
     jz .not0
     or byte[edi],dl
-.not0
+.not0:
     test al,2
     jz .not1
     or byte[edi+1],dl
-.not1
+.not1:
     test al,4
     jz .not2
     or byte[edi+16],dl
-.not2
+.not2:
     test al,8
     jz .not3
     or byte[edi+17],dl
-.not3
+.not3:
     shr eax,4
     shr dl,1
     dec dh
@@ -747,7 +747,7 @@ C4SprBitPlane:
     shr ebx,3
     dec byte[C4SprPos+1]
     jnz .scloop3
-.end
+.end:
     ret
 
 SECTION .data
@@ -774,7 +774,7 @@ DoScaleRotate:
     test bx,8000h
     jz .notover
     mov bx,7FFFh
-.notover
+.notover:
     imul bx
     add ax,ax
     adc dx,dx
@@ -794,7 +794,7 @@ DoScaleRotate:
     test bx,8000h
     jz .notoverb
     mov bx,7FFFh
-.notoverb
+.notoverb:
     imul bx
     add ax,ax
     add dx,dx
@@ -813,7 +813,7 @@ DoScaleRotate:
     jne .effect
     mov word[C4YYScale],1000h
     mov word[C4YXScale],0
-.effect
+.effect:
     ; Calculate Pixel Resolution
     mov cl,byte[C4SprPos]
     shl cl,3
@@ -869,14 +869,14 @@ DoScaleRotate:
     ; Start loop
     mov word[C4CYPos],0
     xor edi,edi
-.loop
+.loop:
     mov ecx,[C4PCXMPos]
     mov [C4CXMPos],ecx
     mov ecx,[C4PCYMPos]
     mov [C4CYMPos],ecx
     mov al,[C4SprPos+2]
     mov byte[C4CXPos],al
-.loop2
+.loop2:
     xor eax,eax
     mov al,[C4SprPos+2]
     mov ebx,[C4CXMPos]
@@ -905,12 +905,12 @@ DoScaleRotate:
     add ebx,eax
     mov al,[ebx]
     jmp .lowerb
-.upperb
+.upperb:
     shr eax,1
     add ebx,eax
     mov al,[ebx]
     shr al,4
-.lowerb
+.lowerb:
     mov ebx,edi
     shr ebx,1
     add ebx,esi
@@ -920,12 +920,12 @@ DoScaleRotate:
     and byte[ebx+2000h],0F0h
     or byte[ebx+2000h],al
     jmp .done
-.upperb2
+.upperb2:
     shl al,4
     and byte[ebx+2000h],0Fh
     or byte[ebx+2000h],al
     jmp .done
-.blank
+.blank:
     mov eax,edi
     shr eax,1
     add eax,esi
@@ -933,9 +933,9 @@ DoScaleRotate:
     jnz .upper
     and byte[eax+2000h],0F0h
     jmp .done
-.upper
+.upper:
     and byte[eax+2000h],0Fh
-.done
+.done:
     movsx eax,word[C4XXScale]
     add [C4CXMPos],eax
     movsx eax,word[C4XYScale]
@@ -951,7 +951,7 @@ DoScaleRotate:
     mov al,[C4SprPos+3]
     cmp byte[C4CYPos],al
     jne near .loop
-.noimage
+.noimage:
     popad
     ret
 
@@ -962,30 +962,30 @@ DoScaleRotate2:
     cmp bx,1000h
     ja .scaled
     mov bx,1000h
-.scaled
+.scaled:
     mov [C4SprScale],ebx
     xor ebx,ebx
     mov bx,[eax+1F92h]
     cmp bx,1000h
     ja .scaledb
     mov bx,1000h
-.scaledb
+.scaledb:
     mov [C4SprScaleY],ebx
     mov cl,[C4SprPos]
     shl cl,3
     mov ch,cl
     xor ebx,ebx
-.leftovercheck
+.leftovercheck:
     dec ch
     add ebx,[C4SprScale]
-.leftovercheckb
+.leftovercheckb:
     cmp ebx,1000h
     jb .leftovercheck
     sub ebx,1000h
     dec cl
     jz .donecheck
     jmp .leftovercheckb
-.donecheck
+.donecheck:
     shr ch,1
     mov cl,ch
     and ecx,0FFh
@@ -995,17 +995,17 @@ DoScaleRotate2:
     shl cl,3
     mov ch,cl
     xor ebx,ebx
-.leftovercheckc
+.leftovercheckc:
     dec ch
     add ebx,[C4SprScaleY]
-.leftovercheckd
+.leftovercheckd:
     cmp ebx,1000h
     jb .leftovercheckc
     sub ebx,1000h
     dec cl
     jz .donecheckc
     jmp .leftovercheckd
-.donecheckc
+.donecheckc:
     shr ch,1
     mov cl,ch
     and ecx,0FFh
@@ -1022,7 +1022,7 @@ DoScaleRotate2:
     mov cl,[C4SprPos+1]
     shl cl,3
     mov [C4SprPos+3],cl
-.next
+.next:
     push esi
     push edi
     xor ecx,ecx
@@ -1031,7 +1031,7 @@ DoScaleRotate2:
     mov ch,cl
     mov dword[C4SprScaler],0
     xor edx,edx
-.loop
+.loop:
     mov edx,edi
     shr edx,1
     add edx,[C4SprPtr]
@@ -1039,7 +1039,7 @@ DoScaleRotate2:
     test esi,1
     jz .notupper
     shr bl,4
-.notupper
+.notupper:
     and bl,0Fh
     mov edx,esi
     shr edx,1
@@ -1048,14 +1048,14 @@ DoScaleRotate2:
     shl bl,4
     or byte[eax+edx+2000h],bl
     jmp .notlowerb
-.notupperb
+.notupperb:
     or byte[eax+edx+2000h],bl
-.notlowerb
+.notlowerb:
     inc esi
     mov ebx,[C4SprScale]
     add dword[C4SprScaler],ebx
     dec ch
-.nextcheck
+.nextcheck:
     cmp dword[C4SprScaler],1000h
     jb near .loop
     sub dword[C4SprScaler],1000h
@@ -1063,7 +1063,7 @@ DoScaleRotate2:
     dec cl
     jz .done
     jmp .nextcheck
-.done
+.done:
     pop edi
     pop esi
     xor edx,edx
@@ -1073,7 +1073,7 @@ DoScaleRotate2:
 
     mov ebx,[C4SprScaleY]
     add dword[C4SprScalerY],ebx
-.nextcheckb
+.nextcheckb:
     cmp dword[C4SprScalerY],1000h
     jb near .next
     sub dword[C4SprScalerY],1000h
@@ -1081,7 +1081,7 @@ DoScaleRotate2:
     dec byte[C4SprPos+3]
     jz .doneb
     jmp .nextcheckb
-.doneb
+.doneb:
 
     popad
     ret
@@ -1220,7 +1220,7 @@ C4SprDisintegrate:
     ; convert to 8-bit bitmap
     mov cx,[C4SprPos+2]
     shr cl,1
-.loop2
+.loop2:
     mov al,[esi]
     mov [edi],al
     mov al,[esi]
@@ -1236,7 +1236,7 @@ C4SprDisintegrate:
     mov edi,[C4Ram]
     add edi,4000h
     mov ecx,2000h
-.lp
+.lp:
     mov byte[edi],0
     inc edi
     loop .lp
@@ -1247,9 +1247,9 @@ C4SprDisintegrate:
     add edi,4000h
 
     mov cx,[C4SprPos+2]
-.next2
+.next2:
     push ebx
-.next
+.next:
     xor eax,eax
     mov ah,[C4SprPos+2]
     cmp ebx,eax
@@ -1272,10 +1272,10 @@ C4SprDisintegrate:
     cmp eax,2000h
     jae .skipdisi
     mov [edi+eax],dl
-.skipdisi
+.skipdisi:
     pop edx
     pop ecx
-.fail
+.fail:
     inc esi
     add ebx,[.scalex]
     dec cl
@@ -1286,7 +1286,7 @@ C4SprDisintegrate:
     dec ch
     jnz near .next2
 
-.skipall
+.skipall:
     ; convert to 4-bit bitmap
     mov esi,[C4Ram]
     add esi,4000h
@@ -1294,7 +1294,7 @@ C4SprDisintegrate:
     add edi,6000h
     mov cx,[C4SprPos+2]
     shr cl,1
-.loop
+.loop:
     mov al,[esi]
     mov [edi],al
     mov al,[esi+1]
@@ -1332,7 +1332,7 @@ C4BitPlaneWave:
     mov dword[.waveptr],eax
     mov word[.temp+4],0C0C0h
     mov word[.temp+6],03F3Fh
-.bmloopb
+.bmloopb:
     mov edi,[C4Ram]
     add edi,[.waveptr]
     xor eax,eax
@@ -1342,7 +1342,7 @@ C4BitPlaneWave:
     mov edi,[C4Ram]
     add edi,0A00h
     xor ecx,ecx
-.bmloopa
+.bmloopa:
     mov ebx,[.bmptr+ecx*4]
     mov dx,[.temp+6]
     and [esi+ebx],dx
@@ -1353,7 +1353,7 @@ C4BitPlaneWave:
     cmp ax,8
     jae .less
     mov dx,[edi+eax*2]
-.less
+.less:
     and dx,[.temp+4]
     or [esi+ebx],dx
     inc ax
@@ -1367,7 +1367,7 @@ C4BitPlaneWave:
     cmp word[.temp+4],0C0C0h
     jne near .bmloopb
     add esi,16
-.bmloopa2b
+.bmloopa2b:
     mov edi,[C4Ram]
     add edi,[.waveptr]
     xor eax,eax
@@ -1377,7 +1377,7 @@ C4BitPlaneWave:
     mov edi,[C4Ram]
     add edi,0A00h
     xor ecx,ecx
-.bmloopa2
+.bmloopa2:
     mov ebx,[.bmptr+ecx*4]
     mov dx,[.temp+6]
     and [esi+ebx],dx
@@ -1388,7 +1388,7 @@ C4BitPlaneWave:
     cmp ax,8
     jae .less2
     mov dx,[edi+eax*2+16]
-.less2
+.less2:
     and dx,[.temp+4]
     or [esi+ebx],dx
     inc ax
@@ -1490,14 +1490,14 @@ EXTSYM C4TransfWireFrame2
     or ecx,ecx
     jnz .not0
     mov ecx,1
-.not0
+.not0:
     movsx eax,word[C4WFXVal]
     mov [C4X2],eax
     movsx eax,word[C4WFYVal]
     mov [C4Y2],eax
     pop esi
     ; render line
-.loop
+.loop:
     ; plot pixel
     cmp word[C4X1+1],0
     jl near .noplot
@@ -1534,12 +1534,12 @@ EXTSYM C4TransfWireFrame2
     test byte[C4Col],1
     jz .nocolor0
     or byte[esi+eax+300h],dl
-.nocolor0
+.nocolor0:
     test byte[C4Col],2
     jz .nocolor1
     or byte[esi+eax+301h],dl
-.nocolor1
-.noplot
+.nocolor1:
+.noplot:
     mov eax,[C4X2]
     add [C4X1],eax
     mov eax,[C4Y2]
@@ -1562,21 +1562,21 @@ DrawWireFrame:
     mov edi,ebx
     xor ecx,ecx
     mov cl,[esi+295h]
-.loop
+.loop:
     xor eax,eax
     mov al,[esi+1F82h]
     shl eax,16
     mov al,[edi+1]
     mov ah,[edi+0]
     mov edx,edi
-.nextprev
+.nextprev:
     cmp ax,0FFFFh
     jne .notprev
     sub edx,5
     mov al,[edx+3]
     mov ah,[edx+2]
     jmp .nextprev
-.notprev
+.notprev:
     add ax,ax
     shr eax,1
     add eax,[romdata]
@@ -1635,7 +1635,7 @@ WireFrameB:
     mov esi,[C4Ram]
     add esi,300h
     mov ecx,16*12*3
-.loop
+.loop:
     mov dword[esi],0
     add esi,4
     loop .loop
@@ -1685,7 +1685,7 @@ EXTSYM C4WFDist,C4WFScale,C4TransfWireFrame,C4WFZVal
     xor ecx,ecx
     mov cx,[esi+1F80h]
     xor al,al
-.loop
+.loop:
     mov ax,[esi+1]
     mov [C4WFXVal],ax
     mov ax,[esi+5]
@@ -1720,7 +1720,7 @@ EXTSYM C4WFDist,C4WFScale,C4TransfWireFrame,C4WFZVal
     mov cx,[esi+0B00h]
     mov edi,esi
     add edi,0B02h
-.lineloop
+.lineloop:
     xor eax,eax
     mov al,[edi]
     shl eax,4
@@ -1748,7 +1748,7 @@ EXTSYM C4WFDist,C4WFScale,C4TransfWireFrame,C4WFZVal
     or ax,ax
     jnz .yeswire
     mov ax,1
-.yeswire
+.yeswire:
     mov word[esi+$600],ax
     mov ax,[C4WFXVal]
     mov word[esi+$602],ax
@@ -1758,7 +1758,7 @@ EXTSYM C4WFDist,C4WFScale,C4TransfWireFrame,C4WFZVal
     add esi,8
     dec ecx
     jnz near .lineloop
-.done
+.done:
     popad
     ret
 
@@ -1813,9 +1813,9 @@ C4activate:
     mov [esi+1F80h],al
     pop esi
     ret
-.befnoc4test
+.befnoc4test:
     pop esi
-.noc4test
+.noc4test:
     cmp al,00h
     je near .dosprites
     cmp al,01h
@@ -1847,10 +1847,10 @@ C4activate:
     cmp al,89h
     je near .immediaterom
     ret
-.dowireframe
+.dowireframe:
     call WireFrameB
     ret
-.linearray
+.linearray:
     pushad
     ; C,F,0,3,6,9 -> 6800 (E1h bytes)
     ; 0,3 = screen scroll coordinates
@@ -1858,18 +1858,18 @@ C4activate:
     ; C,F = angle of both arrays
     mov esi,[C4Ram]
     xor ecx,ecx
-.loopline
+.loopline:
     ; process position
     xor eax,eax
     mov al,[esi+1F8Ch]
     or ecx,ecx
     jz .secondlineb
     mov al,[esi+1F8Fh]
-.secondlineb
+.secondlineb:
     test al,80h
     jz .notua
     or ah,1
-.notua
+.notua:
     movsx ebx,word[CosTable+eax*2]
     mov ax,word[SinTable+eax*2]
     shl eax,16
@@ -1879,7 +1879,7 @@ C4activate:
     test eax,80000000h
     jz .notnegline
     mov edx,0FFFFFFFFh
-.notnegline
+.notnegline:
     idiv ebx
     mov [C4Temp],eax
     xor edx,edx
@@ -1887,7 +1887,7 @@ C4activate:
     sub bx,[esi+1F89h]
     dec bx
     movsx ebx,bx
-.nextline
+.nextline:
     test ebx,80000000h
     jnz .none
     mov eax,[C4Temp]
@@ -1903,23 +1903,23 @@ C4activate:
     or ecx,ecx
     jz .not0line
     mov byte[esi+edx+$800],1
-.not0line
+.not0line:
     cmp ax,255
     jl .not255line
     mov ax,255
-.not255line
+.not255line:
     jmp .doneline
-.none
+.none:
     mov al,1
     sub al,cl
-.doneline
+.doneline:
     or ecx,ecx
     jnz .secondline
     mov [esi+edx+$800],al
     jmp .firstline
-.secondline
+.secondline:
     mov [esi+edx+$900],al
-.firstline
+.firstline:
     inc ebx
     inc edx
     cmp edx,0E1h
@@ -1928,7 +1928,7 @@ C4activate:
     jnz .finish
     mov ecx,1
     jmp .loopline
-.finish
+.finish:
     mov cx,[C4Temp]
 ;    mov [C4values],cx
     mov cx,[C4Temp+2]
@@ -1939,7 +1939,7 @@ C4activate:
 ;    mov [C4values+6],cx
     popad
     ret
-.propulsion
+.propulsion:
     pushad
     ; 81 = 5B, 83 = 0x300
     ; 0x300 = /1, 0x280 = /4
@@ -1964,7 +1964,7 @@ C4activate:
     shl edx,16
     mov dx,ax
     sar edx,8
-.done
+.done:
     mov word[esi+1F80h],dx
     mov [C4values+4],dx
 
@@ -1979,7 +1979,7 @@ C4activate:
 
     popad
     ret
-.polarcord2
+.polarcord2:
     pushad
     mov esi,[C4Ram]
     xor ecx,ecx
@@ -2001,7 +2001,7 @@ C4activate:
     mov [esi+1F8Bh],bl
     popad
     ret
-.dosprites
+.dosprites:
 ;    mov byte[debstop3],0
     push eax
     mov eax,[C4Ram]
@@ -2021,26 +2021,26 @@ C4activate:
     je near .bitmap
     pop eax
     ret
-.wireframeb
+.wireframeb:
     pop eax
     call WireFrameB2
     ret
-.sprites
+.sprites:
     pop eax
     call C4ProcessSprites
     ret
-.disintegrate
+.disintegrate:
     call C4SprDisintegrate
     pop eax
     ret
-.dolines
+.dolines:
 ;    mov byte[debstop3],0
     ret
-.bitmap
+.bitmap:
     call C4BitPlaneWave
     pop eax
     ret
-.calcdistance
+.calcdistance:
 EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
     pushad
     mov esi,[C4Ram]
@@ -2062,7 +2062,7 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
 ;    mov [C4values+4],cx
     popad
     ret
-.calcangle
+.calcangle:
     pushad
     mov esi,[C4Ram]
     mov bx,[esi+1F80h]
@@ -2082,7 +2082,7 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
 ;    mov [C4values+4],cx
     popad
     ret
-.transform
+.transform:
     ; 7F81,4,7,9,A,B,0,1,D
 ;    mov byte[debstop3],0
     pushad
@@ -2092,7 +2092,7 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
 ;    mov word[eax+1F83h],0
     popad
     ret
-.multiply
+.multiply:
     pushad
     mov esi,[C4Ram]
     mov eax,[esi+1F80h]
@@ -2103,13 +2103,13 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
     mov [esi+1F80h],eax
     popad
     ret
-.sum
+.sum:
     pushad
     xor eax,eax
     xor ebx,ebx
     mov esi,[C4Ram]
     mov ecx,800h
-.sumloop    
+.sumloop:
     mov bl,byte[esi]
     inc esi
     add ax,bx
@@ -2118,7 +2118,7 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
     mov [esi+1F80h-0800h],ax
     popad
     ret
-.square
+.square:
     pushad
     xor edx,edx
     mov esi,[C4Ram]
@@ -2130,7 +2130,7 @@ EXTSYM C41FXVal,C41FYVal,C41FAngleRes,C41FDist,C4Op1F,C4Op15
     mov [esi+1F87h],dx
     popad
     ret
-.equatevelocity
+.equatevelocity:
 EXTSYM C41FDistVal,C4Op0D
     pushad
     mov esi,[C4Ram]
@@ -2155,7 +2155,7 @@ EXTSYM C41FDistVal,C4Op0D
     cmp cx,40h
     jb .nomult
     shr cx,7
-.nomult
+.nomult:
     mov ax,[esi+$1F80]
 ;    imul cx
     shl ax,4
@@ -2172,11 +2172,11 @@ EXTSYM C41FDistVal,C4Op0D
 ;    mov [C4values+4],cx
     popad
     ret
-.lines
+.lines:
     call C4WireFrame
     pop eax
     ret
-.scaler
+.scaler:
     push esi
     push ecx
     mov esi,[C4Ram]
@@ -2191,7 +2191,7 @@ EXTSYM C41FDistVal,C4Op0D
     call C4SprScaleR
     pop eax
     ret
-.rotater
+.rotater:
     push esi
     push ecx
     mov esi,[C4Ram]
@@ -2206,7 +2206,7 @@ EXTSYM C41FDistVal,C4Op0D
     call C4SprRotateR
     pop eax
     ret
-.direction
+.direction:
     push eax
     push ebx
     push esi
@@ -2251,7 +2251,7 @@ EXTSYM C41FDistVal,C4Op0D
     pop ebx
     pop eax
     ret
-.immediaterom
+.immediaterom:
     push eax
     mov eax,[C4Ram]
     mov byte[eax+1F80h],36h
@@ -2259,7 +2259,7 @@ EXTSYM C41FDistVal,C4Op0D
     mov byte[eax+1F82h],05h
     pop eax
     ret
-.immediatereg
+.immediatereg:
     push eax
     mov eax,[C4Ram]
     mov dword[eax+0*4],0FF000000h
@@ -2299,7 +2299,7 @@ NEWSYM C4WriteReg
     je .C4Memcpy
     ret
 
-.C4Memcpy
+.C4Memcpy:
 EXTSYM C4LoaDMem
     pushad
     push dword C4Ram

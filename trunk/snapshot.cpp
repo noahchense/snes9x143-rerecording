@@ -685,6 +685,10 @@ bool8 S9xFreezeGame (const char *filename)
 	
     if (S9xOpenSnapshotFile (filename, FALSE, &stream))
     {
+		#ifdef WIN32
+		EnterCriticalSection(&GUI.SoundCritSect);
+		#endif
+
 		S9xPrepareSoundForSnapshotSave (FALSE);
 
 		S9xFreezeToStream (stream);
@@ -697,6 +701,10 @@ bool8 S9xFreezeGame (const char *filename)
 		S9xPrepareSoundForSnapshotSave (TRUE);
 
 		S9xResetSaveTimer (TRUE);
+
+		#ifdef WIN32
+		LeaveCriticalSection(&GUI.SoundCritSect);
+		#endif
 
 		if(S9xMovieActive())
 		{
@@ -831,6 +839,10 @@ void S9xFreezeToStream (STREAM stream)
 
 	freezing_to_stream = true;
 
+	#ifdef WIN32
+	EnterCriticalSection(&GUI.SoundCritSect);
+	#endif
+
     S9xSetSoundMute (TRUE);
 #ifdef ZSNES_FX
     if (Settings.SuperFX)
@@ -950,6 +962,10 @@ void S9xFreezeToStream (STREAM stream)
 		S9xSuperFXPostSaveState ();
 #endif
 
+	#ifdef WIN32
+	LeaveCriticalSection(&GUI.SoundCritSect);
+	#endif
+
 	freezing_to_stream = false;
 }
 
@@ -974,6 +990,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 		return (result);
 
 	unfreezing_from_stream = true;
+
+	#ifdef WIN32
+	EnterCriticalSection(&GUI.SoundCritSect);
+	#endif
 
     if (strcasecmp (rom_filename, Memory.ROMFilename) != 0 &&
 		strcasecmp (S9xBasename (rom_filename), S9xBasename (Memory.ROMFilename)) != 0)
@@ -1320,6 +1340,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 #endif // !NEW_SNAPSHOT_SCREENSHOT
 	for(int i=0; i<2; i++)
 	if (local_dummy[i])		 delete [] local_dummy[i];
+
+	#ifdef WIN32
+	LeaveCriticalSection(&GUI.SoundCritSect);
+	#endif
 
 	unfreezing_from_stream = false;
 

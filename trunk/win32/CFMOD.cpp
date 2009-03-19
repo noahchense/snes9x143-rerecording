@@ -207,10 +207,10 @@ mode or the Windows WAVE device has been opened.",
 	fmod_stream = FSOUND_Stream_Create (FMODStreamCallback, bufferSize,
                                         FSOUND_LOOP_OFF |
                                         FSOUND_STREAMABLE |
-                                        FSOUND_SIGNED |
                                         FSOUND_LOOP_NORMAL |
                                         (Settings.SixteenBitSound ?
-                                           FSOUND_16BITS : FSOUND_8BITS) |
+                                           (FSOUND_16BITS | FSOUND_SIGNED) :
+                                           (FSOUND_8BITS  | FSOUND_SIGNED)) | // FIXME: FSOUND_UNSIGNED didn't work properly (3.7.5 final). For the time being, snes9x converts the mixed samples manually in FMODStreamCallback
                                         (Settings.Stereo ?
                                            FSOUND_STEREO : FSOUND_MONO),
                                         Settings.SoundPlaybackRate, (void *)this);
@@ -334,8 +334,13 @@ F_CALLBACKAPI CFMOD::FMODStreamCallback (FSOUND_STREAM *stream, void *buff, int 
     if (Settings.SixteenBitSound)
         sample_count /= 2;
 
-//	if(Settings.SoundSync)
-	{
+	if (IsSoundMuted()) {
+		if (so.sixteen_bit)
+			SecureZeroMemory(buff, len);
+		else
+			memset(buff, 0x80, len);
+	}
+	else {
 		EnterCriticalSection(&GUI.SoundCritSect);
 		UINT32 mixed_bytes = 0;
 		if(so.samples_mixed_so_far) {
@@ -345,10 +350,13 @@ F_CALLBACKAPI CFMOD::FMODStreamCallback (FSOUND_STREAM *stream, void *buff, int 
 		S9xMixSamplesNoLimitWrapped((unsigned char *)buff+mixed_bytes,sample_count-so.samples_mixed_so_far);
 		so.samples_mixed_so_far = 0;
 		LeaveCriticalSection(&GUI.SoundCritSect);
+
+		// FIXME: use FSOUND_UNSIGNED instead, if that gets working properly.
+		if (!Settings.SixteenBitSound) {
+			for (int i = 0; i < len; i++)
+				((uint8*)buff)[i] ^= 0x80;
+		}
 	}
-//	else {
-//		S9xMixSamplesNoLimitWrapped ((unsigned char *) buff, sample_count);
-//	}
 
 #if defined (FSOUND_LOADRAW)
     return (1);

@@ -146,7 +146,7 @@ NEWSYM FxOp00     ; STOP   stop GSU execution (and maybe generate an IRQ)     ; 
    test dword [SfxCFGR],080h        ; Check if the interrupt generation is on
    jnz .NoIRQ
    or dword [SfxSFR],08000h         ; Set IRQ Flag
-.NoIRQ
+.NoIRQ:
    CLRFLAGS
    inc ebp
    mov eax,[NumberOfOpcodes]
@@ -175,7 +175,7 @@ NEWSYM FxOp02      ; CACHE  reintialize GSU cache
    mov dword [SfxCBR],eax
    mov dword [SfxCacheActive],1
    call FlushCache
-.SkipUpdate
+.SkipUpdate:
    CLRFLAGS
    inc ebp                ; Increase program counter
    ret
@@ -224,7 +224,7 @@ NEWSYM FxOp06      ; BGE    branch on greater or equals        ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -241,7 +241,7 @@ NEWSYM FxOp07      ; BLT    branch on lesss than       ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -255,7 +255,7 @@ NEWSYM FxOp08      ; BNE    branch on not equal        ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -269,7 +269,7 @@ NEWSYM FxOp09      ; BEQ    branch on equal (z=1)      ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -283,7 +283,7 @@ NEWSYM FxOp0A      ; BPL    branch on plus     ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -297,7 +297,7 @@ NEWSYM FxOp0B      ; BMI    branch on minus    ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -311,7 +311,7 @@ NEWSYM FxOp0C      ; BCC    branch on carry clear      ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -325,7 +325,7 @@ NEWSYM FxOp0D      ; BCS    branch on carry set        ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -339,7 +339,7 @@ NEWSYM FxOp0E      ; BVC    branch on overflow clear   ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -353,7 +353,7 @@ NEWSYM FxOp0F      ; BVS    branch on overflow set     ; Verified.
    add ebp,eax
    call [FxTable+ecx*4]
    ret
-.nojump
+.nojump:
    inc ebp
    call [FxTable+ecx*4]
    ret
@@ -459,7 +459,7 @@ NEWSYM FxOp2F      ; WITH  set register n as source and destination register
    je .skip
    mov ebp,[SfxCPB]
    add ebp,[SfxR15]
-.skip
+.skip:
    mov dword [SfxB],0         ; Clear B Flag
    mov esi,SfxR0
    mov edi,SfxR0
@@ -527,7 +527,7 @@ NEWSYM FxOp3C      ; LOOP   decrement loop counter, and branch on not zero ; V
    add ebp,eax
    CLRFLAGS
    ret
-.NoBranch
+.NoBranch:
    inc ebp
    CLRFLAGS
    ret
@@ -690,7 +690,7 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    jnz .nozerocheck_16
    test byte[SfxCOLR],0Fh
    jz .nodraw
-.nozerocheck_16
+.nozerocheck_16:
    mov dl,[SfxCOLR]
    test byte[SfxPOR],02h
    jz .nodither4b
@@ -699,7 +699,7 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    test dh,01h
    jz .nodither4b
    shr dh,4
-.nodither4b
+.nodither4b:
    and byte[eax],bh
    and byte[eax+1],bh
    and byte[eax+16],bh
@@ -707,24 +707,24 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    test dl,01h
    jz .nodraw_16
    or byte[eax],   bl
-.nodraw_16
+.nodraw_16:
    test dl,02h
    jz .nodraw2_16
    or byte[eax+1], bl
-.nodraw2_16
+.nodraw2_16:
    test dl,04h
    jz .nodraw3_16
    or byte[eax+16],bl
-.nodraw3_16
+.nodraw3_16:
    test dl,08h
    jz .nodraw4_16
    or byte[eax+17],bl
-.nodraw4_16
-.nodraw
+.nodraw4_16:
+.nodraw:
    inc word [SfxR1]
    ret
 
-.colors4
+.colors4:
    shl ebx,4    ; x16 (4 colors)
    mov al,[SfxSCBR]
    shl eax,10   ; Get SFX address
@@ -746,7 +746,7 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    jnz .nozerocheck_4
    test byte[SfxCOLR],03h
    jz .noplot_4
-.nozerocheck_4
+.nozerocheck_4:
    mov dl,[SfxCOLR]
    test byte[SfxPOR],02h
    jz .nodither2b
@@ -755,22 +755,22 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    test dh,01h
    jz .nodither2b
    shr dh,4
-.nodither2b
+.nodither2b:
    and byte[eax],bh
    and byte[eax+1],bh
    test dl,01h
    jz .nodraw_4
    or byte[eax],   bl
-.nodraw_4
+.nodraw_4:
    test dl,02h
    jz .nodraw2_4
    or byte[eax+1], bl
-.nodraw2_4
-.noplot_4
+.nodraw2_4:
+.noplot_4:
    inc word [SfxR1]
    ret
 
-.colors256
+.colors256:
    shl ebx,6    ; x64 (256 colors)
    mov al,[SfxSCBR]
    shl eax,10   ; Get SFX address
@@ -794,10 +794,10 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    test byte[SfxPOR],08h
    jz .nozerocheckb_256
    mov dl,0Fh
-.nozerocheckb_256
+.nozerocheckb_256:
    test byte[SfxCOLR],dl
    jz .noplot_256
-.nozerocheck_256
+.nozerocheck_256:
    mov dl,[SfxCOLR]
    and byte[eax],bh
    and byte[eax+1],bh
@@ -810,36 +810,36 @@ NEWSYM FxOp4C      ; PLOT   plot pixel with R1,R2 as x,y and the color register 
    test dl,01h
    jz .nodraw_256
    or byte[eax],   bl
-.nodraw_256
+.nodraw_256:
    test dl,02h
    jz .nodraw2_256
    or byte[eax+1], bl
-.nodraw2_256
+.nodraw2_256:
    test dl,04h
    jz .nodraw3_256
    or byte[eax+16],bl
-.nodraw3_256
+.nodraw3_256:
    test dl,08h
    jz .nodraw4_256
    or byte[eax+17],bl
-.nodraw4_256
+.nodraw4_256:
    test dl,10h
    jz .nodraw5_256
    or byte[eax+32],   bl
-.nodraw5_256
+.nodraw5_256:
    test dl,20h
    jz .nodraw6_256
    or byte[eax+33], bl
-.nodraw6_256
+.nodraw6_256:
    test dl,40h
    jz .nodraw7_256
    or byte[eax+48],bl
-.nodraw7_256
+.nodraw7_256:
    test dl,80h
    jz .nodraw8_256
    or byte[eax+49],bl
-.nodraw8_256
-.noplot_256
+.nodraw8_256:
+.noplot_256:
    inc word [SfxR1]
    ret
 
@@ -867,15 +867,15 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    je .objmode
    mov eax,[sfx128lineloc]
    jmp .donelines
-.lines160
+.lines160:
    mov eax,[sfx160lineloc]
    jmp .donelines
-.lines192
+.lines192:
    mov eax,[sfx192lineloc]
    jmp .donelines
-.objmode
+.objmode:
    mov eax,[sfxobjlineloc]
-.donelines
+.donelines:
    mov ebx,[eax+ebx*4]
    cmp ebx,0FFFFFFFFh
    je near .nodraw
@@ -912,20 +912,20 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    test byte[eax],bl
    jz .nodraw_16
    or bh,01h
-.nodraw_16
+.nodraw_16:
    test byte[eax+1],bl
    jz .nodraw2_16
    or bh,02h
-.nodraw2_16
+.nodraw2_16:
    test byte[eax+16],bl
    jz .nodraw3_16
    or bh,04h
-.nodraw3_16
+.nodraw3_16:
    test byte[eax+17],bl
    jz .nodraw4_16
    or bh,08h
-.nodraw4_16
-.nodraw
+.nodraw4_16:
+.nodraw:
    mov bl,bh
    and ebx,0FFh
    inc ebp
@@ -935,7 +935,7 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    mov [flagnz],ebx
    ret
 
-.colors4
+.colors4:
    shl ebx,4    ; x16 (4 colors)
    mov al,[SfxSCBR]
    shl eax,10   ; Get SFX address
@@ -957,11 +957,11 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    test byte[eax],bl
    jz .nodraw_4
    or bh,01h
-.nodraw_4
+.nodraw_4:
    test byte[eax+1],bl
    jz .nodraw2_4
    or bh,02h
-.nodraw2_4
+.nodraw2_4:
    mov bl,bh
    and ebx,0FFh
    inc ebp
@@ -971,7 +971,7 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    mov [flagnz],ebx
    ret
 
-.colors256
+.colors256:
    shl ebx,6    ; x64 (256 colors)
    mov al,[SfxSCBR]
    shl eax,10   ; Get SFX address
@@ -993,35 +993,35 @@ NEWSYM FxOp4CA1    ; RPIX   read color of the pixel with R1,R2 as x,y
    test byte[eax],bl
    jz .nodraw_256
    or bh,01h
-.nodraw_256
+.nodraw_256:
    test byte[eax+1],bl
    jz .nodraw2_256
    or bh,02h
-.nodraw2_256
+.nodraw2_256:
    test byte[eax+16],bl
    jz .nodraw3_256
    or bh,04h
-.nodraw3_256
+.nodraw3_256:
    test byte[eax+17],bl
    jz .nodraw4_256
    or bh,08h
-.nodraw4_256
+.nodraw4_256:
    test byte[eax+32],bl
    jz .nodraw5_256
    or bh,10h
-.nodraw5_256
+.nodraw5_256:
    test byte[eax+33],bl
    jz .nodraw6_256
    or bh,20h
-.nodraw6_256
+.nodraw6_256:
    test byte[eax+48],bl
    jz .nodraw7_256
    or bh,40h
-.nodraw7_256
+.nodraw7_256:
    test byte[eax+49],bl
    jz .nodraw8_256
    or bh,80h
-.nodraw8_256
+.nodraw8_256:
    mov bl,bh
    and ebx,0FFh
    inc ebp
@@ -1051,7 +1051,7 @@ NEWSYM FxOp4E      ; COLOR  copy source register to color register     ; V
    shr bl,4
    and al,0F0h
    or al,bl
-.nohighnibble
+.nohighnibble:
    test byte[SfxPOR],08h
    jnz .preserveupper
    cmp [SfxCOLR],al
@@ -1066,11 +1066,11 @@ NEWSYM FxOp4E      ; COLOR  copy source register to color register     ; V
    mov [fxbit45pcal],ebx
    mov ebx,[fxbit67+eax*4]
    mov [fxbit67pcal],ebx
-.nocolchange
+.nocolchange:
    CLRFLAGS
    inc ebp                ; Increase program counter
    ret
-.preserveupper
+.preserveupper:
    mov bl,[SfxCOLR]
    and al,0Fh
    and bl,0F0h
@@ -1109,15 +1109,15 @@ NEWSYM FxOp4EA1    ; CMODE  set plot option register ; V
    je .objmode
    mov eax,[sfx128lineloc]
    jmp .donelines
-.lines160
+.lines160:
    mov eax,[sfx160lineloc]
    jmp .donelines
-.lines192
+.lines192:
    mov eax,[sfx192lineloc]
    jmp .donelines
-.objmode
+.objmode:
    mov eax,[sfxobjlineloc]
-.donelines
+.donelines:
    mov [sfxclineloc],eax
 
 
@@ -1486,21 +1486,21 @@ NEWSYM FxOp70      ; MERGE  R7 as upper byte, R8 as lower byte (used for texture
    test eax,0F0F0h
    jz .nozero
    mov dword[SfxSignZero],0000h
-.nozero
+.nozero:
    test eax,08080h
    jz .nosign
    or dword [SfxSignZero],80000h
-.nosign
+.nosign:
    mov dword [SfxOverflow],1
    test ax,0c0c0h
    jnz .Overflow
    mov dword [SfxOverflow],0
-.Overflow
+.Overflow:
    mov dword [SfxCarry],1
    test ax,0e0e0h
    jnz .Carry
    mov dword [SfxCarry],0
-.Carry
+.Carry:
    CLRFLAGS
    ret
 
@@ -1856,7 +1856,7 @@ NEWSYM FxOp96A1    ; DIV2   aritmethic shift right by one      ; V
    mov dword [SfxSignZero],eax
    CLRFLAGS
    ret
-.minusone
+.minusone:
    mov byte[SfxCarry],1
    xor eax,eax
    inc ebp                ; Increase program counter
@@ -2334,7 +2334,7 @@ NEWSYM FxOpDF      ; GETC      transfer ROM buffer to color register
    shr bl,4
    and al,0F0h
    or al,bl
-.nohighnibble
+.nohighnibble:
    test byte[SfxPOR],08h
    jnz .preserveupper
    cmp [SfxCOLR],al
@@ -2349,11 +2349,11 @@ NEWSYM FxOpDF      ; GETC      transfer ROM buffer to color register
    mov [fxbit45pcal],ebx
    mov ebx,[fxbit67+eax*4]
    mov [fxbit67pcal],ebx
-.nocolchange
+.nocolchange:
    CLRFLAGS
    inc ebp                ; Increase program counter
    ret
-.preserveupper
+.preserveupper:
    mov bl,[SfxCOLR]
    and al,0Fh
    and bl,0F0h
@@ -2448,7 +2448,7 @@ NEWSYM FxOpEF      ; getb      get byte from ROM at address R14        ; V
    mov [edi],eax            ; Write DREG
    CLRFLAGS
    ret
-.nor15
+.nor15:
 ;   mov eax,ebp
 ;   sub eax,[SfxCPB]
 ;   mov [SfxR15],al
@@ -2671,11 +2671,11 @@ NEWSYM MainLoop
    jmp [FxTabled+ecx*4]
    jmp .LoopAgain
 ALIGN16
-.LoopAgain
+.LoopAgain:
    call [FxTable+ecx*4]
    dec dword [NumberOfOpcodes]
    jnz .LoopAgain
-.EndLoop
+.EndLoop:
 NEWSYM FXEndLoop
    sub ebp,[SfxCPB]
    mov [SfxR15],ebp

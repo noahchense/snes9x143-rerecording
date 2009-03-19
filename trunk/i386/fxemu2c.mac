@@ -33,7 +33,7 @@
    dec dword [NumberOfOpcodes]
    js %%endloop
    jmp [FxTabled+ecx*4]
-%%endloop
+%%endloop:
    jmp FXEndLoop
 ;   jmp [FxTabled+ecx*4]
    ALIGN32

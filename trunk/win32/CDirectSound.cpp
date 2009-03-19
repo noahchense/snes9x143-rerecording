@@ -177,17 +177,17 @@ extern void S9xMixSamplesNoLimitWrapped(uint8 *buffer, int sample_count);
 //////////////////////////////////////////////////////////////////////
 CDirectSound::CDirectSound()
 {
-    lpDS = NULL;
-    lpDSB = NULL;
-    lpDSBPrimary = NULL;
+	lpDS = NULL;
+	lpDSB = NULL;
+	lpDSBPrimary = NULL;
 
-    initDone = NULL;
+	initDone = NULL;
 	blockCount = 0;
 	blockSize = 0;
 	bufferSize = 0;
 	sampleCount = 0;
 	mixInterval = 0;
-	threadExit = false;
+//	threadExit = false;
 	syncSoundBuffer = NULL;
 }
 
@@ -208,26 +208,26 @@ bool CDirectSound::InitDirectSound ()
 	if(initDone)
 		return true;
 
-    if (!lpDS)
-    {
-        dErr = DirectSoundCreate (NULL, &lpDS, NULL);
-        if (dErr != DS_OK)
-        {
-            MessageBox (GUI.hWnd, TEXT("\
+	if (!lpDS)
+	{
+		dErr = DirectSoundCreate (NULL, &lpDS, NULL);
+		if (dErr != DS_OK)
+		{
+			MessageBox (GUI.hWnd, TEXT("\
 Unable to initialise DirectSound. You will not be able to hear any\n\
 sound effects or music while playing.\n\n\
 It is usually caused by not having DirectX installed, another\n\
 application that has already opened DirectSound in exclusive\n\
 mode or the Windows WAVE device has been opened."),
-                        TEXT("Snes9X - Unable to Open DirectSound"),
-                        MB_OK | MB_ICONWARNING);
-            return (false);
-        }
-    }
+						TEXT("Snes9X - Unable to Open DirectSound"),
+						MB_OK | MB_ICONWARNING);
+			return (false);
+		}
+	}
 	initDone = true;
 	dErr = lpDS->SetCooperativeLevel (GUI.hWnd, DSSCL_PRIORITY | DSSCL_EXCLUSIVE);
-    if (!SUCCEEDED(dErr))
-    {
+	if (!SUCCEEDED(dErr))
+	{
 		dErr = lpDS->SetCooperativeLevel (GUI.hWnd, DSSCL_PRIORITY);
 		if (!SUCCEEDED(dErr))
 		{
@@ -255,7 +255,7 @@ opened DirectSound in exclusive mode."),
 		}
 	}
 
-    return (initDone);
+	return (initDone);
 }
 
 /*  CDirectSound::DeInitDirectSound
@@ -268,11 +268,11 @@ void CDirectSound::DeInitDirectSound()
 	DeInitSoundBuffer();
 	
 	if( lpDS != NULL)
-    {
-        lpDS->SetCooperativeLevel (GUI.hWnd, DSSCL_NORMAL);
-        lpDS->Release ();
-        lpDS = NULL;
-    }
+	{
+		lpDS->SetCooperativeLevel (GUI.hWnd, DSSCL_NORMAL);
+		lpDS->Release ();
+		lpDS = NULL;
+	}
 }
 
 /*  CDirectSound::InitSoundBuffer
@@ -288,10 +288,10 @@ bool CDirectSound::InitSoundBuffer()
 
 	mixInterval = Settings.SoundMixInterval;
 
-    if (Settings.SoundBufferSize < 1)
-        Settings.SoundBufferSize = 1;
-    if (Settings.SoundBufferSize > 64)
-        Settings.SoundBufferSize = 64;
+	if (Settings.SoundBufferSize < 1)
+		Settings.SoundBufferSize = 1;
+	if (Settings.SoundBufferSize > 64)
+		Settings.SoundBufferSize = 64;
 	blockCount = Settings.SoundBufferSize * 4;
 
 	int sampleCountNoAlign = (Settings.SoundPlaybackRate * mixInterval * (Settings.Stereo ? 2 : 1)) / 1000;
@@ -301,52 +301,52 @@ bool CDirectSound::InitSoundBuffer()
 
 	sampleCount = sampleCountAligned;
 	blockSize = sampleCount * (Settings.SixteenBitSound ? 2 : 1);
-    bufferSize = blockSize * blockCount;
+	bufferSize = blockSize * blockCount;
 
-    wfx.wFormatTag = WAVE_FORMAT_PCM;
-    wfx.nChannels = Settings.Stereo ? 2 : 1;
-    wfx.nSamplesPerSec = Settings.SoundPlaybackRate;
-    wfx.nBlockAlign = (Settings.SixteenBitSound ? 2 : 1) * (Settings.Stereo ? 2 : 1);
-    wfx.wBitsPerSample = Settings.SixteenBitSound ? 16 : 8;
-    wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
-    wfx.cbSize = 0;
+	wfx.wFormatTag = WAVE_FORMAT_PCM;
+	wfx.nChannels = Settings.Stereo ? 2 : 1;
+	wfx.nSamplesPerSec = Settings.SoundPlaybackRate;
+	wfx.nBlockAlign = (Settings.SixteenBitSound ? 2 : 1) * (Settings.Stereo ? 2 : 1);
+	wfx.wBitsPerSample = Settings.SixteenBitSound ? 16 : 8;
+	wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
+	wfx.cbSize = 0;
 
-    ZeroMemory (&dsbd, sizeof(DSBUFFERDESC) );
-    dsbd.dwSize = sizeof(dsbd);
-    dsbd.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_STICKYFOCUS;
+	ZeroMemory (&dsbd, sizeof(DSBUFFERDESC) );
+	dsbd.dwSize = sizeof(dsbd);
+	dsbd.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_STICKYFOCUS;
 
-    dErr = lpDS->CreateSoundBuffer (&dsbd, &lpDSBPrimary, NULL);
-    if (dErr != DS_OK)
-    {
-        lpDSB = NULL;
-        return (false);
-    }
+	dErr = lpDS->CreateSoundBuffer (&dsbd, &lpDSBPrimary, NULL);
+	if (dErr != DS_OK)
+	{
+		lpDSB = NULL;
+		return (false);
+	}
 
-    lpDSBPrimary->SetFormat (&wfx);
-    if (lpDSBPrimary->GetFormat (&wfx, sizeof (wfx), NULL) == DS_OK)
-    {
-        so.playback_rate = wfx.nSamplesPerSec;
-        so.stereo = wfx.nChannels > 1;
-        so.sixteen_bit = wfx.wBitsPerSample == 16;
-    }
+	lpDSBPrimary->SetFormat (&wfx);
+	if (lpDSBPrimary->GetFormat (&wfx, sizeof (wfx), NULL) == DS_OK)
+	{
+		so.playback_rate = wfx.nSamplesPerSec;
+		so.stereo = wfx.nChannels > 1;
+		so.sixteen_bit = wfx.wBitsPerSample == 16;
+	}
 
-    lpDSBPrimary->Play (0, 0, DSBPLAY_LOOPING);
+	lpDSBPrimary->Play (0, 0, DSBPLAY_LOOPING);
 
-    ZeroMemory (&dsbd, sizeof (dsbd));
-    dsbd.dwSize = sizeof( dsbd);
-    dsbd.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRLVOLUME |
-               DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_STICKYFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY;
-    dsbd.dwBufferBytes = bufferSize;
-    dsbd.lpwfxFormat = &wfx;
+	ZeroMemory (&dsbd, sizeof (dsbd));
+	dsbd.dwSize = sizeof( dsbd);
+	dsbd.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_CTRLVOLUME |
+			DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_STICKYFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY;
+	dsbd.dwBufferBytes = bufferSize;
+	dsbd.lpwfxFormat = &wfx;
 
-    if (lpDS->CreateSoundBuffer (&dsbd, &lpDSB, NULL) != DS_OK)
-    {
-        lpDSBPrimary->Release ();
-        lpDSBPrimary = NULL;
-        lpDSB->Release();
-        lpDSB = NULL;
-        return (false);
-    }
+	if (lpDS->CreateSoundBuffer (&dsbd, &lpDSB, NULL) != DS_OK)
+	{
+		lpDSBPrimary->Release ();
+		lpDSBPrimary = NULL;
+		lpDSB->Release();
+		lpDSB = NULL;
+		return (false);
+	}
 
 	syncSoundBuffer = new uint8[blockSize];
 	return true;
@@ -357,25 +357,29 @@ deinitializes the DirectSound/temp buffers and stops the mixing thread
 */
 void CDirectSound::DeInitSoundBuffer()
 {
-	if(threadHandle) {
-		threadExit = true;
-		WaitForSingleObject(threadHandle,INFINITE);
-		threadExit = false;
-		CloseHandle(threadHandle);
-		threadHandle = NULL;
+	if (timerHandle) {
+		timeKillEvent(timerHandle);
+		timerHandle = NULL;
 	}
-	if( lpDSB != NULL)
-    {
-        lpDSB->Stop ();
-        lpDSB->Release();
-        lpDSB = NULL;
-    }
-    if( lpDSBPrimary != NULL)
-    {
-        lpDSBPrimary->Stop ();
-        lpDSBPrimary->Release();
-        lpDSBPrimary = NULL;
-    }
+	//if(threadHandle) {
+	//	threadExit = true;
+	//	WaitForSingleObject(threadHandle,INFINITE);
+	//	threadExit = false;
+	//	CloseHandle(threadHandle);
+	//	threadHandle = NULL;
+	//}
+	if(lpDSB != NULL)
+	{
+		lpDSB->Stop ();
+		lpDSB->Release();
+		lpDSB = NULL;
+	}
+	if(lpDSBPrimary != NULL)
+	{
+		lpDSBPrimary->Stop ();
+		lpDSBPrimary->Release();
+		lpDSBPrimary = NULL;
+	}
 	if(syncSoundBuffer) {
 		delete syncSoundBuffer;
 		syncSoundBuffer = NULL;
@@ -406,18 +410,16 @@ bool CDirectSound::SetupSound(uint8 **syncSoundBuffer,int *sample_count)
 	
 	BYTE  *B1;
 	DWORD S1;
-	hResult = lpDSB->Lock (0, 0, (void **)&B1,
-                                       &S1, NULL, NULL, DSBLOCK_ENTIREBUFFER);
+	hResult = lpDSB->Lock (0, 0, (void **)&B1, &S1, NULL, NULL, DSBLOCK_ENTIREBUFFER);
 	if (hResult == DSERR_BUFFERLOST)
-    {
-        lpDSB->Restore ();
-        hResult = lpDSB->Lock (0, 0, (void **)&B1,
-                                       &S1, NULL, NULL, DSBLOCK_ENTIREBUFFER);
-    }
-    if (!SUCCEEDED(hResult))
 	{
-        hResult = lpDSB -> Unlock (B1, S1, NULL, NULL);
-        return true;
+		lpDSB->Restore ();
+		hResult = lpDSB->Lock (0, 0, (void **)&B1, &S1, NULL, NULL, DSBLOCK_ENTIREBUFFER);
+	}
+	if (!SUCCEEDED(hResult))
+	{
+		hResult = lpDSB -> Unlock (B1, S1, NULL, NULL);
+		return true;
 	}
 
 	S9xMixSamplesNoLimitWrapped(B1,sampleCount * blockCount);
@@ -427,15 +429,27 @@ bool CDirectSound::SetupSound(uint8 **syncSoundBuffer,int *sample_count)
 
 	last_block = blockCount - 1;
 
-	if(!(threadHandle = (HANDLE)_beginthreadex(NULL,0,&SoundThread,(void *)this,0,NULL))) {
+	// For some reasons, we use old good timeSetEvent method instead.
+	timerHandle = timeSetEvent (mixInterval/2, 0, &SoundTimerCallback, (DWORD)this, TIME_PERIODIC);
+	if (!timerHandle) {
+		MessageBox (GUI.hWnd, TEXT("Unable to create mixing thread, DirectSound will not work."),
+			TEXT("Snes9X - DirectSound"),
+			MB_OK | MB_ICONWARNING);
 		DeInitSoundBuffer();
 		return false;
 	}
+	//if(!(threadHandle = (HANDLE)_beginthreadex(NULL,0,&SoundThread,(void *)this,0,NULL))) {
+	//	MessageBox (GUI.hWnd, TEXT("Unable to create mixing thread, DirectSound will not work."),
+	//		TEXT("Snes9X - DirectSound"),
+	//		MB_OK | MB_ICONWARNING);
+	//	DeInitSoundBuffer();
+	//	return false;
+	//}
 
 	*syncSoundBuffer = this->syncSoundBuffer;
 	*sample_count = sampleCount;
 
-    return (true);
+	return (true);
 }
 
 /*  CDirectSound::ProcessSound
@@ -445,70 +459,68 @@ synchronizes the syncSoundBuffer access with a critical section
 */
 void CDirectSound::ProcessSound()
 {
-    DWORD play_pos = 0, write_pos = 0;
-    HRESULT hResult;
+	DWORD play_pos = 0, write_pos = 0;
+	HRESULT hResult;
 	DWORD curr_block;
 
 	// we need to enter before GetCurrentPosition, otherwise the play cursor could already be too far
 	// ahead when we get into the critical section
 	EnterCriticalSection(&GUI.SoundCritSect);
-	
-    lpDSB->GetCurrentPosition (&play_pos, &write_pos);
+
+	lpDSB->GetCurrentPosition (&play_pos, &write_pos);
 
 	curr_block = ((play_pos / blockSize) + Settings.SoundBufferSize) % blockCount;
 
-    if (curr_block != last_block)
-    {
-	BYTE  *B1, *B2;
-	DWORD S1, S2;
+	if (curr_block != last_block)
+	{
+		BYTE  *B1, *B2;
+		DWORD S1, S2;
 
-        write_pos = curr_block * blockSize;
-        last_block = curr_block;
+		write_pos = curr_block * blockSize;
+		last_block = curr_block;
 
-        hResult = lpDSB->Lock (write_pos, blockSize, (void **)&B1,
-                                       &S1, (void **)&B2, &S2, 0);
-        if (hResult == DSERR_BUFFERLOST)
-        {
-            lpDSB->Restore ();
-            hResult = lpDSB->Lock (write_pos, blockSize,
-                                           (void **)&B1, &S1, (void **)&B2,
-                                           &S2, 0);
-        }
-        if (!SUCCEEDED(hResult))
+		hResult = lpDSB->Lock (write_pos, blockSize, (void **)&B1, &S1, (void **)&B2, &S2, 0);
+		if (hResult == DSERR_BUFFERLOST)
 		{
-	        hResult = lpDSB -> Unlock (B1, S1, B2, S2);
-            return;
+			lpDSB->Restore ();
+			hResult = lpDSB->Lock (write_pos, blockSize, (void **)&B1, &S1, (void **)&B2, &S2, 0);
 		}
-        int byte_offset = 0;
+		if (!SUCCEEDED(hResult))
+		{
+			hResult = lpDSB -> Unlock (B1, S1, B2, S2);
+			goto finishDirectSoundWrite;
+		}
+		int byte_offset = 0;
 		int sample_count = sampleCount;
 
-		
-		
-        if (so.samples_mixed_so_far < (int32) sampleCount)
-        {
-            byte_offset = (so.sixteen_bit ? (so.samples_mixed_so_far << 1)
-                                          : so.samples_mixed_so_far);
-            sample_count -= so.samples_mixed_so_far;
+		if (IsSoundMuted()) {
+			if (so.sixteen_bit)
+				SecureZeroMemory(syncSoundBuffer, sampleCount * 2);
+			else
+				memset(syncSoundBuffer, 0x80, sampleCount);
+		}
+		else if (so.samples_mixed_so_far < (int32) sampleCount)
+		{
+			byte_offset = (so.sixteen_bit ? (so.samples_mixed_so_far << 1) : so.samples_mixed_so_far);
+			sample_count -= so.samples_mixed_so_far;
+			S9xMixSamplesNoLimitWrapped(syncSoundBuffer + byte_offset,sample_count);
 		}
 		so.samples_mixed_so_far = 0;
 
-		S9xMixSamplesNoLimitWrapped(syncSoundBuffer + byte_offset,sample_count);
-
-        if (B1)
+		if (B1)
 		{
 			memcpy(B1,syncSoundBuffer,S1);
 		}
-        if (B2)
+		if (B2)
 		{
-            memcpy(B2,syncSoundBuffer+S1,S2);
+			memcpy(B2,syncSoundBuffer+S1,S2);
 		}
-		
-		
 
-        hResult = lpDSB -> Unlock (B1, S1, B2, S2);
-        if (!SUCCEEDED(hResult))
-            return;
-    }
+		hResult = lpDSB -> Unlock (B1, S1, B2, S2);
+		if (!SUCCEEDED(hResult))
+			goto finishDirectSoundWrite;
+	}
+finishDirectSoundWrite:
 	LeaveCriticalSection(&GUI.SoundCritSect);
 }
 
@@ -517,12 +529,20 @@ this is the actual mixing thread, runs until DeInitSoundBuffer sets threadExit
 IN:
 lpParameter		-	pointer to the CDirectSound object
 */
-unsigned int __stdcall CDirectSound::SoundThread (LPVOID lpParameter)
-{
-	CDirectSound *S9xDirectSound=(CDirectSound *)lpParameter;
-	while(!S9xDirectSound->threadExit) {
-		S9xDirectSound->ProcessSound();
-	}
-	_endthreadex(0);
-	return 0;
+//unsigned int __stdcall CDirectSound::SoundThread (LPVOID lpParameter)
+//{
+//	CDirectSound *S9xDirectSound=(CDirectSound *)lpParameter;
+//	while(!S9xDirectSound->threadExit) {
+//		S9xDirectSound->ProcessSound();
+//	}
+//	_endthreadex(0);
+//	return 0;
+//}
+
+/*  CDirectSound::SoundTimerCallback
+this is the actual mixing thread, which works instead of SoundThread
+*/
+VOID CALLBACK CDirectSound::SoundTimerCallback(UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2) {
+	CDirectSound *S9xDirectSound = (CDirectSound *)dwUser;
+	S9xDirectSound->ProcessSound();
 }

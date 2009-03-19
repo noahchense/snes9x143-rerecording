@@ -252,7 +252,7 @@
    %4
    inc word [SfxR1]
    %1
-.nodither4b
+.nodither4b:
    %2
 %endmacro
 
@@ -273,7 +273,7 @@
    %4
    inc word [SfxR1]
    %1
-.nodither4b
+.nodither4b:
    %2
 %endmacro
 
@@ -287,7 +287,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 ret, drawpix4b, 5, drawpix4bd, 0Fh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    ret
 %endmacro
@@ -302,7 +302,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 FXReturn, drawpix4b, 5, drawpix4bd, 0Fh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    FXReturn
 %endmacro
@@ -317,7 +317,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 ret, drawpix2b, 4, drawpix2bd, 03h
-.nodraw
+.nodraw:
    inc word [SfxR1]
    ret
 %endmacro
@@ -332,7 +332,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 FXReturn, drawpix2b, 4, drawpix2bd, 03h
-.nodraw
+.nodraw:
    inc word [SfxR1]
    FXReturn
 %endmacro
@@ -347,7 +347,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 ret, drawpix8b, 6, drawpix8bd, 0FFh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    ret
 %endmacro
@@ -362,7 +362,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 FXReturn, drawpix8b, 6, drawpix8bd, 0FFh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    FXReturn
 %endmacro
@@ -377,7 +377,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 ret, drawpix8b, 6, drawpix8bd, 0Fh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    ret
 %endmacro
@@ -392,7 +392,7 @@
    cmp eax,0FFFFFFFFh
    je near .nodraw
    %1 FXReturn, drawpix8b, 6, drawpix8bd, 0Fh
-.nodraw
+.nodraw:
    inc word [SfxR1]
    FXReturn
 %endmacro

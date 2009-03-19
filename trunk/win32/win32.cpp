@@ -2034,8 +2034,7 @@ void S9xAutoSaveSRAM ()
 
 void S9xSetPause (uint32 mask)
 {
-    Settings.ForcedPause |= mask;
-	S9xSetSoundMute(TRUE);
+	Settings.ForcedPause |= mask;
 }
 
 void S9xClearPause (uint32 mask)

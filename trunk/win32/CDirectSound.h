@@ -190,8 +190,10 @@ private:
 
 	bool initDone;							// has init been called successfully?
 
-	HANDLE threadHandle;					// handle to the mixing thread
-	volatile bool threadExit;				// mixing thread exit signal
+//	HANDLE threadHandle;					// handle to the mixing thread
+//	volatile bool threadExit;				// mixing thread exit signal
+
+	MMRESULT timerHandle;					// timer to call the mixing thread
 
 	uint8 *syncSoundBuffer;					// buffer used for SoundSync
 	
@@ -201,8 +203,9 @@ private:
 	bool InitSoundBuffer();
 	void DeInitSoundBuffer();
 
-	static unsigned int __stdcall SoundThread (LPVOID lpParameter);
-	
+//	static unsigned int __stdcall SoundThread (LPVOID lpParameter);
+	static VOID CALLBACK SoundTimerCallback(UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2);
+
 	void ProcessSound();
 
 public:

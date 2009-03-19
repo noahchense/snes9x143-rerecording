@@ -2686,8 +2686,7 @@ LRESULT CALLBACK WinProc(
         case ID_CHANNELS_ENABLEALL: S9xToggleSoundChannel(8); break;
 
 		case ID_SOUND_MUTE:
-			Settings.Mute = !Settings.Mute; // independent from so.mute_sound, so doesn't need reset
-			ReInitSound(1);
+			Settings.Mute = !Settings.Mute;
 			break;
         case ID_SOUND_25MS:
             Settings.SoundBufferSize = 1;
@@ -4480,7 +4479,22 @@ int WINAPI WinMain(
 
 	InitializeCriticalSection(&GUI.SoundCritSect);
 
-	DWORD wSoundTimerRes;
+	DWORD wmTimerRes;
+	TIMECAPS tc;
+	if (timeGetDevCaps(&tc, sizeof(TIMECAPS))== TIMERR_NOERROR)
+	{
+#ifdef __MINGW32__
+		wmTimerRes = min<int>(max<int>(tc.wPeriodMin, 1), tc.wPeriodMax);
+#else
+		wmTimerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
+#endif
+		timeBeginPeriod (wmTimerRes);
+	}
+	else
+	{
+		wmTimerRes = 5;
+		timeBeginPeriod (wmTimerRes);
+	}
 
 	InitCustomKeys(&CustomKeys); // must be called before WinRegisterConfigItems
 	WinRegisterConfigItems ();
@@ -4587,22 +4601,6 @@ int WINAPI WinMain(
 
     void InitSnes9X (void);
     InitSnes9X ();
-	
-    TIMECAPS tc;
-    if (timeGetDevCaps(&tc, sizeof(TIMECAPS))== TIMERR_NOERROR)
-    {
-#ifdef __MINGW32__
-        wSoundTimerRes = min<int>(max<int>(tc.wPeriodMin, 1), tc.wPeriodMax);
-#else
-        wSoundTimerRes = min(max(tc.wPeriodMin, 1), tc.wPeriodMax);
-#endif
-        timeBeginPeriod (wSoundTimerRes);
-    }
-	else
-	{
-		wSoundTimerRes = 5;
-        timeBeginPeriod (wSoundTimerRes);
-	}
 
     QueryPerformanceFrequency((LARGE_INTEGER*)&PCBase);
     QueryPerformanceCounter((LARGE_INTEGER*)&PCStart);
@@ -4650,43 +4648,41 @@ int WINAPI WinMain(
 
     DWORD lastTime = timeGetTime();
 
-    MSG msg;
+	MSG msg;
 	
-    while (TRUE)
-    {
+	while (TRUE)
+	{
 		// note: using GUI.hWnd instead of NULL for PeekMessage/GetMessage breaks some non-modal dialogs
-        while (Settings.StopEmulation || (Settings.Paused && !Settings.FrameAdvance) ||
+		while (Settings.StopEmulation || (Settings.Paused && !Settings.FrameAdvance) ||
 			Settings.ForcedPause ||
 			PeekMessage (&msg, NULL, 0, 0, PM_NOREMOVE))
-        {
-            if (!GetMessage (&msg, NULL, 0, 0))
-                goto loop_exit; // got WM_QUIT
+		{
+			if (!GetMessage (&msg, NULL, 0, 0))
+				goto loop_exit; // got WM_QUIT
 
-            // do not process non-modal dialog messages
-            if ((cheatSearchHWND && IsDialogMessage(cheatSearchHWND, &msg))
-             || (inputMacroHWND && IsDialogMessage(inputMacroHWND, &msg)))
-                continue;
+			// do not process non-modal dialog messages
+			if ((cheatSearchHWND && IsDialogMessage(cheatSearchHWND, &msg))
+			 || (inputMacroHWND && IsDialogMessage(inputMacroHWND, &msg)))
+				continue;
 
-            if (!TranslateAccelerator (GUI.hWnd, GUI.Accelerators, &msg))
-            {
-                TranslateMessage (&msg);
-                DispatchMessage (&msg);
-            }
+			if (!TranslateAccelerator (GUI.hWnd, GUI.Accelerators, &msg))
+			{
+				TranslateMessage (&msg);
+				DispatchMessage (&msg);
+			}
+		}
 
-			S9xSetSoundMute(Settings.ForcedPause || (Settings.Paused && (!Settings.FrameAdvance || GUI.FAMute)));
-        }
-		
 #ifdef NETPLAY_SUPPORT
-        if (!Settings.NetPlay || !NetPlay.PendingWait4Sync ||
-            WaitForSingleObject (GUI.ClientSemaphore, 100) != WAIT_TIMEOUT)
-        {
-            if (NetPlay.PendingWait4Sync)
-            {
-                NetPlay.PendingWait4Sync = FALSE;
-                NetPlay.FrameCount++;
-                S9xNPStepJoypadHistory ();
-            }
-#endif      
+		if (!Settings.NetPlay || !NetPlay.PendingWait4Sync ||
+			WaitForSingleObject (GUI.ClientSemaphore, 100) != WAIT_TIMEOUT)
+		{
+			if (NetPlay.PendingWait4Sync)
+			{
+				NetPlay.PendingWait4Sync = FALSE;
+				NetPlay.FrameCount++;
+				S9xNPStepJoypadHistory ();
+			}
+#endif
 			// FIXME: 1 frame lag in the watch
 			UpdateWatchedAddresses();
 
@@ -4744,7 +4740,6 @@ int WINAPI WinMain(
 				}
 			}
 
-
 			if(Settings.FrameAdvance)
 			{
 				if(GFX.InfoStringTimeout > 4)
@@ -4779,30 +4774,30 @@ int WINAPI WinMain(
 			}
 
 #ifdef NETPLAY_SUPPORT
-        }
+		}
 #endif
-        if (CPU.Flags & DEBUG_MODE_FLAG)
-        {
-            Settings.Paused = TRUE;
-            Settings.FrameAdvance = false;
-            CPU.Flags &= ~DEBUG_MODE_FLAG;
-        }
-        if (GUI.CursorTimer)
-        {
-            if (--GUI.CursorTimer == 0)
-            {
-                if (IPPU.Controller != SNES_SUPERSCOPE)
-                    SetCursor (NULL);
-            }
-        }
-    }
+		if (CPU.Flags & DEBUG_MODE_FLAG)
+		{
+			Settings.Paused = TRUE;
+			Settings.FrameAdvance = false;
+			CPU.Flags &= ~DEBUG_MODE_FLAG;
+		}
+		if (GUI.CursorTimer)
+		{
+			if (--GUI.CursorTimer == 0)
+			{
+				if (IPPU.Controller != SNES_SUPERSCOPE)
+					SetCursor (NULL);
+			}
+		}
+	}
 	
 loop_exit:
 	//stop any lua we might already have had running
 	S9xLuaStop();
 
 #ifdef USE_GLIDE
-    S9xGlideEnable (FALSE);
+	S9xGlideEnable (FALSE);
 #endif
 	
 	Settings.StopEmulation = TRUE;
@@ -4813,9 +4808,10 @@ loop_exit:
     if( GUI.hFrameTimer)
     {	
         timeKillEvent (GUI.hFrameTimer);
-        timeEndPeriod (wSoundTimerRes);
     }
-	
+
+	timeEndPeriod (wmTimerRes);
+
     if (!Settings.StopEmulation)
     {
         Memory.SaveSRAM (S9xGetFilename (".srm", SRAM_DIR));
@@ -5502,8 +5498,6 @@ void EnableServer (bool8 enable)
             {
                 S9xClearPause (PAUSE_NETPLAY_CONNECT);
             }
-
-			S9xSetSoundMute(Settings.ForcedPause || (Settings.Paused && (!Settings.FrameAdvance || GUI.FAMute)));
         }
         else
         {

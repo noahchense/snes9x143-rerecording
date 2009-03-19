@@ -568,6 +568,7 @@ bool GetFilterHiResSupport(RenderFilter filterID);
 #define IS_GL_OR_GLIDE(f) ((IS_GLIDE_MODE(f)) || (IS_GL_MODE(f)))
 
 extern uint8 *FrameSound;
+bool IsSoundMuted();
 bool FlexibleSoundMixMode();
 void S9xWinInitSound();
 void S9xWinDeinitSound();

@@ -129,7 +129,16 @@ FMOD_RESULT F_CALLBACK CFMODEx::FMODExStreamCallback(
     int sample_count = datalen;
 
 	sample_count >>= (Settings.SixteenBitSound?1:0);
-	S9xMixSamplesNoLimitWrapped ((unsigned char *) data, sample_count);
+
+	if (IsSoundMuted()) {
+		if (so.sixteen_bit)
+			SecureZeroMemory(buff, datalen);
+		else
+			memset(buff, 0x80, datalen);
+	}
+	else {
+		S9xMixSamplesNoLimitWrapped ((unsigned char *) data, sample_count);
+	}
 
     return FMOD_OK;
 }

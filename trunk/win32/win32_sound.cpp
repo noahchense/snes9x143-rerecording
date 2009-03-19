@@ -53,14 +53,36 @@ void S9xMixSamplesNoLimit(uint8 *buffer, int sample_count)
 	S9xMixSamples(buffer,sample_count);
 }
 
-// Wrapper function for S9xMixSamplesNoLimit that takes care of deterministic sample mix mode
+// since so.mute_sound can be switched snes9x core,
+// S9xSetSoundMute doesn't work properly (gocha: it's just a guess, though).
+// this function is provided for manual sound mute processing.
+bool IsSoundMuted() {
+	if (Settings.Mute || Settings.StopEmulation || Settings.ForcedPause
+			|| (Settings.Paused && (GUI.FAMute || (!Settings.FrameAdvance && GUI.IdleCount >= 8)))) // gives frame advance sound
+		return true;
+	//else if (so.mute_sound)
+	//	return true;
+	else
+		return false;
+}
+
+// Wrapper function for S9xMixSamplesNoLimit that takes care of deterministic sample mix mode.
+// This function doesn't call S9xMixSamples unless FlexibleSoundMixMode returns true.
 void S9xMixSamplesNoLimitWrapped(uint8 *buffer, int sample_count)
 {
 	const int byte_count = so.sixteen_bit ? 2 : 1;
-	if(FlexibleSoundMixMode())
-		S9xMixSamplesNoLimit(buffer, sample_count);
+
+	if (sample_count == 0)
+		return;
+	else if (!FlexibleSoundMixMode())
+	{
+		if (so.sixteen_bit)
+			SecureZeroMemory(buffer, sample_count * byte_count);
+		else
+			memset(buffer, 0x80, sample_count/* * byte_count*/);
+	}
 	else
-		SecureZeroMemory(buffer, sample_count * byte_count);
+		S9xMixSamplesNoLimit(buffer, sample_count);
 }
 
 // if snes9x requires deterministic sound mix
@@ -83,7 +105,7 @@ bool ReInitSound(int mode)
 {
 	bool result = true;
 
-	//EnterCriticalSection(&GUI.SoundCritSect);
+	EnterCriticalSection(&GUI.SoundCritSect);
 
 	S9xSoundOutput->DeInitSoundOutput();
 	if(mode)
@@ -91,7 +113,7 @@ bool ReInitSound(int mode)
 	else
 		result = true;
 
-	//LeaveCriticalSection(&GUI.SoundCritSect);
+	LeaveCriticalSection(&GUI.SoundCritSect);
 
 	return result;
 }
@@ -106,7 +128,7 @@ bool SetupSound (void)
 {
 	bool result;
 
-	//EnterCriticalSection(&GUI.SoundCritSect);
+	EnterCriticalSection(&GUI.SoundCritSect);
 
 	S9xSetPlaybackRate(Settings.SoundPlaybackRate);
 
@@ -125,8 +147,9 @@ bool SetupSound (void)
 	// we get the temp buffer for sound synchronization from the output object
 	result = S9xSoundOutput->SetupSound(&syncSoundBuffer,&_samplecount);
 
-	//LeaveCriticalSection(&GUI.SoundCritSect);
+	LeaveCriticalSection(&GUI.SoundCritSect);
 
+	S9xSetSoundMute(TRUE); // whether SetupSound succeed
 	return result;
 }
 
@@ -168,7 +191,7 @@ bool8 S9xOpenSoundDevice (int mode, bool8 pStereo, int BufferSize)
 	}
 	if(!S9xSoundOutput->InitSoundOutput())
 		return false;
-	if(Settings.Mute || !Settings.APUEnabled)
+	if(/*Settings.Mute || */!Settings.APUEnabled)
 		return true;
 	return SetupSound();
 }
@@ -188,7 +211,7 @@ extern "C" void S9xGenerateSound(void)
 	if (!S9xWinIsSoundActive() || !syncSoundBuffer)
 		return;
 
-	// FIXME: without the following line, audio samples may be noisy...
+	// to avoid redundant mixing
 	if (so.samples_mixed_so_far >= _samplecount && FlexibleSoundMixMode())
 		return;
 
@@ -255,6 +278,10 @@ extern "C" void S9xGenerateFrameSound(void)
 		FrameSoundWritten = 0;
 		return;
 	}
+
+	// to avoid redundant mixing
+	if (so.samples_mixed_so_far >= _samplecount && FlexibleSoundMixMode())
+		return;
 
 	if (FlexibleSoundMixMode()) {
 		if(!TryEnterCriticalSection(&GUI.SoundCritSect))
