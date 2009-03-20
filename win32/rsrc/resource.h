@@ -665,13 +665,15 @@
 #define ID_FILE_WRITE_WAV               40233
 #define ID_FILE_STOP_WAV                40234
 #define ID_COUNTER_IN_FRAMES            40235
+#define ID_FILE_WAV_RECORDING           40236
+#define ID_FILE_AVI_RECORDING           40237
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        147
-#define _APS_NEXT_COMMAND_VALUE         40236
+#define _APS_NEXT_COMMAND_VALUE         40238
 #define _APS_NEXT_CONTROL_VALUE         1383
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

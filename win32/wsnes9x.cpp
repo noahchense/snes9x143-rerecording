@@ -158,6 +158,10 @@
 #include <stddef.h>
 #include <assert.h>
 
+#ifndef MIIM_STRING
+#define MIIM_STRING      0x00000040
+#endif
+
 extern SNPServer NPServer;
 
 #ifdef USE_OPENGL
@@ -498,7 +502,6 @@ void HotkeySaveSPC ();
 void HotkeySaveSRAM ();
 void HotkeySaveSPC7110Log ();
 void HotkeyRecordAVI ();
-void HotkeyStopAVI ();
 void HotkeySave0 ();
 void HotkeySave1 ();
 void HotkeySave2 ();
@@ -661,7 +664,6 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->SaveSRAM.handleKeyDown = HotkeySaveSRAM;
 	keys->SaveSPC7110Log.handleKeyDown = HotkeySaveSPC7110Log;
 	keys->RecordAVI.handleKeyDown = HotkeyRecordAVI;
-	keys->StopAVI.handleKeyDown = HotkeyStopAVI;
 	keys->Save[0].handleKeyDown = HotkeySave0;
 	keys->Save[1].handleKeyDown = HotkeySave1;
 	keys->Save[2].handleKeyDown = HotkeySave2;
@@ -785,8 +787,7 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->SaveSPC.name = _T("Save SPC");
 	keys->SaveSRAM.name = _T("Save SRAM");
 	keys->SaveSPC7110Log.name = _T("Save SPC7110 Log");
-	keys->RecordAVI.name = _T("Record AVI...");
-	keys->StopAVI.name = _T("Stop AVI");
+	keys->RecordAVI.name = _T("Record/Stop AVI");
 	keys->Save[0].name = _T("Save State to Slot 0");
 	keys->Save[1].name = _T("Save State to Slot 1");
 	keys->Save[2].name = _T("Save State to Slot 2");
@@ -911,7 +912,6 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->SaveSRAM.page = HOTKEY_PAGE_FILE;
 	keys->SaveSPC7110Log.page = HOTKEY_PAGE_FILE;
 	keys->RecordAVI.page = HOTKEY_PAGE_FILE;
-	keys->StopAVI.page = HOTKEY_PAGE_FILE;
 	keys->Save[0].page = HOTKEY_PAGE_SAVESTATE_1;
 	keys->Save[1].page = HOTKEY_PAGE_SAVESTATE_1;
 	keys->Save[2].page = HOTKEY_PAGE_SAVESTATE_1;
@@ -2097,11 +2097,13 @@ LRESULT CALLBACK WinProc(
 			break;
 	case WM_CUSTKEYUP:
 		{
-			int modifiers = GetModifiers(wParam);
 			SCustomKey *key = CustomKeys.key;
-
+			int modifiers = 0;
+			if (wParam == VK_MENU)    modifiers |= CUSTKEY_ALT_MASK;
+			if (wParam == VK_CONTROL) modifiers |= CUSTKEY_CTRL_MASK;
+			if (wParam == VK_SHIFT)   modifiers |= CUSTKEY_SHIFT_MASK;
 			while (!IsLastCustomKey(key)) {
-				if (wParam == key->key && modifiers == key->modifiers && key->handleKeyUp) {
+				if ((wParam == key->key || modifiers == key->modifiers) && key->handleKeyUp) {
 					key->handleKeyUp();
 				}
 				key++;
@@ -2167,6 +2169,13 @@ LRESULT CALLBACK WinProc(
 	case WM_COMMAND:
 		switch (wParam & 0xffff)
 		{
+		case ID_FILE_WAV_RECORDING:
+			if (!GUI.WAVOut)
+				PostMessage(GUI.hWnd, WM_COMMAND, ID_FILE_WRITE_WAV, NULL);
+			else
+				PostMessage(GUI.hWnd, WM_COMMAND, ID_FILE_STOP_WAV, NULL);
+			break;
+
 		case ID_FILE_WRITE_WAV:
 			{
 				RestoreGUIDisplay ();  //exit DirectX
@@ -2199,6 +2208,13 @@ LRESULT CALLBACK WinProc(
 		case ID_FILE_STOP_WAV:
 			DoWAVClose(0);
 			//ReInitSound(1);				// reenable sound output
+			break;
+
+		case ID_FILE_AVI_RECORDING:
+			if (!GUI.AVIOut)
+				PostMessage(GUI.hWnd, WM_COMMAND, ID_FILE_WRITE_AVI, NULL);
+			else
+				PostMessage(GUI.hWnd, WM_COMMAND, ID_FILE_STOP_AVI, NULL);
 			break;
 
 		case ID_FILE_WRITE_AVI:
@@ -3836,8 +3852,7 @@ void HotkeySaveScreenShot () { PostMenuCommand(ID_SAVESCREENSHOT); }
 void HotkeySaveSPC () { PostMenuCommand(ID_FILE_SAVE_SPC_DATA); }
 void HotkeySaveSRAM () { PostMenuCommand(ID_FILE_SAVE_SRAM_DATA); }
 void HotkeySaveSPC7110Log () { PostMenuCommand(IDM_LOG_7110); }
-void HotkeyRecordAVI () { PostMenuCommand(ID_FILE_WRITE_AVI); }
-void HotkeyStopAVI () { PostMenuCommand(ID_FILE_STOP_AVI); }
+void HotkeyRecordAVI () { PostMenuCommand(ID_FILE_AVI_RECORDING); }
 
 void HotkeySave0 () { PostMenuCommand(ID_FILE_SAVE0); }
 void HotkeySave1 () { PostMenuCommand(ID_FILE_SAVE1); }
@@ -4045,8 +4060,8 @@ void HotkeyFastForward ()
 	if(Settings.SPC7110RTC)
 		return;
 
-	if(!Settings.TurboMode)
-		S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_TEXT);
+	//if(!Settings.TurboMode)
+	//	S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_TEXT);
 	Settings.TurboMode = TRUE;
 }
 void HotkeyUpFastForward ()
@@ -4060,10 +4075,10 @@ void HotkeyToggleFastForward ()
 		return;
 
 	Settings.TurboMode ^= TRUE;
-	if (Settings.TurboMode)
-		S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_ON);
-	else
-		S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_OFF);
+	//if (Settings.TurboMode)
+	//	S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_ON);
+	//else
+	//	S9xMessage (S9X_INFO, S9X_TURBO_MODE, WINPROC_TURBOMODE_OFF);
 }
 
 void HotkeyFrameAdvance ()
@@ -5349,17 +5364,22 @@ static void CheckMenuStates ()
 	mii.fState = (S9xMovieActive() ? S9xMovieReadOnly() : GUI.MovieReadOnly) ? MFS_CHECKED : MFS_UNCHECKED;
 	SetMenuItemInfo (GUI.hMenu, ID_MOVIE_READONLY, FALSE, &mii);
 
-	mii.fState = (!Settings.StopEmulation && !GUI.WAVOut) ? MFS_ENABLED : MFS_DISABLED;
-    SetMenuItemInfo (GUI.hMenu, ID_FILE_WRITE_WAV, FALSE, &mii);
+	mii.fState = !Settings.StopEmulation ? MFS_ENABLED : MFS_DISABLED;
+	SetMenuItemInfo (GUI.hMenu, ID_FILE_WAV_RECORDING, FALSE, &mii);
+	SetMenuItemInfo (GUI.hMenu, ID_FILE_AVI_RECORDING, FALSE, &mii);
 
-	mii.fState = (!Settings.StopEmulation && GUI.WAVOut) ? MFS_ENABLED : MFS_DISABLED;
-    SetMenuItemInfo (GUI.hMenu, ID_FILE_STOP_WAV, FALSE, &mii);
+	ZeroMemory(&mii, sizeof(mii));
+	mii.cbSize = sizeof(mii);
+	mii.fMask = MIIM_STRING;
 
-	mii.fState = (!Settings.StopEmulation && !GUI.AVIOut) ? MFS_ENABLED : MFS_DISABLED;
-    SetMenuItemInfo (GUI.hMenu, ID_FILE_WRITE_AVI, FALSE, &mii);
+	mii.dwTypeData = !GUI.WAVOut ? "Start WAV Recording..." : "Stop WAV Recording";
+	SetMenuItemInfo (GUI.hMenu, ID_FILE_WAV_RECORDING, FALSE, &mii);
+	mii.dwTypeData = !GUI.AVIOut ? "Start AVI Recording..." : "Stop AVI Recording";
+	SetMenuItemInfo (GUI.hMenu, ID_FILE_AVI_RECORDING, FALSE, &mii);
 
-	mii.fState = (!Settings.StopEmulation && GUI.AVIOut) ? MFS_ENABLED : MFS_DISABLED;
-    SetMenuItemInfo (GUI.hMenu, ID_FILE_STOP_AVI, FALSE, &mii);
+	ZeroMemory( &mii, sizeof( mii));
+	mii.cbSize = sizeof( mii);
+	mii.fMask = MIIM_STATE;
 
     mii.fState = GUI.AVIDoubleScale ? MFS_CHECKED : MFS_UNCHECKED;
     if (Settings.StopEmulation || GUI.AVIOut)

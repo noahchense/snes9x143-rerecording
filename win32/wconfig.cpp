@@ -1146,7 +1146,7 @@ void WinRegisterConfigItems()
 #define ADD(x) AddVKey("Key:" #x , CustomKeys.x.key, CustomKeys.x.key); AddVKMod("Mods:" #x, CustomKeys.x.modifiers, CustomKeys.x.modifiers)
 #define ADDN(x,n2) AddVKey("Key:" #n2, CustomKeys.x.key, CustomKeys.x.key); AddVKMod("Mods:" #n2, CustomKeys.x.modifiers, CustomKeys.x.modifiers)
 	ADDN(RecentROM[0],RecentROM0); ADDN(RecentROM[1],RecentROM1); ADDN(RecentROM[2],RecentROM2); ADDN(RecentROM[3],RecentROM3); ADDN(RecentROM[4],RecentROM4); ADDN(RecentROM[5],RecentROM5); ADDN(RecentROM[6],RecentROM6); ADDN(RecentROM[7],RecentROM7); ADDN(RecentROM[8],RecentROM8); ADDN(RecentROM[9],RecentROM9);
-	ADD(OpenROM); ADD(Pause); ADD(ResetGame); ADD(SaveScreenShot); ADD(SaveSPC); ADD(SaveSRAM); ADD(SaveSPC7110Log); ADD(RecordAVI); ADD(StopAVI);
+	ADD(OpenROM); ADD(Pause); ADD(ResetGame); ADD(SaveScreenShot); ADD(SaveSPC); ADD(SaveSRAM); ADD(SaveSPC7110Log); ADD(RecordAVI);
 	ADDN(Save[0],SaveSlot0); ADDN(Save[1],SaveSlot1); ADDN(Save[2],SaveSlot2); ADDN(Save[3],SaveSlot3); ADDN(Save[4],SaveSlot4); ADDN(Save[5],SaveSlot5); ADDN(Save[6],SaveSlot6); ADDN(Save[7],SaveSlot7); ADDN(Save[8],SaveSlot8); ADDN(Save[9],SaveSlot9);
 	ADDN(Load[0],LoadSlot0); ADDN(Load[1],LoadSlot1); ADDN(Load[2],LoadSlot2); ADDN(Load[3],LoadSlot3); ADDN(Load[4],LoadSlot4); ADDN(Load[5],LoadSlot5); ADDN(Load[6],LoadSlot6); ADDN(Load[7],LoadSlot7); ADDN(Load[8],LoadSlot8); ADDN(Load[9],LoadSlot9);
 	ADDN(SelectSave[0],SelectSlot0); ADDN(SelectSave[1],SelectSlot1); ADDN(SelectSave[2],SelectSlot2); ADDN(SelectSave[3],SelectSlot3); ADDN(SelectSave[4],SelectSlot4); ADDN(SelectSave[5],SelectSlot5); ADDN(SelectSave[6],SelectSlot6); ADDN(SelectSave[7],SelectSlot7); ADDN(SelectSave[8],SelectSlot8); ADDN(SelectSave[9],SelectSlot9);
