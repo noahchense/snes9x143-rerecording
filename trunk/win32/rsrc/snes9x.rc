@@ -1059,23 +1059,20 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Movie"
         BEGIN
-            MENUITEM "Start Playing Movie...",      ID_FILE_MOVIE_PLAY, GRAYED
-            MENUITEM "Start Recording Movie...",    ID_FILE_MOVIE_RECORD, GRAYED
-            MENUITEM "Stop Playing/Recording Movie",ID_FILE_MOVIE_STOP, GRAYED
+            MENUITEM "Play Movie...",               ID_FILE_MOVIE_PLAY, GRAYED
+            MENUITEM "Watch From Beginning",        ID_MOVIE_RESTART, GRAYED
             MENUITEM SEPARATOR
+            MENUITEM "Record New Movie...",         ID_FILE_MOVIE_RECORD, GRAYED
+            MENUITEM "Resume Record from Now",      ID_MOVIE_CONTINUE, GRAYED
             MENUITEM "Read-only mode",              ID_MOVIE_READONLY
             MENUITEM SEPARATOR
-            MENUITEM "Continue recording from here", ID_MOVIE_CONTINUE, GRAYED
-            MENUITEM "Watch from beginning",        ID_MOVIE_RESTART, GRAYED
+            MENUITEM "Stop Movie",                  ID_FILE_MOVIE_STOP, GRAYED
         END
         POPUP "Audio/Video Recording"
         BEGIN
-            MENUITEM "Start WAV Recording...",      ID_FILE_WRITE_WAV, GRAYED
-            MENUITEM "Stop WAV Recording",          ID_FILE_STOP_WAV, GRAYED
+            MENUITEM "WAV Recording...",            ID_FILE_WAV_RECORDING, GRAYED
             MENUITEM SEPARATOR
-            MENUITEM "Start AVI Recording...",      ID_FILE_WRITE_AVI, GRAYED
-            MENUITEM "Stop AVI Recording",          ID_FILE_STOP_AVI, GRAYED
-            MENUITEM SEPARATOR
+            MENUITEM "AVI Recording",               ID_FILE_AVI_RECORDING, GRAYED
             MENUITEM "Simple2X Resize for AVI (for HiRes)", ID_AVI_DOUBLE_SCALE, GRAYED
         END
         MENUITEM SEPARATOR
