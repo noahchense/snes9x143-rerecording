@@ -574,4 +574,6 @@ void S9xWinInitSound();
 void S9xWinDeinitSound();
 bool S9xWinIsSoundActive();
 
+extern HINSTANCE g_hInst;
+
 #endif // !defined(SNES9X_H_INCLUDED)
