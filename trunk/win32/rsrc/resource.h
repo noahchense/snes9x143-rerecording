@@ -28,7 +28,7 @@
 #define IDD_NETPLAYPROGRESS             123
 #define IDD_INPUTCONFIG                 124
 #define IDB_JOYPAD                      125
-#define IDD_CHEAT_SEARCH                126
+#define IDD_RAM_SEARCH                  126
 #define IDD_CHEAT_FROM_SEARCH           127
 #define IDB_PAD                         128
 #define IDD_OPENMOVIE                   129
@@ -494,7 +494,7 @@
 #define ID_FILE_LOAD8                   40061
 #define ID_FILE_LOAD9                   40062
 #define ID_CHEAT_ENTER                  40063
-#define ID_CHEAT_SEARCH                 40064
+#define ID_RAM_SEARCH                   40064
 #define ID_CHEAT_DISABLE                40065
 #define ID_FILE_SAVE_SPC_DATA           40066
 #define ID_HELP_ABOUT                   40067
@@ -565,7 +565,6 @@
 #define ID_CHANNELS_CHANNEL7            40132
 #define ID_CHANNELS_CHANNEL8            40133
 #define ID_CHANNELS_ENABLEALL           40134
-#define ID_CHEAT_SEARCH_MODAL           40135
 #define ID_SAVESCREENSHOT               40136
 #define ID_FILE_LOAD_GAME               40137
 #define ID_FILE_MOVIE_SEEK              40138
