@@ -89,9 +89,13 @@ S9xMainLoop:
 	pushl %ebx
 	ccall S9xMovieRequiresReset
 	testl %eax, %eax
-	jz .START_MAIN_LOOP
+	jz .NoMovieReset
 	ccall S9xMovieUpdateOnReset
 	ccall S9xSoftReset
+.NoMovieReset:
+	pushl $LUACALL_BEFOREEMULATION
+	ccall CallRegisteredLuaFunctions
+	popl %eax
 .START_MAIN_LOOP:
 	LOAD_REGISTERS
 .L9:

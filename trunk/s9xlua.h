@@ -3,13 +3,13 @@
 
 enum LuaCallID
 {
-	LUACALL_BEFOREEMULATION,
+	LUACALL_BEFOREEMULATION, // also written in asmstruc.h for cpuexec.s!
 	LUACALL_AFTEREMULATION,
 	LUACALL_BEFOREEXIT,
 
 	LUACALL_COUNT
 };
-void CallRegisteredLuaFunctions(LuaCallID calltype);
+EXTERN_C void CallRegisteredLuaFunctions(LuaCallID calltype);
 
 // Just forward function declarations 
 
