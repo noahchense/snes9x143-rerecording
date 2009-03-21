@@ -162,6 +162,7 @@
 #define S9xMovieRequiresReset _S9xMovieRequiresReset
 #define S9xMovieUpdateOnReset _S9xMovieUpdateOnReset
 #define S9xSoftReset _S9xSoftReset
+#define CallRegisteredLuaFunctions _CallRegisteredLuaFunctions
 
 #define A1 _A1
 #define A2 _A2
@@ -236,6 +237,8 @@
 
 #define LOAD_CYCLES movl Cycles, CYCLES
 #define SAVE_CYCLES movl CYCLES, Cycles
+
+#define LUACALL_BEFOREEMULATION 0
 
 .macro LOAD_REGISTERS
 	LOAD_CYCLES
