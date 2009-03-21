@@ -25,10 +25,10 @@
 #include "ppu.h"
 
 extern "C" {
-
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
+	#include "lua.h"
+	#include "lauxlib.h"
+	#include "lualib.h"
+	#include "lstate.h"
 }
 
 #include "s9xlua.h"
@@ -93,6 +93,13 @@ static const char *button_mappings[] = {
 	"R", "L", "X", "A", "right", "left", "down", "up", "start", "select", "Y", "B"
 };
 
+static const char* luaCallIDStrings [] =
+{
+	"CALL_BEFOREEMULATION",
+	"CALL_AFTEREMULATION",
+	"CALL_BEFOREEXIT",
+};
+static const int _makeSureWeHaveTheRightNumberOfStrings [sizeof(luaCallIDStrings)/sizeof(*luaCallIDStrings) == LUACALL_COUNT ? 1 : 0];
 
 INLINE void S9xSetDWord (uint32 DWord, uint32 Address);
 INLINE uint32 S9xGetDWord (uint32 Address);
@@ -305,6 +312,38 @@ static int snes9x_pause(lua_State *L) {
 	
 }
 
+static int snes9x_registerbefore(lua_State *L) {
+	if (!lua_isnil(L,1))
+		luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_settop(L,1);
+	lua_getfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_BEFOREEMULATION]);
+	lua_insert(L,1);
+	lua_setfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_BEFOREEMULATION]);
+	//StopScriptIfFinished(luaStateToUIDMap[L]);
+	return 1;
+}
+
+static int snes9x_registerafter(lua_State *L) {
+	if (!lua_isnil(L,1))
+		luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_settop(L,1);
+	lua_getfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_AFTEREMULATION]);
+	lua_insert(L,1);
+	lua_setfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_AFTEREMULATION]);
+	//StopScriptIfFinished(luaStateToUIDMap[L]);
+	return 1;
+}
+
+static int snes9x_registerexit(lua_State *L) {
+	if (!lua_isnil(L,1))
+		luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_settop(L,1);
+	lua_getfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_BEFOREEXIT]);
+	lua_insert(L,1);
+	lua_setfield(L, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_BEFOREEXIT]);
+	//StopScriptIfFinished(luaStateToUIDMap[L]);
+	return 1;
+}
 
 // snes9x.message(string msg)
 //
@@ -654,16 +693,29 @@ static int savestate_load(lua_State *L) {
 }
 
 
-// int movie.framecount()
+// int snes9x.framecount()
 //
-//   Gets the frame counter for the movie, or nil if no movie running.
-int movie_framecount(lua_State *L) {
+//   Gets the frame counter for the movie, or the number of frames since last reset.
+int snes9x_framecount(lua_State *L) {
 	if (!S9xMovieActive()) {
-		lua_pushnil(L);
-		return 1;
+		lua_pushinteger(L, IPPU.TotalEmulatedFrames);
 	}
-	
-	lua_pushinteger(L, S9xMovieGetFrameCounter());
+	else {
+		lua_pushinteger(L, S9xMovieGetFrameCounter());
+	}
+	return 1;
+}
+
+// int snes9x.lagcount()
+int snes9x_lagcount(lua_State *L) {
+	lua_pushinteger(L, IPPU.LagCounter);
+	return 1;
+}
+
+// boolean snes9x.lagged()
+int snes9x_lagged(lua_State *L) {
+	extern bool8 pad_read_last; // from ppu.cpp
+	lua_pushboolean(L, !pad_read_last);
 	return 1;
 }
 
@@ -1344,7 +1396,7 @@ static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFr
 	extern int font_width, font_height;
 
 	int len = strlen(string);
-	int max_chars = (256-pixelsFromLeft) / (font_width);
+	int max_chars = (256-pixelsFromLeft) / (font_width-1);
 	int char_count = 0;
 	int x = pixelsFromLeft, y = linesFromTop;
 
@@ -1354,7 +1406,7 @@ static void LuaDisplayString (const char *string, int linesFromTop, int pixelsFr
 		if((unsigned char) string[i]<32) continue;
 
 		LuaDisplayChar(x, y, string[i], colour, borderColour);
-		x += font_width;
+		x += (font_width-1);
 	}
 }
 
@@ -1824,7 +1876,12 @@ static const struct luaL_reg snes9xlib [] = {
 	{"speedmode", snes9x_speedmode},
 	{"frameadvance", snes9x_frameadvance},
 	{"pause", snes9x_pause},
-
+	{"framecount", snes9x_framecount},
+	{"lagcount", snes9x_lagcount},
+	{"lagged", snes9x_lagged},
+	{"registerbefore", snes9x_registerbefore},
+	{"registerafter", snes9x_registerafter},
+	{"registerexit", snes9x_registerexit},
 	{"message", snes9x_message},
 	{NULL,NULL}
 };
@@ -1864,7 +1921,7 @@ static const struct luaL_reg savestatelib[] = {
 
 static const struct luaL_reg movielib[] = {
 
-	{"framecount", movie_framecount},
+	{"framecount", snes9x_framecount},
 	{"mode", movie_mode},
 	{"rerecordcounting", movie_rerecordcounting},
 	{"stop", movie_stop},
@@ -1897,6 +1954,57 @@ static const struct luaL_reg guilib[] = {
 
 };
 
+void HandleCallbackError(lua_State* L)
+{
+#ifdef __WIN32__
+		MessageBox( GUI.hWnd, lua_tostring(L,-1), "Lua run error", MB_OK | MB_ICONSTOP);
+#else
+		fprintf(stderr, "Lua thread bombed out: %s\n", lua_tostring(L,-1));
+#endif
+//	if(L->errfunc || L->errorJmp)
+		luaL_error(L, "%s", lua_tostring(L,-1)); // FIXME: crashes snes9x? why?
+}
+
+void CallExitFunction() {
+	if (!LUA)
+		return;
+
+	lua_settop(LUA, 0);
+	lua_getfield(LUA, LUA_REGISTRYINDEX, luaCallIDStrings[LUACALL_BEFOREEXIT]);
+
+	int errorcode = 0;
+	if (lua_isfunction(LUA, -1))
+	{
+		errorcode = lua_pcall(LUA, 0, 0, 0);
+	}
+
+	if (errorcode)
+		HandleCallbackError(LUA);
+}
+
+void CallRegisteredLuaFunctions(LuaCallID calltype)
+{
+	assert((unsigned int)calltype < (unsigned int)LUACALL_COUNT);
+	const char* idstring = luaCallIDStrings[calltype];
+
+	if (!LUA)
+		return;
+
+	lua_settop(LUA, 0);
+	lua_getfield(LUA, LUA_REGISTRYINDEX, idstring);
+
+	int errorcode = 0;
+	if (lua_isfunction(LUA, -1))
+	{
+		errorcode = lua_pcall(LUA, 0, 0, 0);
+		if (errorcode)
+			HandleCallbackError(LUA);
+	}
+	else
+	{
+		lua_pop(LUA, 1);
+	}
+}
 
 void S9xLuaFrameBoundary() {
 
@@ -2000,13 +2108,6 @@ int S9xLoadLuaCode(const char *filename) {
 		lua_setfield(LUA, LUA_GLOBALSINDEX, "BIT");
 
 		lua_newtable(LUA);
-		lua_setglobal(LUA,"emu");
-		lua_getglobal(LUA,"emu");
-		lua_newtable(LUA);
-		lua_setfield(LUA,-2,"OnClose");
-
-		
-		lua_newtable(LUA);
 		lua_setfield(LUA, LUA_REGISTRYINDEX, memoryWatchTable);
 	}
 
@@ -2080,14 +2181,7 @@ void S9xLuaStop() {
 	if (!LUA) return;
 
 	//execute the user's shutdown callbacks
-	//onCloseCallback
-	lua_getglobal(LUA, "emu");
-	lua_getfield(LUA, -1, "OnClose");
-	lua_pushnil(LUA);
-	while (lua_next(LUA, -2) != 0)
-	{
-		lua_call(LUA,0,0);
-	}
+	CallExitFunction();
 
 	//sometimes iup uninitializes com
 	//MBG TODO - test whether this is really necessary. i dont think it is

@@ -102,6 +102,7 @@
 #include "sa1.h"
 #include "spc7110.h"
 #include "movie.h"
+#include "s9xlua.h"
 
 void S9xMainLoop (void)
 {
@@ -110,6 +111,8 @@ void S9xMainLoop (void)
 		S9xMovieUpdateOnReset();
 		S9xSoftReset();
 	}
+
+	CallRegisteredLuaFunctions(LUACALL_BEFOREEMULATION);
 
     for (;;)
     {

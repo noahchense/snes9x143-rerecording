@@ -99,6 +99,7 @@
 #include "screenshot.h"
 #include "cheats.h"
 #include "movie.h"
+#include "s9xlua.h"
 
 #include "font.h"
 int font_width = 8;
@@ -589,6 +590,8 @@ void S9xReRefresh ()
 
 void S9xEndScreenRefresh ()
 {
+	CallRegisteredLuaFunctions(LUACALL_AFTEREMULATION);
+
 	IPPU.HDMAStarted = FALSE;
 	if(IPPU.RenderThisFrame) {
 		FLUSH_REDRAW();
