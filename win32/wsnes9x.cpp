@@ -1095,6 +1095,20 @@ const int idJoypad[] = {
 	ID_JOYPAD_5,
 };
 
+struct SSoundDrivers 
+{
+    int ident;
+    int interfaceId;
+} SoundDrivers[9] = {
+    {ID_SOUNDINTERFACE_DIRECTSOUND, WIN_SNES9X_DIRECT_SOUND_DRIVER},
+    {ID_SOUNDINTERFACE_FMOD_DIRECTSOUND, WIN_FMOD_DIRECT_SOUND_DRIVER},
+    {ID_SOUNDINTERFACE_FMOD_WAVE, WIN_FMOD_WAVE_SOUND_DRIVER},
+    {ID_SOUNDINTERFACE_FMOD_A3D, WIN_FMOD_A3D_SOUND_DRIVER},
+    {ID_SOUNDINTERFACE_XAUDIO2, WIN_XAUDIO2_SOUND_DRIVER},
+    {ID_SOUNDINTERFACE_FMODEX_DEFAULT, WIN_FMODEX_DEFAULT_DRIVER},
+    {ID_SOUNDINTERFACE_FMODEX_ASIO, WIN_FMODEX_ASIO_DRIVER}
+};
+
 struct SSoundRates 
 {
     uint32 rate;
@@ -1105,7 +1119,7 @@ struct SSoundRates
     {16000, ID_SOUND_16000HZ},
     {22050, ID_SOUND_22050HZ},
     {30000, ID_SOUND_30000HZ},
-	{32000, ID_SOUND_32000HZ},
+    {32000, ID_SOUND_32000HZ},
     {35000, ID_SOUND_35000HZ},
     {44100, ID_SOUND_44100HZ},
     {48000, ID_SOUND_48000HZ}
@@ -2103,7 +2117,7 @@ LRESULT CALLBACK WinProc(
 			if (wParam == VK_CONTROL) modifiers |= CUSTKEY_CTRL_MASK;
 			if (wParam == VK_SHIFT)   modifiers |= CUSTKEY_SHIFT_MASK;
 			while (!IsLastCustomKey(key)) {
-				if ((wParam == key->key || modifiers == key->modifiers) && key->handleKeyUp) {
+				if ((wParam == key->key || (modifiers != 0 && modifiers == key->modifiers)) && key->handleKeyUp) {
 					key->handleKeyUp();
 				}
 				key++;
@@ -2670,7 +2684,26 @@ LRESULT CALLBACK WinProc(
             NPServer.SyncByReset ^= TRUE;
             break;
 #endif
-        case ID_SOUND_8000HZ:
+		case ID_SOUNDINTERFACE_DIRECTSOUND:
+		case ID_SOUNDINTERFACE_XAUDIO2:
+		case ID_SOUNDINTERFACE_FMOD_DIRECTSOUND:
+		case ID_SOUNDINTERFACE_FMOD_WAVE:
+		case ID_SOUNDINTERFACE_FMOD_A3D:
+		case ID_SOUNDINTERFACE_FMODEX_DEFAULT:
+		case ID_SOUNDINTERFACE_FMODEX_ASIO:
+			for( i = 0; i < COUNT(SoundDrivers); i ++)
+				if (SoundDrivers[i].ident == (int) wParam)
+				{
+					EnterCriticalSection(&GUI.SoundCritSect);
+					Settings.SoundDriver = SoundDrivers [i].interfaceId;
+					if (!ReInitSound(1)) // !SetupSound()
+					{	MessageBox( GUI.hWnd, Languages[ GUI.Language].errInitDS, TEXT(SNES9X_DXS), MB_OK | MB_ICONINFORMATION);	}
+					LeaveCriticalSection(&GUI.SoundCritSect);
+					break;
+				}
+				break;
+			break;
+		case ID_SOUND_8000HZ:
 		case ID_SOUND_11025HZ:
 		case ID_SOUND_16000HZ:
 		case ID_SOUND_22050HZ:
@@ -5214,9 +5247,45 @@ static void CheckMenuStates ()
 	bool soundIsActive = Settings.APUEnabled;
 //	bool soundIsActive = !(/*!DirectSound.DSAvailable ||*/ Settings.Mute || !Settings.APUEnabled);
 
+#ifndef FMOD_SUPPORT
+	RemoveMenu(GUI.hMenu, ID_SOUNDINTERFACE_FMOD_DIRECTSOUND, MF_BYCOMMAND);
+	RemoveMenu(GUI.hMenu, ID_SOUNDINTERFACE_FMOD_WAVE, MF_BYCOMMAND);
+	RemoveMenu(GUI.hMenu, ID_SOUNDINTERFACE_FMOD_A3D, MF_BYCOMMAND);
+#endif
+#ifndef FMODEX_SUPPORT
+	RemoveMenu(GUI.hMenu, ID_SOUNDINTERFACE_FMODEX_DEFAULT, MF_BYCOMMAND);
+	RemoveMenu(GUI.hMenu, ID_SOUNDINTERFACE_FMODEX_ASIO, MF_BYCOMMAND);
+#endif
+
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_SNES9X_DIRECT_SOUND_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_DIRECTSOUND, FALSE, &mii);
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_XAUDIO2_SOUND_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_XAUDIO2, FALSE, &mii);
+#ifdef FMOD_SUPPORT
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_FMOD_DIRECT_SOUND_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_FMOD_DIRECTSOUND, FALSE, &mii);
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_FMOD_WAVE_SOUND_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_FMOD_WAVE, FALSE, &mii);
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_FMOD_A3D_SOUND_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_FMOD_A3D, FALSE, &mii);
+#endif
+#ifdef FMODEX_SUPPORT
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_FMODEX_DEFAULT_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_FMODEX_DEFAULT, FALSE, &mii);
+	mii.fState = (soundIsActive ? MFS_ENABLED : MFS_DISABLED)
+		| ((Settings.SoundDriver == WIN_FMODEX_ASIO_DRIVER) ? MFS_CHECKED : MFS_UNCHECKED);
+	SetMenuItemInfo (GUI.hMenu, ID_SOUNDINTERFACE_FMODEX_ASIO, FALSE, &mii);
+#endif
+
 	for (i = 0; i < COUNT(SoundRates); i++) {
 		mii.fState = (SoundRates [i].rate == Settings.SoundPlaybackRate) ? MFS_CHECKED : MFS_UNCHECKED;
-		if (!soundIsActive || S9xMovieActive() || GUI.WAVOut || GUI.AVIOut)
+		if (!soundIsActive || /*S9xMovieActive() || */GUI.WAVOut || GUI.AVIOut)
 			mii.fState |= MFS_DISABLED;
 		SetMenuItemInfo (GUI.hMenu, SoundRates[i].ident, FALSE, &mii);
 	}
@@ -5332,7 +5401,7 @@ static void CheckMenuStates ()
 	SetMenuItemInfo (GUI.hMenu, ID_SOUND_FAKEMUTE, FALSE, &mii);
 
 	mii.fState = Settings.SoundSync ? MFS_CHECKED : MFS_UNCHECKED;
-	if (!Settings.APUEnabled || S9xMovieActive())
+	if (!Settings.APUEnabled/* || S9xMovieActive()*/)
 		mii.fState |= MFS_DISABLED;
 	SetMenuItemInfo (GUI.hMenu, ID_SOUND_SYNC, FALSE, &mii);
 

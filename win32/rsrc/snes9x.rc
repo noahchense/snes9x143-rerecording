@@ -1184,17 +1184,57 @@ BEGIN
         END
         POPUP "&Sound"
         BEGIN
+            POPUP "Interface"
+            BEGIN
+                MENUITEM "DirectSound",                 ID_SOUNDINTERFACE_DIRECTSOUND
+                MENUITEM "XAudio2",                     ID_SOUNDINTERFACE_XAUDIO2
+                MENUITEM "FMOD DirectSound",            ID_SOUNDINTERFACE_FMOD_DIRECTSOUND
+                MENUITEM "FMOD Windows Multimedia",     ID_SOUNDINTERFACE_FMOD_WAVE
+                MENUITEM "FMOD A3D",                    ID_SOUNDINTERFACE_FMOD_A3D
+                MENUITEM "FMOD Ex Default",             ID_SOUNDINTERFACE_FMODEX_DEFAULT
+                MENUITEM "FMOD Ex ASIO",                ID_SOUNDINTERFACE_FMODEX_ASIO
+                MENUITEM SEPARATOR
+                POPUP "&Buffer Length"
+                BEGIN
+                    MENUITEM "Mix Interval * &1",       ID_SOUND_25MS
+                    MENUITEM "Mix Interval * &2",       ID_SOUND_50MS
+                    MENUITEM "Mix Interval * &4",       ID_SOUND_100MS
+                    MENUITEM "Mix Interval * &8",       ID_SOUND_200MS
+                    MENUITEM "Mix Interval * 1&6",      ID_SOUND_500MS
+                    MENUITEM "Mix Interval * &32",      ID_SOUND_1S
+                    MENUITEM "Mix Interva&l * 64",      ID_SOUND_2S
+                END
+                POPUP "Mix Interval"
+                BEGIN
+                    MENUITEM "10ms (recommended)",      ID_SOUND_MIXINTERVAL_10MS
+                    MENUITEM "20ms",                    ID_SOUND_MIXINTERVAL_20MS
+                    MENUITEM "30ms",                    ID_SOUND_MIXINTERVAL_30MS
+                    MENUITEM "40ms",                    ID_SOUND_MIXINTERVAL_40MS
+                    MENUITEM "50ms",                    ID_SOUND_MIXINTERVAL_50MS
+                    MENUITEM "60ms",                    ID_SOUND_MIXINTERVAL_60MS
+                    MENUITEM "70ms",                    ID_SOUND_MIXINTERVAL_70MS
+                    MENUITEM "80ms",                    ID_SOUND_MIXINTERVAL_80MS
+                    MENUITEM "90ms",                    ID_SOUND_MIXINTERVAL_90MS
+                    MENUITEM "100ms",                   ID_SOUND_MIXINTERVAL_100MS
+                    MENUITEM "110ms",                   ID_SOUND_MIXINTERVAL_110MS
+                    MENUITEM "120ms",                   ID_SOUND_MIXINTERVAL_120MS
+                    MENUITEM "130ms",                   ID_SOUND_MIXINTERVAL_130MS
+                    MENUITEM "140ms",                   ID_SOUND_MIXINTERVAL_140MS
+                    MENUITEM "150ms",                   ID_SOUND_MIXINTERVAL_150MS
+                END
+            END
+            MENUITEM SEPARATOR
             POPUP "&Playback Rate"
             BEGIN
-                MENUITEM "8KHz",                        ID_SOUND_8000HZ, GRAYED
-                MENUITEM "11KHz",                       ID_SOUND_11025HZ, GRAYED
-                MENUITEM "16KHz",                       ID_SOUND_16000HZ, GRAYED
-                MENUITEM "22KHz",                       ID_SOUND_22050HZ, GRAYED
-                MENUITEM "30KHz",                       ID_SOUND_30000HZ, GRAYED
-                MENUITEM "32KHz (SNES)",                ID_SOUND_32000HZ, GRAYED
-                MENUITEM "35KHz",                       ID_SOUND_35000HZ, GRAYED
-                MENUITEM "44KHz",                       ID_SOUND_44100HZ, GRAYED
-                MENUITEM "48KHz",                       ID_SOUND_48000HZ, GRAYED
+                MENUITEM "8KHz",                        ID_SOUND_8000HZ
+                MENUITEM "11KHz",                       ID_SOUND_11025HZ
+                MENUITEM "16KHz",                       ID_SOUND_16000HZ
+                MENUITEM "22KHz",                       ID_SOUND_22050HZ
+                MENUITEM "30KHz",                       ID_SOUND_30000HZ
+                MENUITEM "32KHz (SNES)",                ID_SOUND_32000HZ
+                MENUITEM "35KHz",                       ID_SOUND_35000HZ
+                MENUITEM "44KHz",                       ID_SOUND_44100HZ
+                MENUITEM "48KHz",                       ID_SOUND_48000HZ
             END
             MENUITEM "&16-Bit Sound (SNES:on)",     ID_SOUND_16BIT
             MENUITEM "&Stereo (SNES:on)",           ID_SOUND_STEREO
@@ -1219,36 +1259,7 @@ BEGIN
                 MENUITEM "Enable All",                  ID_CHANNELS_ENABLEALL
             END
             MENUITEM SEPARATOR
-            POPUP "&Buffer Length"
-            BEGIN
-                MENUITEM "Mix Interval * &1",           ID_SOUND_25MS
-                MENUITEM "Mix Interval * &2",           ID_SOUND_50MS, GRAYED
-                MENUITEM "Mix Interval * &4",           ID_SOUND_100MS, GRAYED
-                MENUITEM "Mix Interval * &8",           ID_SOUND_200MS, GRAYED
-                MENUITEM "Mix Interval * 1&6",          ID_SOUND_500MS, GRAYED
-                MENUITEM "Mix Interval * &32",          ID_SOUND_1S, GRAYED
-                MENUITEM "Mix Interva&l * 64",          ID_SOUND_2S, GRAYED
-            END
-            POPUP "Mix Interval"
-            BEGIN
-                MENUITEM "10ms (recommended)",          ID_SOUND_MIXINTERVAL_10MS
-                MENUITEM "20ms",                        ID_SOUND_MIXINTERVAL_20MS
-                MENUITEM "30ms",                        ID_SOUND_MIXINTERVAL_30MS
-                MENUITEM "40ms",                        ID_SOUND_MIXINTERVAL_40MS
-                MENUITEM "50ms",                        ID_SOUND_MIXINTERVAL_50MS
-                MENUITEM "60ms",                        ID_SOUND_MIXINTERVAL_60MS
-                MENUITEM "70ms",                        ID_SOUND_MIXINTERVAL_70MS
-                MENUITEM "80ms",                        ID_SOUND_MIXINTERVAL_80MS
-                MENUITEM "90ms",                        ID_SOUND_MIXINTERVAL_90MS
-                MENUITEM "100ms",                       ID_SOUND_MIXINTERVAL_100MS
-                MENUITEM "110ms",                       ID_SOUND_MIXINTERVAL_110MS
-                MENUITEM "120ms",                       ID_SOUND_MIXINTERVAL_120MS
-                MENUITEM "130ms",                       ID_SOUND_MIXINTERVAL_130MS
-                MENUITEM "140ms",                       ID_SOUND_MIXINTERVAL_140MS
-                MENUITEM "150ms",                       ID_SOUND_MIXINTERVAL_150MS
-            END
-            MENUITEM SEPARATOR
-            MENUITEM "&Settings...",                ID_SOUND_OPTIONS
+            MENUITEM "&Settings...",                ID_SOUND_OPTIONS, GRAYED
         END
         MENUITEM SEPARATOR
         POPUP "&Emulator"
