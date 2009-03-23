@@ -1549,7 +1549,8 @@ void InitSnes9X( void)
     S9xGraphicsInit();
 
 	//InitializeCriticalSection(&GUI.SoundCritSect); // must be called before process config file
-	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	//CoInitializeEx(NULL, COINIT_MULTITHREADED); // FIXME: this limits file manipulation on GetOpenFileName (?)
+	CoInitialize(NULL);
 
 	S9xWinInitSound();
 
