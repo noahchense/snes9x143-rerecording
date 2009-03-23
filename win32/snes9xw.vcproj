@@ -52,7 +52,7 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;../lua/src;FMOD/api/inc;FMODEx/api/inc"
 				PreprocessorDefinitions="NDEBUG;HAVE_LIBPNG;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;ZSNES_FX;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;FMOD_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -87,7 +87,7 @@
 				OutputFile="$(ProjectDir)\snes9x-ccore.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
+				AdditionalLibraryDirectories="directx;../lua/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
 				DelayLoadDLLs="fmod.dll;fmodexp.dll"
@@ -162,7 +162,7 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;../lua/src;FMOD/api/inc;FMODEx/api/inc"
 				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;NDEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;FMOD_SUPPORT"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -197,7 +197,7 @@
 				OutputFile="$(ProjectDir)\snes9x.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
+				AdditionalLibraryDirectories="directx;../lua/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
 				DelayLoadDLLs="fmod.dll;fmodexp.dll"
@@ -268,7 +268,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;lua-5.1.4/src;FMOD/api/inc;FMODEx/api/inc"
+				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;../lua/src;FMOD/api/inc;FMODEx/api/inc"
 				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;_DEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;FMOD_SUPPORT"
 				RuntimeLibrary="1"
 				StructMemberAlignment="3"
@@ -302,7 +302,7 @@
 				OutputFile="$(ProjectDir)\snes9x-debug.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="directx;lua-5.1.4/lib;FMOD/api/lib;FMODEx/api/lib"
+				AdditionalLibraryDirectories="directx;../lua/lib;FMOD/api/lib;FMODEx/api/lib"
 				GenerateManifest="true"
 				ManifestFile="$(IntDir)\$(TargetFileName).intermediate.manifest"
 				DelayLoadDLLs="fmod.dll;fmodexp.dll"
@@ -3004,16 +3004,8 @@
 			Name="lua"
 			>
 			<File
-				RelativePath=".\lua-5.1.4\src\lapi.c"
+				RelativePath="..\lua\src\lapi.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3024,16 +3016,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lauxlib.c"
+				RelativePath="..\lua\src\lauxlib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3044,16 +3028,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lbaselib.c"
+				RelativePath="..\lua\src\lbaselib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3064,16 +3040,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lcode.c"
+				RelativePath="..\lua\src\lcode.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3084,16 +3052,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ldblib.c"
+				RelativePath="..\lua\src\ldblib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3104,16 +3064,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ldebug.c"
+				RelativePath="..\lua\src\ldebug.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3124,16 +3076,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ldo.c"
+				RelativePath="..\lua\src\ldo.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3144,16 +3088,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ldump.c"
+				RelativePath="..\lua\src\ldump.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3164,16 +3100,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lfunc.c"
+				RelativePath="..\lua\src\lfunc.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3184,16 +3112,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lgc.c"
+				RelativePath="..\lua\src\lgc.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3204,16 +3124,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\linit.c"
+				RelativePath="..\lua\src\linit.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3224,16 +3136,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\liolib.c"
+				RelativePath="..\lua\src\liolib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3244,16 +3148,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\llex.c"
+				RelativePath="..\lua\src\llex.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3264,16 +3160,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lmathlib.c"
+				RelativePath="..\lua\src\lmathlib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3284,16 +3172,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lmem.c"
+				RelativePath="..\lua\src\lmem.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3304,16 +3184,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\loadlib.c"
+				RelativePath="..\lua\src\loadlib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3324,16 +3196,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lobject.c"
+				RelativePath="..\lua\src\lobject.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3344,16 +3208,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lopcodes.c"
+				RelativePath="..\lua\src\lopcodes.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3364,16 +3220,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\loslib.c"
+				RelativePath="..\lua\src\loslib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3384,16 +3232,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lparser.c"
+				RelativePath="..\lua\src\lparser.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3404,16 +3244,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lstate.c"
+				RelativePath="..\lua\src\lstate.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3424,16 +3256,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lstring.c"
+				RelativePath="..\lua\src\lstring.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3444,16 +3268,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lstrlib.c"
+				RelativePath="..\lua\src\lstrlib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3464,16 +3280,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ltable.c"
+				RelativePath="..\lua\src\ltable.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3484,16 +3292,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ltablib.c"
+				RelativePath="..\lua\src\ltablib.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3504,16 +3304,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\ltm.c"
+				RelativePath="..\lua\src\ltm.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3524,16 +3316,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lundump.c"
+				RelativePath="..\lua\src\lua.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3544,16 +3328,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lvm.c"
+				RelativePath="..\lua\src\luac.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3564,16 +3340,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\lzio.c"
+				RelativePath="..\lua\src\lundump.c"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
@@ -3584,16 +3352,32 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\lua-5.1.4\src\print.c"
+				RelativePath="..\lua\src\lvm.c"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\lua\src\lzio.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\lua\src\print.c"
+				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
