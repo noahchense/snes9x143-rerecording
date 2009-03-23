@@ -158,10 +158,6 @@
 #include <stddef.h>
 #include <assert.h>
 
-#ifndef MIIM_STRING
-#define MIIM_STRING      0x00000040
-#endif
-
 extern SNPServer NPServer;
 
 #ifdef USE_OPENGL
