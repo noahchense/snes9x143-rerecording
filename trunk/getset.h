@@ -121,23 +121,28 @@ INLINE uint16 S9xGetWord (uint32 Address, bool free=false);
 
 INLINE void S9xLuaWriteInform(uint32 address) {
 
-	if (!(address >= 0x7e0000 && address <= 0x7fffff))
-		return;
+	if (address & 0x400000)
+	{
+		address &= 0x7fffff;
+		if (address < 0x7e0000)
+			return;
+	}
+	else
+	{
+		address = 0x7e0000 | (address & 0xffff);
+	}
 
 	int addr2 = address - 0x7e0000;
 	
 	// These might be better using binary arithmatic -- a shift and an AND
 	int slot = addr2 / 8;
 	int bits = addr2 % 8;
-	
 
-	
 	extern unsigned char lua_watch_bitfield[16384];
 	
 	// Check the slot
 	if (lua_watch_bitfield[slot] & (1 << bits))
 		S9xLuaWrite(address);
-
 }
 
 
