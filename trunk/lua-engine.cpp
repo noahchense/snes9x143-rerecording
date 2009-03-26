@@ -1521,120 +1521,137 @@ static const uint32 Small_Font_Data[] =
 
 static void PutTextInternal (const char *str, int len, short x, short y, int color, int backcolor)
 {
-   int Opac = (color >> 24) & 0xFF;
-   int backOpac = (backcolor >> 24) & 0xFF;
-   int origX = x;
+	int Opac = (color >> 24) & 0xFF;
+	int backOpac = (backcolor >> 24) & 0xFF;
+	int origX = x;
 
-   if(!Opac && !backOpac)
-      return;
+	if(!Opac && !backOpac)
+		return;
 
-   while(*str && len)
-   {
-      int c = *str++;
-      if(c == '\n')
-      {
-         x = origX;
-         y += 8;
-         continue;
-      }
-      if((unsigned int)(c-32) >= 96)
-         continue;
-      const unsigned char* Cur_Glyph = (const unsigned char*)&Small_Font_Data + (c-32)*7*4;
+	while(*str && len && y < 239)
+	{
+		int c = *str++;
+		while (x > 256 && c != '\n') {
+			c = *str;
+			if (c == '\0')
+				break;
+			str++;
+		}
+		if(c == '\n')
+		{
+			x = origX;
+			y += 8;
+			continue;
+		}
+		else if(c == '\t') // just in case
+		{
+			const int tabSpace = 8;
+			x += (tabSpace-(((x-origX)/4)%tabSpace))*4;
+			continue;
+		}
+		if((unsigned int)(c-32) >= 96)
+			continue;
+		const unsigned char* Cur_Glyph = (const unsigned char*)&Small_Font_Data + (c-32)*7*4;
 
-      for(int y2 = 0; y2 < 8; y2++)
-      {
-         unsigned int glyphLine = *((unsigned int*)Cur_Glyph + y2);
-         for(int x2 = -1; x2 < 4; x2++)
-         {
-            int shift = x2 << 3;
-            int mask = 0xFF << shift;
-            int intensity = (glyphLine & mask) >> shift;
+		for(int y2 = 0; y2 < 8; y2++)
+		{
+			unsigned int glyphLine = *((unsigned int*)Cur_Glyph + y2);
+			for(int x2 = -1; x2 < 4; x2++)
+			{
+				int shift = x2 << 3;
+				int mask = 0xFF << shift;
+				int intensity = (glyphLine & mask) >> shift;
 
-            if(intensity && x2 >= 0 && y2 < 7)
-            {
-               int xdraw = max(0,min(256 - 1,x+x2));
-               int ydraw = max(0,min(239 - 1,y+y2));
-               gui_drawpixel_fast(xdraw, ydraw, color);
-            }
-            else if(backOpac)
-            {
-               for(int y3 = max(0,y2-1); y3 <= min(6,y2+1); y3++)
-               {
-                  unsigned int glyphLine = *((unsigned int*)Cur_Glyph + y3);
-                  for(int x3 = max(0,x2-1); x3 <= min(3,x2+1); x3++)
-                  {
-                     int shift = x3 << 3;
-                     int mask = 0xFF << shift;
-                     intensity |= (glyphLine & mask) >> shift;
-                  }
-               }
-               if(intensity)
-               {
-                  int xdraw = max(0,min(256 - 1,x+x2));
-                  int ydraw = max(0,min(239 - 1,y+y2));
-                  gui_drawpixel_fast(xdraw, ydraw, backcolor);
-               }
-            }
-         }
-      }
+				if(intensity && x2 >= 0 && y2 < 7)
+				{
+					//int xdraw = max(0,min(256 - 1,x+x2));
+					//int ydraw = max(0,min(239 - 1,y+y2));
+					//gui_drawpixel_fast(xdraw, ydraw, color);
+					gui_drawpixel_internal(x+x2, y+y2, color);
+				}
+				else if(backOpac)
+				{
+					for(int y3 = max(0,y2-1); y3 <= min(6,y2+1); y3++)
+					{
+						unsigned int glyphLine = *((unsigned int*)Cur_Glyph + y3);
+						for(int x3 = max(0,x2-1); x3 <= min(3,x2+1); x3++)
+						{
+							int shift = x3 << 3;
+							int mask = 0xFF << shift;
+							intensity |= (glyphLine & mask) >> shift;
+						}
+					}
+					if(intensity)
+					{
+						//int xdraw = max(0,min(256 - 1,x+x2));
+						//int ydraw = max(0,min(239 - 1,y+y2));
+						//gui_drawpixel_fast(xdraw, ydraw, backcolor);
+						gui_drawpixel_internal(x+x2, y+y2, backcolor);
+					}
+				}
+			}
+		}
 
-      x += 4;
-      len--;
-   }
+		x += 4;
+		len--;
+	}
 }
 
 static int strlinelen(const char* string)
 {
-   const char* s = string;
-   while(*s && *s != '\n')
-      s++;
-   if(*s)
-      s++;
-   return s - string;
+	const char* s = string;
+	while(*s && *s != '\n')
+		s++;
+	if(*s)
+		s++;
+	return s - string;
 }
 
 static void LuaDisplayString (const char *string, int y, int x, uint32 color, uint32 outlineColor)
 {
-   if(!string)
-      return;
+	if(!string)
+		return;
 
-   gui_prepare();
+	gui_prepare();
 
-   const char* ptr = string;
-   while(*ptr && y < 239)
-   {
-      int len = strlinelen(ptr);
-      int skip = 0;
-      if(len < 1) len = 1;
+	PutTextInternal(string, strlen(string), x, y, color, outlineColor);
+/*
+	const char* ptr = string;
+	while(*ptr && y < 239)
+	{
+		int len = strlinelen(ptr);
+		int skip = 0;
+		if(len < 1) len = 1;
 
-      // break up the line if it's too long to display otherwise
-      if(len > 63)
-      {
-         len = 63;
-         const char* ptr2 = ptr + len-1;
-         for(int j = len-1; j; j--, ptr2--)
-         {
-            if(*ptr2 == ' ' || *ptr2 == '\t')
-            {
-               len = j;
-               skip = 1;
-               break;
-            }
-         }
-      }
+		// break up the line if it's too long to display otherwise
+		if(len > 63)
+		{
+			len = 63;
+			const char* ptr2 = ptr + len-1;
+			for(int j = len-1; j; j--, ptr2--)
+			{
+				if(*ptr2 == ' ' || *ptr2 == '\t')
+				{
+					len = j;
+					skip = 1;
+					break;
+				}
+			}
+		}
 
-      int xl = 0;
-      int yl = 0;
-      int xh = (256 - 1 - 1) - 4*len;
-      int yh = 239 - 1;
-      int x2 = min(max(x,xl),xh);
-      int y2 = min(max(y,yl),yh);
+		int xl = 0;
+		int yl = 0;
+		int xh = (256 - 1 - 1) - 4*len;
+		int yh = 239 - 1;
+		int x2 = min(max(x,xl),xh);
+		int y2 = min(max(y,yl),yh);
 
-      PutTextInternal(ptr,len,x2,y2,color,outlineColor);
+		PutTextInternal(ptr,len,x2,y2,color,outlineColor);
 
-      ptr += len + skip;
-      y += 8;
-   }
+		ptr += len + skip;
+		y += 8;
+	}
+*/
 }
 
 // gui.text(int x, int y, string msg)
