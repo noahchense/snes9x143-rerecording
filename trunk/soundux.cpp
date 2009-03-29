@@ -238,34 +238,34 @@ int DoFakeMute = 0;
 #define JUST_PLAYED_LAST_SAMPLE(c) ((c)->sample_pointer >= LAST_SAMPLE)
 
 static inline int32 absolute (int32);
-static inline int32 sclip15 (int32);
-static inline int32 sclamp8 (int32);
-static inline int32 sclamp15 (int32);
-static inline int32 sclamp16 (int32);
+static inline int16 sclip15 (int32);
+static inline int8 sclamp8 (int32);
+static inline int16 sclamp15 (int32);
+static inline int16 sclamp16 (int32);
 
 static inline int32 absolute (int32 x)
 {
 	return ((x < 0) ? -x : x);
 }
 
-static inline int32 sclip15 (int32 x)
+static inline int16 sclip15 (int32 x)
 {
-	return ((x & 16384) ? (x | ~16383) : (x & 16383));
+	return (int16)((x & 16384) ? (x | ~16383) : (x & 16383));
 }
 
-static inline int32 sclamp8 (int32 x)
+static inline int8 sclamp8 (int32 x)
 {
-	return ((x > 127) ? 127 : (x < -128) ? -128 : x);
+	return (int8)((x > 127) ? 127 : (x < -128) ? -128 : x);
 }
 
-static inline int32 sclamp15 (int32 x)
+static inline int16 sclamp15 (int32 x)
 {
-	return ((x > 16383) ? 16383 : (x < -16384) ? -16384 : x);
+	return (int16)((x > 16383) ? 16383 : (x < -16384) ? -16384 : x);
 }
 
-static inline int32 sclamp16 (int32 x)
+static inline int16 sclamp16 (int32 x)
 {
-	return ((x > 32767) ? 32767 : (x < -32768) ? -32768 : x);
+	return (int16)((x > 32767) ? 32767 : (x < -32768) ? -32768 : x);
 }
 
 STATIC inline uint8 *S9xGetSampleAddress (int sample_number)
@@ -445,11 +445,9 @@ void S9xSetSoundKeyOff (int channel)
 
 void S9xPrepareSoundForSnapshotSave (bool8 restore)
 {
-	int i, j;
-
 	if (!restore)
 	{
-		for (i = 0; i < NUM_CHANNELS; i++)
+		for (int i = 0; i < NUM_CHANNELS; i++)
 		{
 			Channel *ch = &SoundData.channels[i];
 
@@ -1016,7 +1014,7 @@ void MixStereo (int sample_count)
 
 			assert(ENVX_SHIFT >= 4);
 			outx = (outx * (ch->envxx >> (ENVX_SHIFT - 4))) >> 11;
-			ch->sample = outx << 1;
+			ch->sample = (short)((outx << 1) & 0xFFFF);
 
 			if (mod2)
 				wave[I >> 1] = outx << 1;
@@ -1339,7 +1337,7 @@ void MixMono (int sample_count)
 
 			assert(ENVX_SHIFT >= 4);
 			outx = (outx * (ch->envxx >> (ENVX_SHIFT - 4))) >> 11;
-			ch->sample = outx << 1;
+			ch->sample = (short)((outx << 1) & 0xFFFF);
 
 			if (mod2)
 				wave[I] = outx << 1;

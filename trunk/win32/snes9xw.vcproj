@@ -82,6 +82,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/ignore:4199"
 				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x-ccore.exe"
 				LinkIncremental="1"
@@ -157,9 +158,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="0"
+				Optimization="3"
+				InlineFunctionExpansion="2"
 				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories=".;..;zlib;directx;libpng-1.2.1;../lua/src;FMOD/api/inc;FMODEx/api/inc"
 				PreprocessorDefinitions="ZSNES_C4;ZSNES_FX;NDEBUG;HAVE_LIBPNG;SPC700_C;JMA_SUPPORT;SDD1_DECOMP;CORRECT_VRAM_READS;JP_FIX;SPC700_SHUTDOWN;CPU_SHUTDOWN;ZLIB;VAR_CYCLES;UNZIP_SUPPORT;EXECUTE_SUPERFX_PER_LINE;NEW_COLOUR_BLENDING;__WIN32__;__MSC__;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;NOUNCRYPT;FMOD_SUPPORT"
@@ -191,6 +194,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/ignore:4199"
 				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x.exe"
 				LinkIncremental="1"
@@ -204,7 +208,6 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"
 				LinkTimeCodeGeneration="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -278,7 +281,7 @@
 				BrowseInformation="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 				CompileAs="0"
 				DisableSpecificWarnings="4290;4996;4200"
 			/>
@@ -295,6 +298,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/ignore:4199"
 				AdditionalDependencies="comctl32.lib winmm.lib opengl32.lib glu32.lib wsock32.lib directx/ddraw.lib directx/dsound.lib directx/dxguid.lib vfw32.lib shlwapi.lib delayimp.lib fmodvc.lib fmodexp_vc.lib"
 				OutputFile="$(ProjectDir)\snes9x-debug.exe"
 				LinkIncremental="1"

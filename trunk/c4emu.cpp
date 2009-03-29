@@ -361,7 +361,7 @@ static void C4DrawLine(int32 X1, int32 Y1, int16 Z1,
         if(X1>0xff && Y1>0xff && X1<0x6000 && Y1<0x6000)
 		{
             uint16 addr=((X1&~0x7ff) + (Y1&~0x7ff)*12 + (Y1&0x700))>>7;
-            addr=(((Y1>>8)>>3)<<8)-(((Y1>>8)>>3)<<6)+(((X1>>8)>>3)<<4)+((Y1>>8)&7)*2;
+            addr=(int16)((((Y1>>8)>>3)<<8)-(((Y1>>8)>>3)<<6)+(((X1>>8)>>3)<<4)+((Y1>>8)&7)*2);
             uint8 bit=0x80>>((X1>>8)&7);
             Memory.C4RAM[addr+0x300]&=~bit;
             Memory.C4RAM[addr+0x301]&=~bit;
@@ -750,13 +750,13 @@ void S9xSetC4 (uint8 byte, uint16 Address)
                     {
                         if(y>=0)
                         {
-                            left = SAR((int32)tan1*y, 16) -
+                            left = (int16)(SAR((int32)tan1*y, 16) -
                                 READ_WORD(Memory.C4RAM+0x1f80) + 
-                                READ_WORD(Memory.C4RAM+0x1f86);
-                            right = SAR((int32)tan2*y, 16) -
+                                READ_WORD(Memory.C4RAM+0x1f86));
+                            right = (int16)(SAR((int32)tan2*y, 16) -
                                 READ_WORD(Memory.C4RAM+0x1f80) + 
                                 READ_WORD(Memory.C4RAM+0x1f86) +
-                                READ_WORD(Memory.C4RAM+0x1f93);
+                                READ_WORD(Memory.C4RAM+0x1f93));
 
                             if(left<0 && right<0){
                                 left=1;

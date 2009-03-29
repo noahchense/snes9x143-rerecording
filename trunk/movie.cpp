@@ -1031,7 +1031,7 @@ bool S9xMovieRequiresReset ()
 		break;
 		default: break;
 	}
-	return Movie.RequiresReset;
+	return Movie.RequiresReset!=0;
 }
 
 void S9xMovieUpdateOnReset ()

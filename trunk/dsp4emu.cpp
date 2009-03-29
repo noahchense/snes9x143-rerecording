@@ -293,11 +293,11 @@ void DSP4_Op01()
 
 		// quadratic regression (rough)
 		if(project_focaly>=-0x0f) 
-			py_dy = project_focaly * project_focaly * -0.20533553
-							- 1.08330005 * project_focaly - 69.61094639;
+			py_dy = (int16)(project_focaly * project_focaly * -0.20533553
+							- 1.08330005 * project_focaly - 69.61094639);
 		else
-			py_dy = project_focaly * project_focaly * -0.000657035759
-							- 1.07629051 * project_focaly - 65.69315963;
+			py_dy = (int16)(project_focaly * project_focaly * -0.000657035759
+							- 1.07629051 * project_focaly - 65.69315963);
 
 		// approximate # of raster lines
 		segments = abs(project_y2-project_y1);
@@ -498,11 +498,11 @@ void DSP4_Op07()
 
 		// quadratic regression (rough)
 		if(project_focaly>=-0x0f) 
-			py_dy = project_focaly * project_focaly * -0.20533553
-							- 1.08330005 * project_focaly - 69.61094639;
+			py_dy = (int16)(project_focaly * project_focaly * -0.20533553
+							- 1.08330005 * project_focaly - 69.61094639);
 		else
-			py_dy = project_focaly * project_focaly * -0.000657035759
-							- 1.07629051 * project_focaly - 65.69315963;
+			py_dy = (int16)(project_focaly * project_focaly * -0.000657035759
+							- 1.07629051 * project_focaly - 65.69315963);
 
 		// approximate # of raster lines
 		segments = abs(project_y2-project_y1);
@@ -1060,11 +1060,11 @@ void DSP4_Op0D()
 
 		// quadratic regression (rough)
 		if(project_focaly>=-0x0f) 
-			py_dy = project_focaly * project_focaly * -0.20533553
-							- 1.08330005 * project_focaly - 69.61094639;
+			py_dy = (int16)(project_focaly * project_focaly * -0.20533553
+							- 1.08330005 * project_focaly - 69.61094639);
 		else
-			py_dy = project_focaly * project_focaly * -0.000657035759
-							- 1.07629051 * project_focaly - 65.69315963;
+			py_dy = (int16)(project_focaly * project_focaly * -0.000657035759
+							- 1.07629051 * project_focaly - 65.69315963);
 
 		// approximate # of raster lines
 		segments = abs(project_y2-project_y1);
@@ -1412,8 +1412,8 @@ sprite_found:
 			/////////////////////////////////////
 			// process tile data
 
-			bool8 clip;
-			int16 sp_x, sp_y, sp_oam, sp_msb;
+			bool8 clip, sp_msb;
+			int16 sp_x, sp_y, sp_oam;
 			int16 sp_dx, sp_dy;
 			int16 expand = sprite_size ? 15:7;
 

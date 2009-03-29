@@ -109,9 +109,9 @@
 
 #ifndef __BORLANDC__
 
-#ifndef __MINGW32__
-#include <afxres.h>
-#endif
+//#ifndef __MINGW32__
+//#include <afxres.h> // disabled because it seems to be missing by default and it's not needed
+//#endif
 
 #include <dsound.h>
 #endif
@@ -435,7 +435,7 @@ typedef union {
 		SCustomKey StopLuaScript;
 		SCustomKey LastItem; // dummy, must be last
 	};
-	SCustomKey key[];
+	SCustomKey key[1]; // array of all the keys above (the size is not really 1)
 } SCustomKeys;
 
 struct SJoypad {

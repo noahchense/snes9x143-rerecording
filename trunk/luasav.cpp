@@ -623,8 +623,7 @@ void CallRegisteredLuaLoadFunctions(int savestateNumber, const LuaSaveData& save
 			// (e.g. the registered save function returned some huge tables)
 			// check the number of parameters the registered load function expects
 			// and don't bother loading the parameters it wouldn't receive anyway
-			// NOTE: if this crashes, that means your Lua headers are out of sync with your Lua lib, so stop using lua51.lib and just compile the c files into the project like everyone else
-			int numParamsExpected = (L->top - 1)->value.gc->cl.l.p->numparams;
+			int numParamsExpected = (L->top - 1)->value.gc->cl.l.p->numparams; // NOTE: if this line crashes, that means your Lua headers are out of sync with your Lua lib
 			if(numParamsExpected) numParamsExpected--; // minus one for the savestate number we always pass in
 
 			int prevGarbage = lua_gc(L, LUA_GCCOUNT, 0);

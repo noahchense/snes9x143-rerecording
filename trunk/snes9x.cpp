@@ -972,8 +972,8 @@ void S9xLoadConfigFiles(char **argv, int argc){
     }
 
     /* Parse config file here */
-    Settings.NextAPUEnabled=conf.GetBool("Sound::APUEnabled", Settings.APUEnabled);
-    Settings.SoundSkipMethod=conf.GetInt("Sound::SoundSkip", 0);
+    Settings.NextAPUEnabled=conf.GetBool("Sound::APUEnabled", Settings.APUEnabled!=0);
+    Settings.SoundSkipMethod=(uint8)conf.GetInt("Sound::SoundSkip", 0);
     i=conf.GetInt("CPU::CyclesPercentage", 100);
     if(i>0 && i<200) Settings.CyclesPercentage = i;
 //    i=conf.GetInt("CPU::HDMATimingHack", 100);
@@ -990,7 +990,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
     }
     Settings.TurboSkipFrames=conf.GetUInt("Settings::TurboFrameSkip", 15);
     Settings.TurboMode=conf.GetBool("Settings::TurboMode",false);
-    Settings.StretchScreenshots=conf.GetInt("Settings::StretchScreenshots",1);
+    Settings.StretchScreenshots=(int8)conf.GetInt("Settings::StretchScreenshots",1);
     Settings.InitialInfoStringTimeout=conf.GetInt("Settings::MessageDisplayTime",120);
     Settings.AutoSaveDelay=conf.GetUInt("Settings::AutoSaveDelay", 30);
     Settings.ForceHiROM=conf.GetBool("ROM::HiROM", false);
@@ -1067,7 +1067,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
     Settings.DisableMasterVolume=!conf.GetBool("Sound::MasterVolume");
     Settings.InterpolatedSound=conf.GetBool("Sound::Interpolate", true);
     if(conf.Exists("Sound::Sync")){
-        Settings.SoundSync=conf.GetInt("Sound::Sync", 1);
+        Settings.SoundSync=(bool8)conf.GetInt("Sound::Sync", 1);
         if(Settings.SoundSync>2) Settings.SoundSync=1;
         Settings.SoundEnvelopeHeightReading = TRUE;
         Settings.InterpolatedSound = TRUE;
@@ -1079,7 +1079,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
     //    Settings.AltSampleDecode=conf.GetInt("Sound::AltDecode", 1);
     //}
     if(conf.Exists("Sound::FixFrequency")){
-        Settings.FixFrequency=conf.GetInt("Sound::FixFrequency", 0);
+        Settings.FixFrequency=(bool8)conf.GetInt("Sound::FixFrequency", 0);
     }
     if(conf.Exists("ROM::SuperFX")){
         Settings.ForceSuperFX=conf.GetBool("ROM::SuperFX");
@@ -1141,7 +1141,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
         fprintf(stderr,"AHI Unit set to: Unit %i\n",unit);
     }
 #endif
-    Settings.JoystickEnabled=conf.GetBool("Controls::Joystick", Settings.JoystickEnabled);
+    Settings.JoystickEnabled=conf.GetBool("Controls::Joystick", Settings.JoystickEnabled!=0);
     Settings.UpAndDown=conf.GetBool("Controls::AllowLeftRight", false);
     Settings.SnapshotScreenshots=conf.GetBool("Settings::SnapshotScreenshots", true);
     Settings.MovieTruncate=conf.GetBool("Settings::MovieTruncateAtEnd", false);

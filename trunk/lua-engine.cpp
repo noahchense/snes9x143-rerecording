@@ -1782,7 +1782,7 @@ static int gui_gdoverlay(lua_State *L) {
 		luaL_error(L, "bad image data or not truecolour");
 	
 	// Don't care about transparent colour
-	if (size < (11+ width*height*4))
+	if ((int)size < (11+ width*height*4))
 		luaL_error(L, "bad image data");
 	
 	const uint8* pixels = data + 11;

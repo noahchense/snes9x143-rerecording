@@ -156,8 +156,8 @@ EXTERN_C bool8 S9xFreezePlatformDepends (const char *basefilename)
 	// TODO: more abstract implementation
 	result &= MacroSaveState(filepath);
 	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
-	WritePrivateProfileBool(_T("Control"), _T("pad_read"), pad_read, filepath);
-	WritePrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last, filepath);
+	WritePrivateProfileBool(_T("Control"), _T("pad_read"), pad_read!=0, filepath);
+	WritePrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last!=0, filepath);
 	WritePrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
 	WritePrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
 	return result;
@@ -175,8 +175,8 @@ EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename)
 	// TODO: more abstract implementation
 	result &= MacroLoadState(filepath);
 	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
-	pad_read = GetPrivateProfileBool(_T("Control"), _T("pad_read"), pad_read, filepath);
-	pad_read_last = GetPrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last, filepath);
+	pad_read = GetPrivateProfileBool(_T("Control"), _T("pad_read"), pad_read!=0, filepath);
+	pad_read_last = GetPrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last!=0, filepath);
 	IPPU.TotalEmulatedFrames = GetPrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
 	IPPU.LagCounter = GetPrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
 
