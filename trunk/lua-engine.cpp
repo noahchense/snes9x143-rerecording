@@ -1728,10 +1728,6 @@ static void LuaDisplayString (const char *string, int y, int x, uint32 color, ui
 //  Displays the given text on the screen, using the same font and techniques as the
 //  main HUD.
 static int gui_text(lua_State *L) {
-#define CONVERT_16_TO_32(pixel) \
-    (((((pixel) >> 11)        ) << /*RedShift+3*/  19) | \
-     ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
-      (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
 
 	extern int font_height;
 	const char *msg;
@@ -1745,8 +1741,11 @@ static int gui_text(lua_State *L) {
 //	if (x < 0 || x >= 256 || y < 0 || y >= (239 - font_height))
 //		luaL_error(L,"bad coordinates");
 
-	colour = gui_optcolour(L,4,(transparencyModifier << 24)|CONVERT_16_TO_32(Settings.DisplayColor));
-	borderColour = gui_optcolour(L,5,LUA_BUILD_PIXEL(transparencyModifier, 0, 0, 0));
+	uint8 displayColorR = (Settings.DisplayColor >> 11) << 3;
+	uint8 displayColorG = ((Settings.DisplayColor >> 6) & 0x1f) << 3;
+	uint8 displayColorB = (Settings.DisplayColor & 0x1f) << 3;
+	colour = gui_optcolour(L,4,LUA_BUILD_PIXEL(255, displayColorR, displayColorG, displayColorB));
+	borderColour = gui_optcolour(L,5,LUA_BUILD_PIXEL(255, 0, 0, 0));
 
 	gui_prepare();
 
