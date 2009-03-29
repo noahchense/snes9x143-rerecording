@@ -121,6 +121,7 @@
 #include "movie.h"
 #include "dsp1.h"
 #include "language.h"
+#include "luasav.h"
 
 //you would think everyone would have these
 //since they're so useful.
@@ -670,6 +671,40 @@ bool8 Snapshot (const char *filename)
 
 bool8 S9xFreezeGame (const char *filename)
 {
+    char def [PATH_MAX + 1 ];
+    char drive [_MAX_DRIVE + 1];
+    char dir [_MAX_DIR + 1 ];
+    char ext [_MAX_EXT + 1 ] ;
+
+    _splitpath (filename, drive, dir, def, ext);
+	int stateNumber = -2;
+	sscanf(ext, ".%03d", &stateNumber);
+	stateNumber++;
+	// call savestate.save callback if any and store the results in a luasav file if any
+	{
+		LuaSaveData saveData;
+		CallRegisteredLuaSaveFunctions(stateNumber, saveData);
+
+		char luaSaveFilename [512];
+		strncpy(luaSaveFilename, filename, 512);
+		luaSaveFilename[512-(1+7/*strlen(".luasav")*/)] = '\0';
+		strcat(luaSaveFilename, ".luasav");
+		if(saveData.recordList)
+		{
+			FILE* luaSaveFile = fopen(luaSaveFilename, "wb");
+			if(luaSaveFile)
+			{
+				saveData.ExportRecords(luaSaveFile);
+				fclose(luaSaveFile);
+			}
+		}
+		else
+		{
+			unlink(luaSaveFilename);
+		}
+	}
+
+
 #ifndef NEW_SNAPSHOT_SCREENSHOT
 	// backup screen for snapshot screenshot
 	{
@@ -743,13 +778,20 @@ bool8 S9xUnfreezeGame (const char *filename)
     _splitpath (filename, drive, dir, def, ext);
     S9xResetSaveTimer (!strcmp(ext, "oops") || !strcmp(ext, "oop"));
 
+	// this is so we don't mix the previous frame's gui drawing with any drawing that the savestate triggers
+	S9xLuaEnableGui(false);
+	// this is so we don't refresh the screen too early before the lua code knows that we loaded a savestate (since it can't know what to draw if that happens)
+	extern bool disableMessageImmediateRefresh;
+	bool prev_disableMessageImmediateRefresh = disableMessageImmediateRefresh;
+	disableMessageImmediateRefresh = true;
+
     ZeroMemory (&Obsolete, sizeof(Obsolete));
 
     if (S9xLoadOrigSnapshot (filename))
-		return (TRUE);
+		goto successFinish;
 	
     if (S9xUnfreezeZSNES (filename))
-		return (TRUE);
+		goto successFinish;
 	
     STREAM snapshot = NULL;
     if (S9xOpenSnapshotFile (filename, TRUE, &snapshot))
@@ -781,7 +823,7 @@ bool8 S9xUnfreezeGame (const char *filename)
 				break;
 			}
 			S9xCloseSnapshotFile (snapshot);
-			return (FALSE);
+			goto failFinish;
 		}
 
 		if(S9xMovieActive())
@@ -810,7 +852,7 @@ bool8 S9xUnfreezeGame (const char *filename)
 			S9xUnfreezePlatformDepends (filename);
 		#endif // !S9xUnfreezePlatformDepends
 
-		return (TRUE);
+		goto successFinish;
     }
 
 	// failed; error message:
@@ -824,7 +866,53 @@ bool8 S9xUnfreezeGame (const char *filename)
 		S9xMessage (S9X_INFO, S9X_FREEZE_FILE_INFO, String);
 	}
 
+failFinish:
+
+	S9xLuaClearGui(); // (needs to be here)
+	S9xLuaEnableGui(true);
+	disableMessageImmediateRefresh = prev_disableMessageImmediateRefresh;
+
+	// refresh has to happen now to at least show the error message since we disabled it happening earlier
+#ifdef WIN32
+	void S9xReRefresh ();
+	S9xReRefresh();
+#endif
+
     return (FALSE);
+
+successFinish:
+
+	S9xLuaClearGui(); // (needs to be here)
+	S9xLuaEnableGui(true);
+	disableMessageImmediateRefresh = prev_disableMessageImmediateRefresh;
+
+	int stateNumber = -2;
+	sscanf(ext, ".%03d", &stateNumber);
+	stateNumber++;
+	// call savestate.registerload callback if any, and pass it the result from the previous savestate.registerload callback to the same state if any
+	{
+		LuaSaveData saveData;
+
+		char luaSaveFilename [512];
+		strncpy(luaSaveFilename, filename, 512);
+		luaSaveFilename[512-(1+7/*strlen(".luasav")*/)] = '\0';
+		strcat(luaSaveFilename, ".luasav");
+		FILE* luaSaveFile = fopen(luaSaveFilename, "rb");
+		if(luaSaveFile)
+		{
+			saveData.ImportRecords(luaSaveFile);
+			fclose(luaSaveFile);
+		}
+
+		CallRegisteredLuaLoadFunctions(stateNumber, saveData);
+	}
+	// the refresh should happen last and only last, because lua code can't know what to draw in the gui if the refresh happens before savestate.registerload callbacks get called
+#ifdef WIN32
+	void S9xReRefresh ();
+	S9xReRefresh();
+#endif
+
+	return (TRUE);
 }
 
 bool diagnostic_freezing = false;
@@ -969,7 +1057,7 @@ void S9xFreezeToStream (STREAM stream)
 	freezing_to_stream = false;
 }
 
-bool unfreezing_from_stream = false;
+bool disableMessageImmediateRefresh = false;
 
 int S9xUnfreezeFromStream (STREAM stream)
 {
@@ -989,7 +1077,7 @@ int S9xUnfreezeFromStream (STREAM stream)
     if ((result = UnfreezeBlock (stream, "NAM", (uint8 *) rom_filename, _MAX_PATH)) != SUCCESS)
 		return (result);
 
-	unfreezing_from_stream = true;
+	disableMessageImmediateRefresh = true;
 
 	#ifdef WIN32
 	EnterCriticalSection(&GUI.SoundCritSect);
@@ -1345,7 +1433,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	LeaveCriticalSection(&GUI.SoundCritSect);
 	#endif
 
-	unfreezing_from_stream = false;
+	disableMessageImmediateRefresh = false;
 
 	return (result);
 }

@@ -32,6 +32,7 @@ extern "C" {
 }
 
 #include "s9xlua.h"
+#include "luasav.h"
 
 static lua_State *LUA;
 
@@ -77,6 +78,7 @@ unsigned char lua_watch_bitfield[16384];
 
 
 static bool8 gui_used = FALSE;
+static bool8 gui_enabled = TRUE;
 static uint8 *gui_data = NULL; // BGRA
 
 
@@ -692,6 +694,51 @@ static int savestate_load(lua_State *L) {
 
 }
 
+static int savestate_registersave(lua_State *L) {
+ 
+	lua_settop(L,1);
+	if (!lua_isnil(L,1))
+		luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_getfield(L, LUA_REGISTRYINDEX, LUA_SAVE_CALLBACK_STRING);
+	lua_pushvalue(L,1);
+	lua_setfield(L, LUA_REGISTRYINDEX, LUA_SAVE_CALLBACK_STRING);
+	return 1;
+}
+static int savestate_registerload(lua_State *L) {
+
+	lua_settop(L,1);
+	if (!lua_isnil(L,1))
+		luaL_checktype(L, 1, LUA_TFUNCTION);
+	lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOAD_CALLBACK_STRING);
+	lua_pushvalue(L,1);
+	lua_setfield(L, LUA_REGISTRYINDEX, LUA_LOAD_CALLBACK_STRING);
+	return 1;
+}
+
+static int savestate_loadscriptdata(lua_State *L) {
+
+	const char *filename = savestateobj2filename(L,1);
+
+	{
+		LuaSaveData saveData;
+
+		char luaSaveFilename [512];
+		strncpy(luaSaveFilename, filename, 512);
+		luaSaveFilename[512-(1+7/*strlen(".luasav")*/)] = '\0';
+		strcat(luaSaveFilename, ".luasav");
+		FILE* luaSaveFile = fopen(luaSaveFilename, "rb");
+		if(luaSaveFile)
+		{
+			saveData.ImportRecords(luaSaveFile);
+			fclose(luaSaveFile);
+
+			lua_settop(L, 0);
+			saveData.LoadRecord(L, LUA_DATARECORDKEY, (unsigned int)-1);
+			return lua_gettop(L);
+		}
+	}
+	return 0;
+}
 
 // int snes9x.framecount()
 //
@@ -2159,6 +2206,10 @@ static const struct luaL_reg savestatelib[] = {
 	{"save", savestate_save},
 	{"load", savestate_load},
 
+	{"registersave", savestate_registersave},
+	{"registerload", savestate_registerload},
+	{"loadscriptdata", savestate_loadscriptdata},
+
 	{NULL,NULL}
 };
 
@@ -2533,7 +2584,7 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 	// And wreak the stack
 	lua_settop(LUA, 0);
 
-	if (!gui_used)
+	if (!gui_used || !gui_enabled)
 		return;
 
 	gui_used = FALSE;
@@ -2586,4 +2637,11 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 
 void S9xLuaClearGui() {
 	gui_used = false;
+}
+void S9xLuaEnableGui(bool enabled) {
+	gui_enabled = enabled;
+}
+ 
+lua_State* S9xGetLuaState() {
+	return LUA;
 }
