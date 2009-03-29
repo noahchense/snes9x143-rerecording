@@ -582,9 +582,12 @@ void S9xReRefresh ()
 	if(Settings.StopEmulation)
 		return;
 
-	GFX.Repainting = TRUE;
-	S9xDeinitUpdate (IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight/*, Settings.SixteenBit*/);
-	GFX.Repainting = FALSE;
+	if(!GFX.Repainting) // check added just in case of an infinite recursion
+	{
+		GFX.Repainting = TRUE;
+		S9xDeinitUpdate (IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight/*, Settings.SixteenBit*/);
+		GFX.Repainting = FALSE;
+	}
 }
 
 
@@ -3858,7 +3861,7 @@ void S9xUpdateScreen () {
     IPPU.PreviousLine = IPPU.CurrentLine;
 }
 
-extern bool unfreezing_from_stream;
+extern bool disableMessageImmediateRefresh; // (renamed to show what it really does)
 
 void S9xSetInfoString (const char *string)
 {
@@ -3867,7 +3870,7 @@ void S9xSetInfoString (const char *string)
 		GFX.InfoString = string;
 		GFX.InfoStringTimeout = Settings.InitialInfoStringTimeout;
 
-		if (Settings.Paused && !unfreezing_from_stream)
+		if (Settings.Paused && !disableMessageImmediateRefresh)
 		{
 			//refresh screen to show new message immediately
 			S9xReRefresh();

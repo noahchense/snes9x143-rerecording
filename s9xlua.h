@@ -27,6 +27,9 @@ bool8 S9xLuaRerecordCountSkip();
 
 void S9xLuaGui(uint16 *, int ppl, int width, int height);
 void S9xLuaClearGui();
+void S9xLuaEnableGui(bool enabled);
+
+struct lua_State* S9xGetLuaState();
 
 // And some interesting REVERSE declarations!
 char *S9xGetFreezeFilename(int slot);

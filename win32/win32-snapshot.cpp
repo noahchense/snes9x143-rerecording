@@ -190,7 +190,8 @@ EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename)
 	IPPU.LagCounter += (adjustLagCounter ? 1 : 0);
 	pad_read = pad_read_temp;
 
-	S9xReRefresh();
+	// disabled because the refresh needs to happen later than when this function gets called
+//	S9xReRefresh();
 
 	return result;
 }

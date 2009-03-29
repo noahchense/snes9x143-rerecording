@@ -1660,6 +1660,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\luasav.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\luasav.h"
+				>
+			</File>
+			<File
 				RelativePath="..\memmap.cpp"
 				>
 				<FileConfiguration
