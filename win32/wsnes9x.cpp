@@ -1532,7 +1532,7 @@ void ToggleFullScreen ()
 				SetWindowPos (GUI.hWnd, HWND_TOP, 0, 0, 0, 0, SWP_DRAWFRAME|SWP_FRAMECHANGED|SWP_NOMOVE|SWP_NOSIZE);
 			}
 			if(!GUI.FullScreen) {
-				GUI.FullScreen = wasFullScreen;
+				GUI.FullScreen = wasFullScreen!=0;
 				Direct3D.setFullscreen(false);
 				SetWindowLong( GUI.hWnd, GWL_STYLE, WS_POPUPWINDOW|WS_CAPTION|
 					WS_VISIBLE|WS_MINIMIZEBOX|WS_MAXIMIZEBOX|(GUI.windowResizeLocked?0:WS_THICKFRAME));
@@ -1927,7 +1927,7 @@ bool WinLoadROM(const char *filename)
 		Memory.SaveSRAM (S9xGetFilename (".srm", SRAM_DIR));
 		S9xSaveCheatFile (S9xGetFilename (".cht", CHEAT_DIR));
 	}
-	result = LoadROM (filename);
+	result = LoadROM (filename)!=0;
 	Settings.StopEmulation = !result;
 	if (!Settings.StopEmulation) 
 	{
@@ -2122,7 +2122,7 @@ LRESULT CALLBACK WinProc(
 		break;
 	case WM_DROPFILES: {
 		HDROP hDrop;
-		UINT fileNo;
+		//UINT fileNo;
 		UINT fileCount;
 		char filename[PATH_MAX];
 
@@ -5161,7 +5161,7 @@ static void CheckMenuStates ()
 		mii.fState |= MFS_DISABLED;
 	SetMenuItemInfo (GUI.hMenu, ID_RAM_SEARCH, FALSE, &mii);
 
-	bool luaRunning = S9xLuaRunning();
+	bool luaRunning = S9xLuaRunning()!=0;
 	mii.fState = MFS_UNCHECKED; // | (luaRunning ? MFS_DISABLED : 0);
 	SetMenuItemInfo (GUI.hMenu, IDD_FILE_LUA_LOAD, FALSE, &mii);
 	mii.fState = MFS_UNCHECKED;
@@ -5240,7 +5240,7 @@ static void CheckMenuStates ()
         mii.fState |= MFS_DISABLED;
     SetMenuItemInfo( GUI.hMenu, ID_CHEAT_DISABLE, FALSE, &mii);
 
-	bool soundIsActive = Settings.APUEnabled;
+	bool soundIsActive = Settings.APUEnabled!=0;
 //	bool soundIsActive = !(/*!DirectSound.DSAvailable ||*/ Settings.Mute || !Settings.APUEnabled);
 
 #ifndef FMOD_SUPPORT
@@ -5855,7 +5855,7 @@ HMENU GetSubMenuFromID(HMENU hMenu, UINT wID)
 	if (hMenu == NULL)
 		return NULL;
 
-	for (UINT i = 0; i < GetMenuItemCount(hMenu); i++) {
+	for (int i = 0; i < GetMenuItemCount(hMenu); i++) {
 		if (GetMenuItemID(hMenu, i) == wID)
 			return hMenu;
 
@@ -5875,7 +5875,7 @@ HMENU GetSubMenuFromString(HMENU hMenu, LPCTSTR lpString, bool recursive)
 	if (hMenu == NULL)
 		return NULL;
 
-	for (UINT i = 0; i < GetMenuItemCount(hMenu); i++) {
+	for (int i = 0; i < GetMenuItemCount(hMenu); i++) {
 		GetMenuString(hMenu, i, menuString, COUNT(menuString), MF_BYPOSITION);
 fprintf(stderr, "%s\n", menuString);
 		if (lstrcmp(lpString, menuString) == 0)
@@ -9981,7 +9981,7 @@ INT_PTR CALLBACK DlgFunky(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 		prevVideoMemory = GUI.ddrawUseVideoMemory;
 		prevD3dFilter = GUI.d3dFilter;
 		prevAspectRatio = GUI.AspectRatio;
-		prevMode7Interpolate = Settings.Mode7Interpolate;
+		prevMode7Interpolate = Settings.Mode7Interpolate!=0;
 		prevHeightExtend = GUI.HeightExtend;
 		prevMessagesInImage = GUI.MessagesInImage;
 
@@ -10304,7 +10304,7 @@ updateFilterBox2:
 			else
 				Settings.SupportHiRes = false;
 			GUI.HeightExtend = IsDlgButtonChecked(hDlg, IDC_HEIGHT_EXTEND)!=0;
-			GUI.MessagesInImage = IsDlgButtonChecked(hDlg, IDC_MESSAGES_IN_IMAGE);
+			GUI.MessagesInImage = IsDlgButtonChecked(hDlg, IDC_MESSAGES_IN_IMAGE)!=0;
 			Settings.Mode7Interpolate = IsDlgButtonChecked(hDlg, IDC_BILINEARMD7);
 			GUI.tripleBuffering = (bool)(IsDlgButtonChecked(hDlg, IDC_DBLBUFFER)==BST_CHECKED);
 
@@ -12096,7 +12096,7 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 
 	case WM_DROPFILES: {
 		HDROP hDrop;
-		UINT fileNo;
+		//UINT fileNo;
 		UINT fileCount;
 		char filename[PATH_MAX];
 
@@ -12110,7 +12110,7 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 		return true;
 	 }
 	}
-	char message[1024];
+//	char message[1024];
 //	sprintf(message, "Unkonwn command %d,%d",msg,wParam);
 	//MessageBox(hDlg, message, TEXT("Range Error"), MB_OK);
 
@@ -12173,7 +12173,7 @@ INT_PTR CALLBACK DlgOpenMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DROPFILES: {
 		HDROP hDrop;
-		UINT fileNo;
+		//UINT fileNo;
 		UINT fileCount;
 		char filename[PATH_MAX];
 
@@ -12400,7 +12400,7 @@ INT_PTR CALLBACK DlgCreateMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 
 	case WM_DROPFILES: {
 		HDROP hDrop;
-		UINT fileNo;
+		//UINT fileNo;
 		UINT fileCount;
 		char filename[PATH_MAX];
 

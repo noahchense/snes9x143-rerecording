@@ -131,6 +131,7 @@ size_t load_jma_file(const char *filename, unsigned char *buffer)
   }
   catch (JMA::jma_errors jma_error)
   {
+    (void)jma_error;
     return(0);
   }
 }

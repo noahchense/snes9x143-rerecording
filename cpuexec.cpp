@@ -378,7 +378,7 @@ void S9xDoHBlankProcessing ()
 	if (CPU.V_Counter >= FIRST_VISIBLE_LINE &&
 	    CPU.V_Counter < PPU.ScreenHeight + FIRST_VISIBLE_LINE)
 	{
-	    RenderLine (CPU.V_Counter - FIRST_VISIBLE_LINE);
+	    RenderLine ((uint8)(CPU.V_Counter - FIRST_VISIBLE_LINE));
 	}
 	
 	if(Settings.UseWIPAPUTiming)

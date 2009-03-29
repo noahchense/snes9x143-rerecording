@@ -154,7 +154,7 @@ void S9xUpdateHTimer ()
 #ifdef DEBUGGER
 		missing.hirq_pos = PPU.IRQHBeamPos;
 #endif
-		PPU.HTimerPosition = PPU.IRQHBeamPos * Settings.H_Max / SNES_HCOUNTER_MAX;
+		PPU.HTimerPosition = (short)(PPU.IRQHBeamPos * Settings.H_Max / SNES_HCOUNTER_MAX);
 		if (PPU.HTimerPosition == Settings.H_Max ||
 			PPU.HTimerPosition == Settings.HBlankStart)
 		{
@@ -1623,7 +1623,7 @@ void S9xSetCPU (uint8 byte, uint16 Address)
 				// No need to check for HTimer being disabled as the scanline
 				// event trigger code won't trigger an H-IRQ unless its enabled.
 				PPU.HTimerEnabled = FALSE;
-				PPU.HTimerPosition = Settings.H_Max + 1;
+				PPU.HTimerPosition = (short)Settings.H_Max + 1;
 			}
 			if (!Settings.DaffyDuck)
 				CLEAR_IRQ_SOURCE (PPU_V_BEAM_IRQ_SOURCE | PPU_H_BEAM_IRQ_SOURCE);
@@ -2523,7 +2523,7 @@ static void S9xResetPPUCommon ()
 
 	PPU.VTimerEnabled = FALSE;
 	PPU.HTimerEnabled = FALSE;
-	PPU.HTimerPosition = Settings.H_Max + 1;
+	PPU.HTimerPosition = (short)Settings.H_Max + 1;
 	PPU.Mosaic = 0;
 	PPU.BGMosaic [0] = PPU.BGMosaic [1] = FALSE;
 	PPU.BGMosaic [2] = PPU.BGMosaic [3] = FALSE;

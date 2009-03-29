@@ -48,7 +48,7 @@ public:
     }
     while (aSymbol < 0x100);
     RC_FLUSH_VAR
-    return aSymbol;
+    return (BYTE)(aSymbol & 0xFF);
   }
 
   BYTE DecodeWithMatchByte(CMyRangeDecoder *aRangeDecoder, BYTE aMatchByte)
@@ -76,7 +76,7 @@ public:
     }
     while (aSymbol < 0x100);
     RC_FLUSH_VAR
-    return aSymbol;
+    return (BYTE)(aSymbol & 0xFF);
   }
 };
 

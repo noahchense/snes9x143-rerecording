@@ -979,7 +979,7 @@ void WinRegisterConfigItems()
 	AddUIntC("Stretch:AspectRatioBaseWidth", GUI.AspectWidth, 256, "base width for aspect ratio calculation (AR=AspectRatioBaseWidth/224), default is 256");
 	AddBoolC("Stretch:UseVideoMemory", GUI.ddrawUseVideoMemory, true, "allows bilinear filtering of stretching. Depending on your video card and the window size, this may result in a lower framerate.");
 	AddBoolC("Stretch:LocalVidMem", GUI.ddrawUseLocalVidMem, true, "determines the location of video memory, if UseVideoMemory = true. May increase or decrease rendering performance, depending on your setup and which filter and stretching options are active.");
-	AddUIntC("Stretch:D3DFilter", GUI.d3dFilter, D3DFilter::BILINEAR, "0=Nearest, 1=Bilinear");
+	AddUIntC("Stretch:D3DFilter", GUI.d3dFilter, /*D3DFilter::*/BILINEAR, "0=Nearest, 1=Bilinear");
 	AddBool("Fullscreen:Enabled", GUI.FullScreen, false);
 	AddUInt("Fullscreen:Width", GUI.Width, 640);
 	AddUInt("Fullscreen:Height", GUI.Height, 480);

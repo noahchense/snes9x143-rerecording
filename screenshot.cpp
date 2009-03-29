@@ -121,7 +121,7 @@ bool8 S9xDoScreenshot(int width, int height)
     png_structp png_ptr;
     png_infop info_ptr;
     png_color_8 sig_bit;
-    png_color pngpal[256];
+    //png_color pngpal[256];
     int imgwidth;
     int imgheight;
     const char *fname=S9xGetFilenameInc(".png", SCREENSHOT_DIR);

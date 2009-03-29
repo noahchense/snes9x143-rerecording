@@ -142,7 +142,7 @@ void CDirect3D::render(SSurface Src)
 	RECT dstRect;
 	int iNewFilterScale;
 	D3DLOCKED_RECT lr;
-	D3DLOCKED_RECT lrConv;
+	//D3DLOCKED_RECT lrConv;
 	HRESULT hr;
 
 	if(!init_done) return;
@@ -220,7 +220,7 @@ void CDirect3D::createDrawSurface()
 	//we need at least 512 pixels (SNES_WIDTH * 2) so we can start with that value
 	quadTextureSize = 512;
 	neededSize = SNES_WIDTH * iFilterScale;
-	while(quadTextureSize < neededSize)
+	while((int)quadTextureSize < neededSize)
 		quadTextureSize *=2;
 
 	if(!drawSurface) {

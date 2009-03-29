@@ -109,7 +109,7 @@ bool ReInitSound(int mode)
 
 	S9xSoundOutput->DeInitSoundOutput();
 	if(mode)
-		result = S9xInitSound(mode,Settings.Stereo,0);
+		result = S9xInitSound(mode,Settings.Stereo,0) != 0;
 	else
 		result = true;
 
@@ -238,7 +238,7 @@ extern "C" void S9xGenerateSound(void)
 		so.err_counter &= FIXED_POINT_REMAINDER;
 
 		// limit sample count per frame (just in case)
-		if (FrameSoundWritten + sample_count > sound_samples_per_update)
+		if ((int)FrameSoundWritten + sample_count > sound_samples_per_update)
 		{
 			sample_count = sound_samples_per_update - FrameSoundWritten;
 		}
