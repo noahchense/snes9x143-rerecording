@@ -467,6 +467,9 @@ void CDirectSound::ProcessSound()
 	// ahead when we get into the critical section
 	EnterCriticalSection(&GUI.SoundCritSect);
 
+	if(!lpDSB)
+		goto finishDirectSoundWrite;
+
 	lpDSB->GetCurrentPosition (&play_pos, &write_pos);
 
 	curr_block = ((play_pos / blockSize) + Settings.SoundBufferSize) % blockCount;
