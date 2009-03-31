@@ -144,6 +144,7 @@ static int avi_image_size = 0;
 static uint32 avi_skip_frames = 0;
 //void Convert8To24 (SSurface *src, SSurface *dst, RECT *srect);
 void Convert16To24 (SSurface *src, SSurface *dst, RECT *srect);
+void Convert16To32 (SSurface *src, SSurface *dst, RECT *srect);
 void DoWAVOpen(const char* filename);
 void DoWAVClose(int reason);
 void DoAVIOpen(const char* filename);
@@ -1159,6 +1160,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 
 	Src.Pitch = GFX.Pitch;
 	Src.Surface = (BYTE*)GFX.Screen;
+	int srcDepth = 16;
 
 	const int OrigHeight = Height;
 	Height = Src.Height;
@@ -1201,7 +1203,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	{
 		uint32 RealPPL = GFX.Pitch2/2;
 		S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-		S9xLuaGui((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
+		S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
 	}
 
 	if(!GFX.Repainting && Settings.TakeScreenshot)
@@ -1211,7 +1213,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	DoAVIVideoFrame();
 
 	if(!Settings.AutoDisplayMessages && !GUI.MessagesInImage)
-		S9xLuaGui((uint16*)Src.Surface, Src.Pitch/2 /*512*/, Width, Height);
+		S9xLuaGui(Src.Surface, Width, Height, srcDepth, Src.Pitch);
 
 	GUI.ScreenCleared = true;
 
@@ -1403,7 +1405,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 					if(p.x < 0) p.x = 0;
 
 					ClientToScreen (GUI.hWnd, &p);
-					
+
 					dstRect.top = p.y;
 					dstRect.left = p.x;
 					dstRect.bottom = dstRect.top + height;
@@ -1413,9 +1415,6 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 			else
 				dstRect = srcRect;
 
-	//	S9xLuaGui((uint16*)Dst.Surface, Dst.Pitch/2, srcRect.right-srcRect.left, srcRect.bottom-srcRect.top - ((in_display_dlg && GUI.HeightExtend) ? GetFilterScale(GUI.Scale) : 0));
-
-		
 			lpDDSurface2->Unlock (Dst.Surface);	
 			if (PrimarySurfaceLockFailed)
 			{

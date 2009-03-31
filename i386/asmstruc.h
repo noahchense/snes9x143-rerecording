@@ -162,6 +162,7 @@
 #define S9xMovieRequiresReset _S9xMovieRequiresReset
 #define S9xMovieUpdateOnReset _S9xMovieUpdateOnReset
 #define S9xSoftReset _S9xSoftReset
+#define S9xLuaClearGui _S9xLuaClearGui
 #define CallRegisteredLuaFunctions _CallRegisteredLuaFunctions
 
 #define A1 _A1
