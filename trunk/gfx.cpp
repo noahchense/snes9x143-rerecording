@@ -628,6 +628,8 @@ void S9xEndScreenRefresh ()
 		}
 		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 	}
+	else
+		S9xLuaClearGui(); // Lua gui must be reset per frame
 	S9xApplyCheats();
 #ifdef DEBUGGER
 	if(CPU.Flags & FRAME_ADVANCE_FLAG) {

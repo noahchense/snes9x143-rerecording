@@ -112,7 +112,7 @@ void S9xMainLoop (void)
 		S9xSoftReset();
 	}
 
-	S9xLuaClearGui(); // Lua gui must be reset per frame
+	//S9xLuaClearGui(); // Lua gui must be reset per frame
 	CallRegisteredLuaFunctions(LUACALL_BEFOREEMULATION);
 
     for (;;)
