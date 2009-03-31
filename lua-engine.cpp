@@ -587,9 +587,15 @@ static int savestate_gc(lua_State *L) {
 
 	// Delete the file
 	remove(filename);
-	
+
+	// Also delete the .luasav file if we saved one of those with it
+	char luaSaveFilename [512];
+	strncpy(luaSaveFilename, filename, 512);
+	luaSaveFilename[512-(1+7/*strlen(".luasav")*/)] = '\0';
+	strcat(luaSaveFilename, ".luasav");
+	remove(luaSaveFilename);
+
 	// We exit, and the garbage collector takes care of the rest.
-	// Edit: Visual Studio needs a return value anyway, so returns 0.
 	return 0;
 }
 
