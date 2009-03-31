@@ -2068,6 +2068,183 @@ use_console:
 
 }
 
+#ifdef _WIN32
+const char* s_keyToName[256] =
+{
+	NULL,
+	"leftclick",
+	"rightclick",
+	NULL,
+	"middleclick",
+	NULL,
+	NULL,
+	NULL,
+	"backspace",
+	"tab",
+	NULL,
+	NULL,
+	NULL,
+	"enter",
+	NULL,
+	NULL,
+	"shift", // 0x10
+	"control",
+	"alt",
+	"pause",
+	"capslock",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	"escape",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	"space", // 0x20
+	"pageup",
+	"pagedown",
+	"end",
+	"home",
+	"left",
+	"up",
+	"right",
+	"down",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	"insert",
+	"delete",
+	NULL,
+	"0","1","2","3","4","5","6","7","8","9",
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	"A","B","C","D","E","F","G","H","I","J",
+	"K","L","M","N","O","P","Q","R","S","T",
+	"U","V","W","X","Y","Z",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	"numpad0","numpad1","numpad2","numpad3","numpad4","numpad5","numpad6","numpad7","numpad8","numpad9",
+	"numpad*","numpad+",
+	NULL,
+	"numpad-","numpad.","numpad/",
+	"F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","F11","F12",
+	"F13","F14","F15","F16","F17","F18","F19","F20","F21","F22","F23","F24",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	"numlock",
+	"scrolllock",
+	NULL, // 0x92
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, // 0xB9
+	"semicolon",
+	"plus",
+	"comma",
+	"minus",
+	"period",
+	"slash",
+	"tilde",
+	NULL, // 0xC1
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+	NULL, // 0xDA
+	"leftbracket",
+	"backslash",
+	"rightbracket",
+	"quote",
+};
+
+#endif
+
+// input.get()
+// takes no input, returns a lua table of entries representing the current input state,
+// independent of the joypad buttons the emulated game thinks are pressed
+// for example:
+//   if the user is holding the W key and the left mouse button
+//   and has the mouse at the bottom-right corner of the game screen,
+//   then this would return {W=true, leftclick=true, xmouse=255, ymouse=223}
+static int input_getcurrentinputstatus(lua_State *L) {
+	lua_newtable(L);
+
+#ifdef _WIN32
+	// keyboard and mouse button status
+	{
+		unsigned char keys [256];
+		if(!GUI.BackgroundInput)
+		{
+			if(GetKeyboardState(keys))
+			{
+				for(int i = 1; i < 255; i++)
+				{
+					int mask = (i == VK_CAPITAL || i == VK_NUMLOCK || i == VK_SCROLL) ? 0x01 : 0x80;
+					if(keys[i] & mask)
+					{
+						const char* name = s_keyToName[i];
+						if(name)
+						{
+							lua_pushboolean(L, true);
+							lua_setfield(L, -2, name);
+						}
+					}
+				}
+			}
+		}
+		else // use a slightly different method that will detect background input:
+		{
+			for(int i = 1; i < 255; i++)
+			{
+				const char* name = s_keyToName[i];
+				if(name)
+				{
+					int active;
+					if(i == VK_CAPITAL || i == VK_NUMLOCK || i == VK_SCROLL)
+						active = GetKeyState(i) & 0x01;
+					else
+						active = GetAsyncKeyState(i) & 0x8000;
+					if(active)
+					{
+						lua_pushboolean(L, true);
+						lua_setfield(L, -2, name);
+					}
+				}
+			}
+		}
+	}
+	// mouse position in game screen pixel coordinates
+	{
+		extern BOOL GetCursorPosSNES(LPPOINT lpPoint, bool clip);
+
+		POINT mouse;
+		GetCursorPosSNES(&mouse, true);
+		if (IPPU.RenderedScreenWidth > SNES_WIDTH)
+			mouse.x /= 2;
+
+		lua_pushinteger(L, mouse.x);
+		lua_setfield(L, -2, "xmouse");
+		lua_pushinteger(L, mouse.y);
+		lua_setfield(L, -2, "ymouse");
+	}
+#else
+	// NYI (well, return an empty table)
+#endif
+
+	return 1;
+}
 
 // int AND(int one, int two, ..., int n)
 //
@@ -2305,6 +2482,13 @@ static const struct luaL_reg guilib[] = {
 	{NULL,NULL}
 };
 
+static const struct luaL_reg inputlib[] = {
+	{"get", input_getcurrentinputstatus},
+	// alternative names
+	{"read", input_getcurrentinputstatus},
+	{NULL, NULL}
+};
+
 void HandleCallbackError(lua_State* L)
 {
 	if(L->errfunc || L->errorJmp)
@@ -2458,6 +2642,7 @@ int S9xLoadLuaCode(const char *filename) {
 		luaL_register(LUA, "savestate", savestatelib);
 		luaL_register(LUA, "movie", movielib);
 		luaL_register(LUA, "gui", guilib);
+		luaL_register(LUA, "input", inputlib);
 		lua_settop(LUA, 0); // clean the stack, because each call to luaL_register leaves a table on top
 
 		lua_register(LUA, "AND", base_AND);

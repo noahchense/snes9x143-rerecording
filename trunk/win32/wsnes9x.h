@@ -549,6 +549,7 @@ void S9xSetWinPixelFormat ();
 
 const char* GetFilterName(RenderFilter filterID);
 int GetFilterScale(RenderFilter filterID);
+void GetFilterRect(RenderFilter filterID, LPRECT filterRect);
 bool GetFilterHiResSupport(RenderFilter filterID);
 
 #ifdef USE_GLIDE

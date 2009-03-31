@@ -1222,6 +1222,90 @@ struct OpenMovieParams
 
 
 
+BOOL ClientToSNESScreen(PPOINT ppt, bool clip) {
+	POINT cur = { ppt->x, ppt->y };
+	POINT snespt;
+
+	int screenWidth = IPPU.RenderedScreenWidth;
+	int screenHeight = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
+	if (IPPU.RenderedScreenWidth > SNES_WIDTH) screenHeight *= 2;
+	RECT clientRect;
+	GetClientRect(GUI.hWnd, &clientRect);
+	int clientWidth = clientRect.right - clientRect.left;
+	int clientHeight = clientRect.bottom - clientRect.top;
+
+	if (!GUI.Stretch && !VOODOO_MODE && !OPENGL_MODE) {
+		POINT start;
+		RECT filterRect;
+		int filterWidth, filterHeight;
+
+		GetFilterRect(GUI.Scale, &filterRect);
+		filterWidth = filterRect.right - filterRect.left;
+		filterHeight = filterRect.bottom - filterRect.top;
+
+		start.x = (clientWidth - filterWidth) / 2;
+		start.y = (clientHeight - filterHeight) / 2;
+		snespt.x = (LONG)((cur.x - start.x) * ((float) screenWidth / filterWidth));
+		snespt.y = (LONG)((cur.y - start.y) * ((float) screenHeight / filterHeight));
+	}
+	else {
+		if (GUI.AspectRatio) {
+			float snesAspect = (float) GUI.AspectWidth / (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT);
+			float renderedWidth = (float) clientWidth, renderedHeight = renderedWidth / snesAspect;
+			int xOffset = 0, yOffset = 0;
+			if (renderedHeight <= clientHeight) {
+				yOffset = (clientHeight - (int) renderedHeight) / 2;
+			}
+			else {
+				renderedHeight = (float) clientHeight;
+				renderedWidth = renderedHeight * snesAspect;
+				xOffset = (clientWidth - (int) renderedWidth) / 2;
+			}
+			snespt.x = (LONG)((cur.x - xOffset) * ((float) screenWidth / (int) renderedWidth));
+			snespt.y = (LONG)((cur.y - yOffset) * ((float) screenHeight / (int) renderedHeight));
+		}
+		else {
+			snespt.x = (LONG)(cur.x * ((float) screenWidth / clientWidth));
+			snespt.y = (LONG)(cur.y * ((float) screenHeight / clientHeight));
+		}
+	}
+
+	if (IPPU.RenderedScreenWidth > SNES_WIDTH)
+		snespt.y /= 2;
+	if (clip) {
+		if (snespt.x < 0)
+			snespt.x = 0;
+		if (snespt.y < 0)
+			snespt.y = 0;
+		if (snespt.x >= IPPU.RenderedScreenWidth)
+			snespt.x = IPPU.RenderedScreenWidth - 1;
+		if (snespt.y >= IPPU.RenderedScreenHeight)
+			snespt.y = IPPU.RenderedScreenHeight - 1;
+	}
+
+	if (ppt) {
+		ppt->x = snespt.x;
+		ppt->y = snespt.y;
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
+
+BOOL GetCursorPosSNES(LPPOINT lpPoint, bool clip) {
+	POINT cur;
+
+	GetCursorPos(&cur);
+	ScreenToClient(GUI.hWnd, &cur);
+	ClientToSNESScreen(&cur, clip);
+	if (lpPoint) {
+		lpPoint->x = cur.x;
+		lpPoint->y = cur.y;
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
 
 
 std::vector<dMode> dm;
@@ -3004,27 +3088,35 @@ LRESULT CALLBACK WinProc(
 							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
 						case ID_WINDOW_X1: {
-							int newWidth = SNES_WIDTH;
-							int newHeight = GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT;
-
+							float snesAspect = (float) GUI.AspectWidth / (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT);
+							int newWidth = GUI.AspectWidth;
+							int newHeight = (snesAspect == 1.0)
+									? (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT)
+									: (int) (newWidth / snesAspect);
 							S9xResizeWindow(newWidth, newHeight, true);
 						}	break;
 						case ID_WINDOW_X2: {
-							int newWidth = SNES_WIDTH * 2;
-							int newHeight = (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 2;
-
+							float snesAspect = (float) GUI.AspectWidth / (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT);
+							int newWidth = GUI.AspectWidth * 2;
+							int newHeight = (snesAspect == 1.0)
+									? ((GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 2)
+									: (int) (newWidth / snesAspect);
 							S9xResizeWindow(newWidth, newHeight, true);
 						}	break;
 						case ID_WINDOW_X3: {
-							int newWidth = SNES_WIDTH * 3;
-							int newHeight = (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 3;
-
+							float snesAspect = (float) GUI.AspectWidth / (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT);
+							int newWidth = GUI.AspectWidth * 3;
+							int newHeight = (snesAspect == 1.0)
+									? ((GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 3)
+									: (int) (newWidth / snesAspect);
 							S9xResizeWindow(newWidth, newHeight, true);
 						}	break;
 						case ID_WINDOW_X4: {
-							int newWidth = SNES_WIDTH * 4;
-							int newHeight = (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 4;
-
+							float snesAspect = (float) GUI.AspectWidth / (GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT);
+							int newWidth = GUI.AspectWidth * 4;
+							int newHeight = (snesAspect == 1.0)
+									? ((GUI.HeightExtend ? SNES_HEIGHT_EXTENDED : SNES_HEIGHT) * 4)
+									: (int) (newWidth / snesAspect);
 							S9xResizeWindow(newWidth, newHeight, true);
 						}	break;
 						case ID_WINDOW_LOCKRESIZE: {
@@ -3695,76 +3787,10 @@ LRESULT CALLBACK WinProc(
 			}
 			else if (IPPU.Controller==SNES_SUPERSCOPE||Settings.Justifier||Settings.SecondJustifier)
 			{
-				RECT size;
-				GetClientRect (GUI.hWnd, &size);
-				if(!(GUI.Scale)&&!(GUI.Stretch))
-				{
-					int x,y, startx, starty;
-					x=GET_X_LPARAM(lParam);
-					y=GET_Y_LPARAM(lParam);
-					
-					int theight;
-					(IPPU.RenderedScreenHeight> 256)? theight= SNES_HEIGHT_EXTENDED<<1: theight = SNES_HEIGHT_EXTENDED;
-					
-					startx= size.right-IPPU.RenderedScreenWidth;
-					startx/=2;
-					starty= size.bottom-theight;
-					starty/=2;
-
-					if(x<startx)
-						GUI.MouseX=0;
-					else if(x>(startx+IPPU.RenderedScreenWidth))
-						GUI.MouseX=IPPU.RenderedScreenWidth;
-					else GUI.MouseX=x-startx;
-
-					if(y<starty)
-						GUI.MouseY=0;
-					else if(y>(starty+theight))
-						GUI.MouseY=theight;
-					else GUI.MouseY=y-starty;
-				}
-				else if(!(GUI.Stretch)&&!VOODOO_MODE && !OPENGL_MODE)
-				{
-					int x,y, startx, starty, sizex, sizey;
-					x=GET_X_LPARAM(lParam);
-					y=GET_Y_LPARAM(lParam);
-
-					if (IPPU.RenderedScreenWidth>256)
-						sizex=IPPU.RenderedScreenWidth;
-					else sizex=IPPU.RenderedScreenWidth*2;
-
-					if (IPPU.RenderedScreenHeight>256)
-						sizey=SNES_HEIGHT_EXTENDED;
-					else sizey=SNES_HEIGHT_EXTENDED*2;
-
-
-					startx= size.right-sizex;
-					startx/=2;
-					starty= size.bottom-sizey;
-					starty/=2;
-					if(x<startx)
-						GUI.MouseX=0;
-					else if(x>(startx+sizex))
-						GUI.MouseX=sizex;
-					else GUI.MouseX=x-startx;
-
-					if(y<starty)
-						GUI.MouseY=0;
-					else if(y>(starty+sizey))
-						GUI.MouseY=sizey;
-					else GUI.MouseY=y-starty;
-
-					GUI.MouseX=(GUI.MouseX*IPPU.RenderedScreenWidth)/sizex;
-					GUI.MouseY=(GUI.MouseY*SNES_HEIGHT_EXTENDED)/sizey;
-
-				}
-				else
-				{
-					int theight;
-					(IPPU.RenderedScreenHeight> 256)? theight= SNES_HEIGHT_EXTENDED<<1: theight = SNES_HEIGHT_EXTENDED;
-					GUI.MouseX=GET_X_LPARAM(lParam)*IPPU.RenderedScreenWidth/size.right;
-					GUI.MouseY=GET_Y_LPARAM(lParam)*theight/size.bottom;
-				}
+				POINT mouse = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+				ClientToSNESScreen(&mouse, true);
+				GUI.MouseX = mouse.x;
+				GUI.MouseY = mouse.y;
 			}
 			else
 			{
