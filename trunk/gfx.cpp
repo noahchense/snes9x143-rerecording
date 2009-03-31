@@ -624,12 +624,10 @@ void S9xEndScreenRefresh ()
 		{
 			uint32 RealPPL = GFX.Pitch2/2;
 			S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-			S9xLuaGui((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
+			S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
 		}
 		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 	}
-	else
-		S9xLuaClearGui(); // Lua gui must be reset per frame
 	S9xApplyCheats();
 #ifdef DEBUGGER
 	if(CPU.Flags & FRAME_ADVANCE_FLAG) {

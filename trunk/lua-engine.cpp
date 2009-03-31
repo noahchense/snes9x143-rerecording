@@ -2798,7 +2798,8 @@ bool8 S9xLuaRerecordCountSkip() {
  *
  * Currently we only support 256x* resolutions.
  */
-void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
+//static inline int dibPitchOf(int width, int bpp) { return (((width*bpp+31)/8)&~3); }
+void S9xLuaGui(void *s, int width, int height, int bpp, int pitch) {
 
 	if (!LUA || !luaRunning)
 		return;
@@ -2843,40 +2844,139 @@ void S9xLuaGui(uint16 *screen, int ppl, int width, int height) {
 	int x, y, x2;
 	int xscale = (width == 512) ? 2 : 1;
 
-	for (y=0; y < height && y < 239; y++) {
-		for (x=0; x < 256; x++) {
-			const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
-			const uint8 gui_red   = gui_data[(y*256+x)*4+2];
-			const uint8 gui_green = gui_data[(y*256+x)*4+1];
-			const uint8 gui_blue  = gui_data[(y*256+x)*4];
-			int red, green, blue;
+	switch(bpp)
+	{
+	case 16:
+	 {
+		uint16 *screen = (uint16*) s;
+		int ppl = pitch/2;
+		for (y=0; y < height && y < 239; y++) {
+			for (x=0; x < 256; x++) {
+				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
+				const uint8 gui_red   = gui_data[(y*256+x)*4+2];
+				const uint8 gui_green = gui_data[(y*256+x)*4+1];
+				const uint8 gui_blue  = gui_data[(y*256+x)*4];
+				int red, green, blue;
 
-			for (x2 = 0; x2 < xscale; x2++) {
-				const uint8 scr_red   = ((screen[y*ppl + (x*xscale+x2)] >> 11) & 31) << 3;
-				const uint8 scr_green = ((screen[y*ppl + (x*xscale+x2)] >> 5)  & 63) << 2;
-				const uint8 scr_blue  = ( screen[y*ppl + (x*xscale+x2)]        & 31) << 3;
+				for (x2 = 0; x2 < xscale; x2++) {
+					const uint8 scr_red   = ((screen[y*ppl + (x*xscale+x2)] >> 11) & 31) << 3;
+					const uint8 scr_green = ((screen[y*ppl + (x*xscale+x2)] >> 5)  & 63) << 2;
+					const uint8 scr_blue  = ( screen[y*ppl + (x*xscale+x2)]        & 31) << 3;
 
-				if (gui_alpha == 0) {
-					// do nothing
-					red = scr_red;
-					green = scr_green;
-					blue = scr_blue;
+					if (gui_alpha == 0) {
+						// do nothing
+						red = scr_red;
+						green = scr_green;
+						blue = scr_blue;
+					}
+					else if (gui_alpha == 255) {
+						// direct copy
+						red = gui_red;
+						green = gui_green;
+						blue = gui_blue;
+					}
+					else {
+						// alpha-blending
+						red   = (((int) gui_red   - scr_red)   * gui_alpha / 255 + scr_red)   & 255;
+						green = (((int) gui_green - scr_green) * gui_alpha / 255 + scr_green) & 255;
+						blue  = (((int) gui_blue  - scr_blue)  * gui_alpha / 255 + scr_blue)  & 255;
+					}
+					screen[y*ppl + (x*xscale+x2)] =  ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
 				}
-				else if (gui_alpha == 255) {
-					// direct copy
-					red = gui_red;
-					green = gui_green;
-					blue = gui_blue;
-				}
-				else {
-					// alpha-blending
-					red   = (((int) gui_red   - scr_red)   * gui_alpha / 255 + scr_red)   & 255;
-					green = (((int) gui_green - scr_green) * gui_alpha / 255 + scr_green) & 255;
-					blue  = (((int) gui_blue  - scr_blue)  * gui_alpha / 255 + scr_blue)  & 255;
-				}
-				screen[y*ppl + (x*xscale+x2)] =  ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
 			}
 		}
+		break;
+	 }
+	case 24:
+	 {
+		#define bytesPerPixel   3
+		uint8 *screen = (uint8*) s;
+		for (y=0; y < height && y < 239; y++) {
+			for (x=0; x < 256; x++) {
+				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
+				const uint8 gui_red   = gui_data[(y*256+x)*4+2];
+				const uint8 gui_green = gui_data[(y*256+x)*4+1];
+				const uint8 gui_blue  = gui_data[(y*256+x)*4];
+				int red, green, blue;
+
+				for (x2 = 0; x2 < xscale; x2++) {
+					const uint8 scr_red   = screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 2];
+					const uint8 scr_green = screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 1];
+					const uint8 scr_blue  = screen[y*pitch + (x*xscale+x2)*bytesPerPixel];
+
+					if (gui_alpha == 0) {
+						// do nothing
+						red = scr_red;
+						green = scr_green;
+						blue = scr_blue;
+					}
+					else if (gui_alpha == 255) {
+						// direct copy
+						red = gui_red;
+						green = gui_green;
+						blue = gui_blue;
+					}
+					else {
+						// alpha-blending
+						red   = (((int) gui_red   - scr_red)   * gui_alpha / 255 + scr_red)   & 255;
+						green = (((int) gui_green - scr_green) * gui_alpha / 255 + scr_green) & 255;
+						blue  = (((int) gui_blue  - scr_blue)  * gui_alpha / 255 + scr_blue)  & 255;
+					}
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel] = blue;
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 1] = green;
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 2] = red;
+				}
+			}
+		}
+		#undef bytesPerPixel
+		break;
+	 }
+	case 32:
+	 {
+		#define bytesPerPixel   4
+		uint8 *screen = (uint8*) s;
+		for (y=0; y < height && y < 239; y++) {
+			for (x=0; x < 256; x++) {
+				const uint8 gui_alpha = gui_data[(y*256+x)*4+3];
+				const uint8 gui_red   = gui_data[(y*256+x)*4+2];
+				const uint8 gui_green = gui_data[(y*256+x)*4+1];
+				const uint8 gui_blue  = gui_data[(y*256+x)*4];
+				int red, green, blue;
+
+				for (x2 = 0; x2 < xscale; x2++) {
+					const uint8 scr_red   = screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 2];
+					const uint8 scr_green = screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 1];
+					const uint8 scr_blue  = screen[y*pitch + (x*xscale+x2)*bytesPerPixel];
+
+					if (gui_alpha == 0) {
+						// do nothing
+						red = scr_red;
+						green = scr_green;
+						blue = scr_blue;
+					}
+					else if (gui_alpha == 255) {
+						// direct copy
+						red = gui_red;
+						green = gui_green;
+						blue = gui_blue;
+					}
+					else {
+						// alpha-blending
+						red   = (((int) gui_red   - scr_red)   * gui_alpha / 255 + scr_red)   & 255;
+						green = (((int) gui_green - scr_green) * gui_alpha / 255 + scr_green) & 255;
+						blue  = (((int) gui_blue  - scr_blue)  * gui_alpha / 255 + scr_blue)  & 255;
+					}
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel] = blue;
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 1] = green;
+					screen[y*pitch + (x*xscale+x2)*bytesPerPixel + 2] = red;
+				}
+			}
+		}
+		#undef bytesPerPixel
+		break;
+	 }
+	default:
+		assert(false /* unsupported color-depth */);
 	}
 	return;
 }
