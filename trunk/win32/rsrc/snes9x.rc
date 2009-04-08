@@ -1179,6 +1179,7 @@ BEGIN
             MENUITEM "&Full Screen\tAlt+Enter",     ID_WINDOW_FULLSCREEN
             MENUITEM SEPARATOR
             MENUITEM "&Stretch Image",              ID_WINDOW_STRETCH
+            MENUITEM "&TV Width Pixels",            ID_WINDOW_TVPIXELRATIO
             MENUITEM "&Maintain Aspect Ratio",      ID_WINDOW_ASPECTRATIO
             MENUITEM "Lock Window Size",            ID_WINDOW_LOCKRESIZE
             MENUITEM SEPARATOR
