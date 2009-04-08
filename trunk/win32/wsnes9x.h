@@ -205,10 +205,12 @@ struct sGUI {
     HINSTANCE hInstance;
 
     DWORD hFrameTimer;
-    DWORD hHotkeyTimer;
+    DWORD hKeyInputTimer;
     HANDLE ClientSemaphore;
     HANDLE FrameTimerSemaphore;
     HANDLE ServerTimerSemaphore;
+	unsigned int KeyInDelayMSec;
+	unsigned int KeyInRepeatMSec;
 
     BYTE Language;
 

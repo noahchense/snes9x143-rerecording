@@ -683,7 +683,11 @@ bool S9xGetState (WORD KeyIdent)
 //			return false;
 	}
 
-    return ((GetKeyState (KeyIdent) & 0x80) == 0);
+	if(KeyIdent == VK_CAPITAL || KeyIdent == VK_NUMLOCK || KeyIdent == VK_SCROLL)
+		return ((GetKeyState(KeyIdent) & 0x01) == 0);
+	else
+		return ((GetAsyncKeyState(KeyIdent) & 0x8000) == 0);
+	//return ((GetKeyState (KeyIdent) & 0x80) == 0);
 }
 
 //bool WinReadJoypadNeedsScan = true;
