@@ -685,7 +685,6 @@ void S9xUpdateFrameCounter (int offset)
 	static char tmpBuf[1024];
 
 //	offset++;
-	extern bool8 pad_read;
 	if (!Settings.DisplayFrame)
 		*GFX.FrameDisplayString = 0;
 	else if (Movie.State == MOVIE_STATE_RECORD) {
@@ -732,7 +731,7 @@ void S9xUpdateFrameCounter (int offset)
 			sprintf(GFX.LagCounterString, "%d", max(0,(int)(IPPU.LagCounter)));
 		else
 			FrameCountToTime(GFX.LagCounterString, max(0,(int)(IPPU.LagCounter)), Memory.ROMFramesPerSecond);
-		if (!pad_read)
+		if (!IPPU.pad_read)
 			strcat(GFX.LagCounterString, " *");
 	}
 

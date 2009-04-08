@@ -156,25 +156,27 @@ EXTERN_C bool8 S9xFreezePlatformDepends (const char *basefilename)
 	// TODO: more abstract implementation
 	result &= MacroSaveState(filepath);
 	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
-	WritePrivateProfileBool(_T("Control"), _T("pad_read"), pad_read!=0, filepath);
-	WritePrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last!=0, filepath);
-	WritePrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
-	WritePrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
+	//WritePrivateProfileBool(_T("Control"), _T("pad_read"), pad_read!=0, filepath);
+	//WritePrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last!=0, filepath);
+	//WritePrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
+	//WritePrivateProfileInt(_T("Timings"), _T("LagCounter"), IPPU.LagCounter, filepath);
 	return result;
 }
 
 EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename)
 {
 	static TCHAR filepath [_MAX_PATH + 1];
-	bool8 pad_read_temp;
-	bool adjustLagCounter;
 	bool result = true;
 
 	GetPlatformSnapPath(filepath, basefilename);
 
 	// TODO: more abstract implementation
 	result &= MacroLoadState(filepath);
+
 	// TODO/FIXME?: they must be removed when they're stored in platform-independent snapshot
+	/*
+	bool8 pad_read_temp;
+	bool adjustLagCounter;
 	pad_read = GetPrivateProfileBool(_T("Control"), _T("pad_read"), pad_read!=0, filepath);
 	pad_read_last = GetPrivateProfileBool(_T("Control"), _T("pad_read_last"), pad_read_last!=0, filepath);
 	IPPU.TotalEmulatedFrames = GetPrivateProfileInt(_T("Timings"), _T("TotalEmulatedFrames"), IPPU.TotalEmulatedFrames, filepath);
@@ -189,6 +191,7 @@ EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename)
 	S9xUpdateFrameCounter (-1);
 	IPPU.LagCounter += (adjustLagCounter ? 1 : 0);
 	pad_read = pad_read_temp;
+	*/
 
 	// disabled because the refresh needs to happen later than when this function gets called
 //	S9xReRefresh();

@@ -201,6 +201,8 @@ static struct Obsolete {
 #define DELETED_ARRAY_ENTRY(save_version_introduced, save_version_removed, field, count, elemType) {DELETED(field),0, count, elemType, save_version_introduced, save_version_removed, #field}
 #define DELETED_POINTER_ENTRY(save_version_introduced, save_version_removed, field, relativeToField) {DELETED(field),DELETED(relativeToField), 4, POINTER_V, save_version_introduced, save_version_removed, #field} // size=4 -> (field - relativeToField) must fit in 4 bytes
 
+#define V1_RR_UNOFFICIAL 1  // unofficial members added by rerecording team
+
 struct SnapshotMovieInfo
 {
 	uint32	MovieInputDataSize;
@@ -608,6 +610,10 @@ static FreezeData SnapIPPU [] = {
     ARRAY_ENTRY(1, Mouse, 2, uint32_ARRAY_V),
     ARRAY_ENTRY(1, PrevMouseX, 2, uint32_ARRAY_V),
     ARRAY_ENTRY(1, PrevMouseY, 2, uint32_ARRAY_V),
+    INT_ENTRY(V1_RR_UNOFFICIAL, pad_read),
+    INT_ENTRY(V1_RR_UNOFFICIAL, pad_read_last),
+    INT_ENTRY(V1_RR_UNOFFICIAL, TotalEmulatedFrames),
+    INT_ENTRY(V1_RR_UNOFFICIAL, LagCounter),
 };
 
 #ifndef NEW_SNAPSHOT_SCREENSHOT
@@ -1321,12 +1327,12 @@ int S9xUnfreezeFromStream (STREAM stream)
 #endif // !NEW_SNAPSHOT_SCREENSHOT
 		} /* GFX.Screen */
 
-		if(local_movie_data) // cannot restore last displayed pad_read status, so assume it was read
+		if(local_movie_data)
 		{
-			extern bool8 pad_read, pad_read_last;
-			pad_read = true;
-			pad_read_last = true;
+			bool8 pad_read_temp = IPPU.pad_read;
+			IPPU.pad_read = IPPU.pad_read_last;
 			S9xUpdateFrameCounter (-1);
+			IPPU.pad_read = pad_read_temp;
 		}
 
 		Memory.FixROMSpeed ();
