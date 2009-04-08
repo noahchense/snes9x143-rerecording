@@ -1010,6 +1010,8 @@ void WinRegisterConfigItems()
 #define CATEGORY "Settings\\Win"
 	AddBoolC("PauseWhenInactive", GUI.InactivePause, true, "true to pause Snes9x when it is not the active window");
 	AddBool2C("Joypads:Background", GUI.BackgroundInput, false, "on to detect game keypresses and hotkeys while window is inactive, if PauseWhenInactive = FALSE.");
+	AddUIntC("Joypads:RepeatDelay", GUI.KeyInDelayMSec, 0, "keyboard/joypad's repeat-delay setting in milliseconds. set to 0 to use system setting.");
+	AddUIntC("Joypads:RepeatSpeed", GUI.KeyInRepeatMSec, 0, "keyboard/joypad's repeat-speed setting in milliseconds. set to 0 to use system setting.");
 	AddBoolC("CustomRomOpenDialog", GUI.CustomRomOpen, TRUE, "false to use standard Windows open dialog for the ROM open dialog");
 //	AddUIntC("Language", GUI.Language, 0, "0=English, 1=Nederlands"); // NYI
 //	AddBoolC("FrameAdvanceSkipsNonInput", GUI.FASkipsNonInput, false, "causes frame advance to fast-forward past frames where the game is definitely not checking input, such as during lag or loading time. EXPERIMENTAL");

@@ -260,6 +260,10 @@ INT_PTR CALLBACK test(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 #define WM_CUSTKEYDOWN	(WM_APP+50)
 #define WM_CUSTKEYUP	(WM_APP+51)
 
+static int KeyInDelayMSec;
+static int KeyInDelayInCount;
+static int KeyInRepeatMSec;
+
 #define NUM_HOTKEY_CONTROLS 20
 
 const int IDC_LABEL_HK_Table[NUM_HOTKEY_CONTROLS] = {
@@ -2166,7 +2170,7 @@ LRESULT CALLBACK WinProc(
 		DragAcceptFiles(hWnd, GUI.allowDropFiles);
 		return 0;
 	case WM_KEYDOWN:
-		if(wParam != VK_PAUSE && GUI.BackgroundInput)
+		if(wParam != VK_PAUSE)
 			break;
 	case WM_SYSKEYDOWN:
 	case WM_CUSTKEYDOWN:
@@ -2187,8 +2191,9 @@ LRESULT CALLBACK WinProc(
 		}
 
 	case WM_KEYUP:
-		if(wParam != VK_PAUSE && GUI.BackgroundInput)
+		if(wParam != VK_PAUSE)
 			break;
+	case WM_SYSKEYUP:
 	case WM_CUSTKEYUP:
 		{
 			SCustomKey *key = CustomKeys.key;
@@ -4396,8 +4401,8 @@ void S9xExtraUsage ()
 {
 }
 
-// handles joystick hotkey presses
-VOID CALLBACK HotkeyTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
+// handles key presses
+VOID CALLBACK KeyInputTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw1, DWORD_PTR dw2)
 {
 //	static int lastTime = timeGetTime();
 //	if(timeGetTime() - lastTime > 5)
@@ -4416,7 +4421,7 @@ VOID CALLBACK HotkeyTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR 
 				{
 					if(joyState[i] < ULONG_MAX) // 0xffffffffUL
 						joyState[i]++;
-					if(joyState[i] == 1 || joyState[i] >= 12)
+					if(joyState[i] == 1 || joyState[i] >= (unsigned) KeyInDelayInCount)
 						PostMessage(GUI.hWnd, WM_CUSTKEYDOWN, (WPARAM)(0x8000|i),(LPARAM)(NULL));
 				}
 				else
@@ -4429,7 +4434,8 @@ VOID CALLBACK HotkeyTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR 
 				}
 			}
 		}
-		if(!GUI.InactivePause && GUI.BackgroundInput)
+		if((!GUI.InactivePause || !Settings.ForcedPause)
+				|| (GUI.BackgroundInput || !(Settings.ForcedPause & (PAUSE_INACTIVE_WINDOW | PAUSE_WINDOW_ICONISED))))
 		{
 			static uint32 joyState [256];
 			for(int i = 0 ; i < 255 ; i++)
@@ -4439,7 +4445,7 @@ VOID CALLBACK HotkeyTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR 
 				{
 					if(joyState[i] < ULONG_MAX) // 0xffffffffUL
 						joyState[i]++;
-					if(joyState[i] == 1 || joyState[i] >= 12)
+					if(joyState[i] == 1 || joyState[i] >= (unsigned) KeyInDelayInCount)
 						PostMessage(GUI.hWnd, WM_CUSTKEYDOWN, (WPARAM)(i),(LPARAM)(NULL));
 				}
 				else
@@ -4698,11 +4704,30 @@ int WINAPI WinMain(
 	PCStartTicks = timeGetTime()*1000;
     PCFrameTime = PCFrameTimeNTSC = (__int64)((float)PCBase / 59.948743718592964824120603015098f);
     PCFrameTimePAL = PCBase / 50;
-	
-	
+
+	KeyInDelayMSec = GUI.KeyInDelayMSec;
+	KeyInRepeatMSec = GUI.KeyInRepeatMSec;
+	if (KeyInDelayMSec == 0) {
+		DWORD dwKeyboardDelay;
+		SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &dwKeyboardDelay, 0);
+		KeyInDelayMSec = 250 * (dwKeyboardDelay + 1);
+	}
+	if (KeyInRepeatMSec == 0) {
+		DWORD dwKeyboardSpeed;
+		SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &dwKeyboardSpeed, 0);
+		KeyInRepeatMSec = (int)(1000.0/(((30.0-2.5)/31.0)*dwKeyboardSpeed+2.5));
+	}
+	if (KeyInRepeatMSec < (int)wmTimerRes)
+		KeyInRepeatMSec = (int)wmTimerRes;
+	if (KeyInDelayMSec < KeyInRepeatMSec)
+		KeyInDelayMSec = KeyInRepeatMSec;
+	KeyInDelayInCount = KeyInDelayMSec / KeyInRepeatMSec;
+	if (KeyInDelayInCount <= 1)
+		KeyInDelayInCount = 12;
+
     Settings.StopEmulation = TRUE;
     GUI.hFrameTimer = timeSetEvent (20, 0, FrameTimer, 0, TIME_PERIODIC);
-	GUI.hHotkeyTimer = timeSetEvent (32, 0, HotkeyTimer, 0, TIME_PERIODIC);
+	GUI.hKeyInputTimer = timeSetEvent (KeyInRepeatMSec, 0, KeyInputTimer, 0, TIME_PERIODIC);
 
     GUI.FrameTimerSemaphore = CreateSemaphore (NULL, 0, 10, NULL);
     GUI.ServerTimerSemaphore = CreateSemaphore (NULL, 0, 10, NULL);
@@ -4891,8 +4916,8 @@ loop_exit:
 	
 	Settings.StopEmulation = TRUE;
 
-    if (GUI.hHotkeyTimer)
-        timeKillEvent (GUI.hHotkeyTimer);
+    if (GUI.hKeyInputTimer)
+        timeKillEvent (GUI.hKeyInputTimer);
 
     if( GUI.hFrameTimer)
     {	
