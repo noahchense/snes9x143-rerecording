@@ -119,9 +119,6 @@ uint8 in_bit=0;
 
 extern uint8 *HDMAMemPointers [8];
 
-bool8 pad_read = 0;
-bool8 pad_read_last = 0;
-
 static inline void S9xLatchCounters (bool force)
 {
 	if(!force && !(Memory.FillRAM[0x4213] & 0x80)) return;
@@ -2083,11 +2080,10 @@ uint8 S9xGetCPU (uint16 Address)
 	{
 		if(Address==0x4016 || Address==0x4017)
 		{
-//			extern bool8 pad_read;
 //#ifdef SNES_JOY_READ_CALLBACKS
 //			S9xOnSNESPadRead();
 //#endif
-			pad_read = true;
+			IPPU.pad_read = true;
 		}
 
 		CPU.Cycles += ONE_CYCLE;
@@ -2249,11 +2245,10 @@ uint8 S9xGetCPU (uint16 Address)
 	  case 0x421f:
 		if(Memory.FillRAM[0x4200] & 1)
 		{
-//			extern bool8 pad_read;
 //#ifdef SNES_JOY_READ_CALLBACKS
 //			S9xOnSNESPadRead();
 //#endif
-			pad_read = true;
+			IPPU.pad_read = true;
 		}
 		// Joypads 1-4 button and direction state.
 		return (Memory.FillRAM [Address]);
@@ -2942,10 +2937,10 @@ void S9xUpdateJoypadButtons ()
 	}
 
 	S9xMovieUpdate();
-	if(!pad_read)
+	if(!IPPU.pad_read)
 		++IPPU.LagCounter;
-	pad_read_last = pad_read;
-	pad_read = false;
+	IPPU.pad_read_last = IPPU.pad_read;
+	IPPU.pad_read = false;
 
 	if(!Settings.UpAndDown)
 	{

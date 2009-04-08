@@ -767,8 +767,7 @@ int snes9x_lagcount(lua_State *L) {
 
 // boolean snes9x.lagged()
 int snes9x_lagged(lua_State *L) {
-	extern bool8 pad_read_last; // from ppu.cpp
-	lua_pushboolean(L, !pad_read_last);
+	lua_pushboolean(L, !IPPU.pad_read_last);
 	return 1;
 }
 
