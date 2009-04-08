@@ -3077,6 +3077,33 @@ LRESULT CALLBACK WinProc(
 
 							if(DirectDraw.Clipped) S9xReRefresh();
 						}	break;
+						case ID_WINDOW_TVPIXELRATIO: {
+							if(abs(GUI.AspectWidth-301) >= 12)
+							{
+								GUI.AspectWidth = 301; // since our 2x blargg blitter uses 602, this has to be 301 instead of 300 to prevent stretching
+								
+								// adjust the size right away in the common cases to make it a little more convenient
+								for(int i = 0; i < 4; i++)
+									if(abs(GUI.window_size.right - GUI.window_size.left - 256*(i+1)) < 12)
+										SendMessage(hWnd, WM_COMMAND, (WPARAM)(ID_WINDOW_X1+i),(LPARAM)(NULL));
+							}
+							else
+							{
+								GUI.AspectWidth = 256;
+
+								// adjust the size right away in the common cases to make it a little more convenient
+								for(int i = 0; i < 4; i++)
+									if(abs(GUI.window_size.right - GUI.window_size.left - 301*(i+1)) < 12)
+										SendMessage(hWnd, WM_COMMAND, (WPARAM)(ID_WINDOW_X1+i),(LPARAM)(NULL));
+							}
+
+							if(GUI.outputMethod==DIRECT3D)
+								Direct3D.changeRenderSize(0,0);
+							else
+								RestoreSNESDisplay ();
+
+							if(DirectDraw.Clipped) S9xReRefresh();
+						}	break;
 						case ID_WINDOW_ASPECTRATIO: {
 							GUI.AspectRatio = !GUI.AspectRatio;
 
@@ -5102,6 +5129,9 @@ static void CheckMenuStates ()
 
 	mii.fState = GUI.Stretch ? MFS_CHECKED : MFS_UNCHECKED;
     SetMenuItemInfo (GUI.hMenu, ID_WINDOW_STRETCH, FALSE, &mii);
+
+	mii.fState = (abs(GUI.AspectWidth-301)<12) ? MFS_CHECKED : MFS_UNCHECKED; // note: enabled even if stretch is disabled because this option affects things other than stretch too
+    SetMenuItemInfo (GUI.hMenu, ID_WINDOW_TVPIXELRATIO, FALSE, &mii);
 
 	mii.fState = GUI.Stretch ? (GUI.AspectRatio ? MFS_CHECKED : MFS_UNCHECKED) : MFS_CHECKED|MFS_DISABLED;
     SetMenuItemInfo (GUI.hMenu, ID_WINDOW_ASPECTRATIO, FALSE, &mii);

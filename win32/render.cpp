@@ -135,10 +135,14 @@ void RenderGlide (SSurface Src, SSurface Dst, RECT *);
 #ifdef USE_OPENGL
 void RenderOpenGL (SSurface Src, SSurface Dst, RECT *);
 #endif
-void RenderBlarggNTSCComposite(SSurface Src, SSurface Dst, RECT *);
-void RenderBlarggNTSCSvideo(SSurface Src, SSurface Dst, RECT *);
-void RenderBlarggNTSCRgb(SSurface Src, SSurface Dst, RECT *);
-void RenderBlarggNTSC(SSurface Src, SSurface Dst, RECT *);
+void RenderBlarggNTSCComposite(SSurface Src, SSurface Dst, RECT *); // with scanlines
+void RenderBlarggNTSCSvideo(SSurface Src, SSurface Dst, RECT *); // with scanlines
+void RenderBlarggNTSCRgb(SSurface Src, SSurface Dst, RECT *); // with scanlines
+void RenderBlarggNTSC(SSurface Src, SSurface Dst, RECT *); // with scanlines
+void RenderBlarggNTSCCompositeBright(SSurface Src, SSurface Dst, RECT *); // without scanlines
+void RenderBlarggNTSCSvideoBright(SSurface Src, SSurface Dst, RECT *); // without scanlines
+void RenderBlarggNTSCRgbBright(SSurface Src, SSurface Dst, RECT *); // without scanlines
+void RenderBlarggNTSCBright(SSurface Src, SSurface Dst, RECT *); // without scanlines
 // Contains the pointer to the now active render method
 TRenderMethod RenderMethod = RenderPlain;
 TRenderMethod RenderMethodHiRes = RenderPlain;
@@ -186,6 +190,9 @@ TRenderMethod FilterToMethod(RenderFilter filterID)
 		case FILTER_BLARGGCOMP: return RenderBlarggNTSCComposite;
 		case FILTER_BLARGGSVID: return RenderBlarggNTSCSvideo;
 		case FILTER_BLARGGRGB:  return RenderBlarggNTSCRgb;
+		case FILTER_BLARGGCOMPBRIGHT: return RenderBlarggNTSCCompositeBright;
+		case FILTER_BLARGGSVIDBRIGHT: return RenderBlarggNTSCSvideoBright;
+		case FILTER_BLARGGRGBBRIGHT:  return RenderBlarggNTSCRgbBright;
 #ifdef USE_GLIDE
         case FILTER_GLIDE:      return RenderGlide;
 #endif
@@ -205,9 +212,12 @@ const char* GetFilterName(RenderFilter filterID)
 		case FILTER_SIMPLE2X: return "Simple 2X";
 		case FILTER_SCANLINES: return "Scanlines";
 		case FILTER_TVMODE: return "TV Mode";
-		case FILTER_BLARGGCOMP: return "Blargg's NTSC (Composite)";
-		case FILTER_BLARGGSVID: return "Blargg's NTSC (S-Video)";
-		case FILTER_BLARGGRGB: return "Blargg's NTSC (RGB)";
+		case FILTER_BLARGGCOMP: return "Blargg's NTSC (Composite) (Scanlines)";
+		case FILTER_BLARGGSVID: return "Blargg's NTSC (S-Video) (Scanlines)";
+		case FILTER_BLARGGRGB: return "Blargg's NTSC (RGB) (Scanlines)";
+		case FILTER_BLARGGCOMPBRIGHT: return "Blargg's NTSC (Composite) (Bright)";
+		case FILTER_BLARGGSVIDBRIGHT: return "Blargg's NTSC (S-Video) (Bright)";
+		case FILTER_BLARGGRGBBRIGHT: return "Blargg's NTSC (RGB) (Bright)";
 		case FILTER_SUPEREAGLE: return "SuperEagle";
 		case FILTER_SUPER2XSAI: return "Super2xSaI";
 		case FILTER_2XSAI: return "2xSaI";
@@ -262,6 +272,9 @@ int GetFilterScale(RenderFilter filterID)
 		case FILTER_BLARGGCOMP:
 		case FILTER_BLARGGSVID:
 		case FILTER_BLARGGRGB:
+		case FILTER_BLARGGCOMPBRIGHT:
+		case FILTER_BLARGGSVIDBRIGHT:
+		case FILTER_BLARGGRGBBRIGHT:
 			return 3;
 	}
 }
@@ -288,6 +301,9 @@ void GetFilterRect(RenderFilter filterID, LPRECT filterRect)
 		case FILTER_BLARGGCOMP:
 		case FILTER_BLARGGSVID:
 		case FILTER_BLARGGRGB:
+		case FILTER_BLARGGCOMPBRIGHT:
+		case FILTER_BLARGGSVIDBRIGHT:
+		case FILTER_BLARGGRGBBRIGHT:
 			filterRect->right = 600;
 			filterRect->bottom = (LONG)(450 * (GUI.HeightExtend ? (239.0/224.0) : 1.0));
 			break;
@@ -305,6 +321,9 @@ bool GetFilterHiResSupport(RenderFilter filterID)
 		case FILTER_BLARGGCOMP:
 		case FILTER_BLARGGSVID:
 		case FILTER_BLARGGRGB:
+		case FILTER_BLARGGCOMPBRIGHT:
+		case FILTER_BLARGGSVIDBRIGHT:
+		case FILTER_BLARGGRGBBRIGHT:
 		case FILTER_TVMODE:
 		case FILTER_SIMPLE3X:
 	#ifdef USE_GLIDE
@@ -356,6 +375,8 @@ extern bool8 cpu_mmx;
          ((((pixel) >> 6)   & 0x1f) << /*GreenShift+3*/11) | \
           (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
 	#define NUMBITS (16)
+	#define RSHIFT 11
+	#define GMAX 63
 #else
 	#define	Mask_2	0x03E0	// 00000 11111 00000
 	#define	Mask13	0x7C1F	// 11111 00000 11111
@@ -366,6 +387,8 @@ extern bool8 cpu_mmx;
          ((((pixel) >> 5)   & 0x1f) << /*GreenShift+3*/11) | \
           (((pixel)         & 0x1f) << /*BlueShift+3*/ 3))
 	#define NUMBITS (15)
+	#define RSHIFT 10
+	#define GMAX 31
 #endif
 
 static int	RGBtoYUV[1<<NUMBITS];
@@ -3202,9 +3225,8 @@ BlarggMode blarggMode = UNINITIALIZED;
 
 void RenderBlarggNTSCComposite( SSurface Src, SSurface Dst, RECT *rect)
 {
-	if(!ntsc) {
+	if(!ntsc)
 		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
-	}
 	if(blarggMode!=BLARGGCOMPOSITE) {
 		snes_ntsc_setup_t setup = snes_ntsc_composite;
 		setup.merge_fields = 1;
@@ -3216,9 +3238,8 @@ void RenderBlarggNTSCComposite( SSurface Src, SSurface Dst, RECT *rect)
 
 void RenderBlarggNTSCSvideo( SSurface Src, SSurface Dst, RECT *rect)
 {
-	if(!ntsc) {
+	if(!ntsc)
 		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
-	}
 	if(blarggMode!=BLARGGSVIDEO) {
 		snes_ntsc_setup_t setup = snes_ntsc_svideo;
 		setup.merge_fields = 1;
@@ -3230,9 +3251,8 @@ void RenderBlarggNTSCSvideo( SSurface Src, SSurface Dst, RECT *rect)
 
 void RenderBlarggNTSCRgb( SSurface Src, SSurface Dst, RECT *rect)
 {
-	if(!ntsc) {
+	if(!ntsc)
 		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
-	}
 	if(blarggMode!=BLARGGRGB) {
 		snes_ntsc_setup_t setup = snes_ntsc_rgb;
 		setup.merge_fields = 1;
@@ -3242,10 +3262,50 @@ void RenderBlarggNTSCRgb( SSurface Src, SSurface Dst, RECT *rect)
 	RenderBlarggNTSC(Src,Dst,rect);
 }
 
+void RenderBlarggNTSCCompositeBright( SSurface Src, SSurface Dst, RECT *rect)
+{
+	if(!ntsc)
+		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
+	if(blarggMode!=BLARGGCOMPOSITE) {
+		snes_ntsc_setup_t setup = snes_ntsc_composite;
+		setup.merge_fields = 1;
+		snes_ntsc_init( ntsc, &setup );
+		blarggMode=BLARGGCOMPOSITE;
+	}
+	RenderBlarggNTSCBright(Src,Dst,rect);
+}
+
+void RenderBlarggNTSCSvideoBright( SSurface Src, SSurface Dst, RECT *rect)
+{
+	if(!ntsc)
+		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
+	if(blarggMode!=BLARGGSVIDEO) {
+		snes_ntsc_setup_t setup = snes_ntsc_svideo;
+		setup.merge_fields = 1;
+		snes_ntsc_init( ntsc, &setup );
+		blarggMode=BLARGGSVIDEO;
+	}
+	RenderBlarggNTSCBright(Src,Dst,rect);
+}
+
+void RenderBlarggNTSCRgbBright( SSurface Src, SSurface Dst, RECT *rect)
+{
+	if(!ntsc)
+		ntsc = (snes_ntsc_t *)malloc(sizeof(snes_ntsc_t));
+	if(blarggMode!=BLARGGRGB) {
+		snes_ntsc_setup_t setup = snes_ntsc_rgb;
+		setup.merge_fields = 1;
+		snes_ntsc_init( ntsc, &setup );
+		blarggMode=BLARGGRGB;
+	}
+	RenderBlarggNTSCBright(Src,Dst,rect);
+}
+
+
 void RenderBlarggNTSC( SSurface Src, SSurface Dst, RECT *rect)
 {
 	SetRect(rect, 256, 239, 2);
-	rect->right = 604;
+	rect->right = 602; // 604 is too big (shows junk pixels on the right edge) and 600 is too small (cuts off the fade to black on the right edge, which looks wrong considering an even larger fade to black is visible on the left edge)
 
 	const unsigned int srcRowPixels = Src.Pitch/2;
   
@@ -3254,7 +3314,8 @@ void RenderBlarggNTSC( SSurface Src, SSurface Dst, RECT *rect)
 	else
 		snes_ntsc_blit( ntsc, (unsigned short *)Src.Surface, srcRowPixels, 0,Src.Width, Src.Height, Dst.Surface, Dst.Pitch );
   
-	//Blargg's filter produces half-height output, so we have to double the height again
+	//Blargg's filter produces half-height output, so we have to double the height
+	//use faintly darkening scanlines, and linear interpolation
 	for (int y = rect->bottom / 2; --y >= 0; )
 	{
 		unsigned char const* in = Dst.Surface + y * Dst.Pitch;
@@ -3272,5 +3333,83 @@ void RenderBlarggNTSC( SSurface Src, SSurface Dst, RECT *rect)
 			out += 2;
 		}
 	}
-
 }
+
+void RenderBlarggNTSCBright( SSurface Src, SSurface Dst, RECT *rect)
+{
+	SetRect(rect, 256, 239, 2);
+	rect->right = 602; // 604 is too big (shows junk pixels on the right edge) and 600 is too small (cuts off the fade to black on the right edge, which looks wrong considering an even larger fade to black is visible on the left edge)
+
+	const unsigned int srcRowPixels = Src.Pitch/2;
+  
+	if(Src.Height > SNES_HEIGHT_EXTENDED || Src.Width == 512)
+		snes_ntsc_blit_hires( ntsc, (unsigned short *)Src.Surface, srcRowPixels, 0,Src.Width, Src.Height, Dst.Surface, Dst.Pitch );
+	else
+		snes_ntsc_blit( ntsc, (unsigned short *)Src.Surface, srcRowPixels, 0,Src.Width, Src.Height, Dst.Surface, Dst.Pitch );
+  
+	//Blargg's filter produces half-height output, so we have to double the height
+	//use no scanlines, and bicubic interpolation approximation (with slight contrast adjust, to simulate enough brightness bleed to fill the in-between-scanline pixels)
+	//this looks closer to the real thing to me (in composite mode) than the with-scanlines version does
+	//(does anyone ever really see perfectly alternating darkened rows on their TV screen?)
+	//although it is somewhat slower as a result of the extra blending that was necessary,
+	//and some people might prefer the scanlines since they make the flaws of the NTSC image more apparent
+	for (int y = rect->bottom / 2; --y >= 0; )
+	{
+		unsigned char const* inU = Dst.Surface + (y-1) * Dst.Pitch;
+		unsigned char const* in = Dst.Surface + y * Dst.Pitch;
+		unsigned char const* inD = Dst.Surface + (y+1) * Dst.Pitch;
+		unsigned char* out = Dst.Surface + (y*2) * Dst.Pitch;
+		
+		if(y == rect->bottom / 2) inD = in;
+		if(y == 0) inU = in;
+
+		// E D H
+		// A X C
+		// F B G
+		unsigned short colorA = 0;
+		unsigned short colorD = *(unsigned short*)inU;
+		unsigned short colorX = *(unsigned short*)in;
+		unsigned short colorB = *(unsigned short*)inD;
+		in += 2;
+		unsigned short colorC = *(unsigned short*)in;
+
+		for (int n = rect->right; n; --n )
+		{
+			int RX = (colorX) >> RSHIFT;
+			int RA = (colorA) >> RSHIFT;
+			int RB = (colorB) >> RSHIFT;
+			int RC = (colorC) >> RSHIFT;
+			int RD = (colorD) >> RSHIFT;
+			int GX = (colorX & Mask_2) >> 5;
+			int GA = (colorA & Mask_2) >> 5;
+			int GB = (colorB & Mask_2) >> 5;
+			int GC = (colorC & Mask_2) >> 5;
+			int GD = (colorD & Mask_2) >> 5;
+			int BX = (colorX & Mask_1);
+			int BA = (colorA & Mask_1);
+			int BB = (colorB & Mask_1);
+			int BC = (colorC & Mask_1);
+			int BD = (colorD & Mask_1);
+			int R = RX*707+RD*346+RA*37+RC*34;
+			int G = GX*707+GD*346+GA*37+GC*34;
+			int B = BX*707+BD*346+BA*37+BC*34;
+			#define clampit(x,m) (min(m,((x)>>10)))
+			*(unsigned short*) (out) = clampit(B,31)|(clampit(G,GMAX)<<5)|(clampit(R,31)<<RSHIFT);
+			R = RX*717+RB*310+RA*51+RC*46;
+			G = GX*717+GB*310+GA*51+GC*46;
+			B = BX*717+BB*310+BA*51+BC*46;
+			*(unsigned short*) (out + Dst.Pitch) = clampit(B,31)|(clampit(G,GMAX)<<5)|(clampit(R,31)<<RSHIFT);
+			#undef clampit
+			inU += 2;
+			in += 2;
+			inD += 2;
+			out += 2;
+			colorA = colorX;
+			colorX = colorC;
+			colorD = *(unsigned short*)(inU);
+			colorC = *(unsigned short*)(in); // this is actually in+2 compared to inU and inD
+			colorB = *(unsigned short*)(inD);
+		}
+	}
+}
+
