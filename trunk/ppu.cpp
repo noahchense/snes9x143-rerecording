@@ -1758,7 +1758,7 @@ void S9xSetCPU (uint8 byte, uint16 Address)
 			if (Settings.DisableHDMA)
 				byte = 0;
 			Memory.FillRAM[0x420c] = byte;
-			IPPU.HDMA = byte;
+			PPU.HDMA = byte;
 			break;
 
 		  case 0x420d:
@@ -2364,7 +2364,7 @@ uint8 S9xGetCPU (uint16 Address)
 	  case 0x437A:
 		{
 			int d = (Address & 0x70) >> 4;
-			if (IPPU.HDMA & (1 << d))
+			if (PPU.HDMA & (1 << d))
 			{
 				return (DMA[d].LineCount);
 			}
@@ -2535,8 +2535,8 @@ static void S9xResetPPUCommon ()
 	PPU.MouseSpeed[0] = PPU.MouseSpeed[1] = 0;
 
 	IPPU.ColorsChanged = TRUE;
-	IPPU.HDMA = 0;
-	IPPU.HDMAStarted = FALSE;
+	PPU.HDMA = 0;
+	PPU.HDMAStarted = FALSE;
 	IPPU.MaxBrightness = 0;
 	IPPU.LatchedBlanking = 0;
 	IPPU.OBJChanged = TRUE;

@@ -109,8 +109,6 @@ struct SIAPU
     uint8  _Zero;
     uint8  _Overflow;
     uint32 TimerErrorCounter;
-    int32  NextAPUTimerPos;
-    int32  APUTimerCounter;
     uint32 Scanline;
     int32  OneCycle;
     int32  TwoCycles;
@@ -134,6 +132,8 @@ struct SAPU
     uint16 TimerTarget [3];
     bool8  TimerEnabled [3];
     bool8  TimerValueWritten [3];
+    int32  NextAPUTimerPos;
+    int32  APUTimerCounter;
 };
 
 EXTERN_C struct SAPU APU;

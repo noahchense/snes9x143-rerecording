@@ -76,7 +76,6 @@
 #define APU_Zero IAPU + 41
 #define APU_Overflow IAPU + 42
 #define APUTimerErrorCounter IAPU + 44
-#define NextAPUTimerPos IAPU + 48
 #define APUCycles APU + 0
 #define APUShowROM APU + 4
 #define APUFlags APU + 5
@@ -88,6 +87,7 @@
 #define APUTimerTarget APU + 210
 #define APUTimerEnabled APU + 216
 #define TimerValueWritten APU + 219
+#define NextAPUTimerPos APU + 224
 #define CPUSpeed ICPU + 0
 #define CPUOpcodes ICPU + 4
 #define _Carry ICPU + 8
@@ -192,13 +192,13 @@
 #define Joypad3ButtonReadPos PPU + 2769
 #define MouseSpeed PPU + 2770
 #define RangeTimeOver PPU + 2118
+#define HDMA PPU + 2777
+#define HDMAStarted PPU + 2778
 #define ColorsChanged IPPU + 0
-#define HDMA IPPU + 1
-#define HDMAStarted IPPU + 2
-#define MaxBrightness IPPU + 3
-#define LatchedBlanking IPPU + 4
-#define OBJChanged IPPU + 5
-#define RenderThisFrame IPPU + 6
+#define MaxBrightness IPPU + 1
+#define LatchedBlanking IPPU + 2
+#define OBJChanged IPPU + 3
+#define RenderThisFrame IPPU + 4
 #define SkippedFrames IPPU + 28
 #define FrameSkip IPPU + 32
 #define TileCache IPPU + 36

@@ -117,8 +117,6 @@ struct ClipData {
 
 struct InternalPPU {
     bool8  ColorsChanged;
-    uint8  HDMA;
-    bool8  HDMAStarted;
     uint8  MaxBrightness;
     bool8  LatchedBlanking;
     bool8  OBJChanged;
@@ -273,6 +271,9 @@ struct SPPU {
     uint8 BGnxOFSbyte;
     uint8 OpenBus1;
     uint8 OpenBus2;
+
+    uint8  HDMA;
+    bool8  HDMAStarted;
 };
 
 #define CLIP_OR 0
