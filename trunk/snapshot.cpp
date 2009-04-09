@@ -233,6 +233,8 @@ static FreezeData SnapCPU [] = {
 	INT_ENTRY(1, FastROMSpeed),
 
 	// not sure if the following are necessary, but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, PC), // just in case
+    INT_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
 	INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
 	INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
 	INT_ENTRY(V1_RR_UNOFFICIAL, TriedInterleavedMode2),
@@ -549,6 +551,7 @@ static FreezeData SnapSA1 [] = {
     INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedDB),
     INT_ENTRY(V1_RR_UNOFFICIAL, Executing),
     INT_ENTRY(V1_RR_UNOFFICIAL, Waiting),
+    INT_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
     INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
     INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
     INT_ENTRY(V1_RR_UNOFFICIAL, VirtualBitmapFormat),
