@@ -143,6 +143,152 @@ void S9xSuperFXPostLoadState ();
 END_EXTERN_C
 #endif
 
+#ifdef _DEBUG
+	#define SNAPSHOT_VERIFY_SUPPORTED
+#endif
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	// verify that a snapshot saved of the current emulation state would exactly match
+	// with the snapshot that's already in the given file or stream (this is for desync testing)
+	bool S9xVerifySnapshotsIdentical (const char *filename);
+	bool S9xVerifySnapshotsIdentical (STREAM stream);
+
+	// list of things to ignore (if the error message contains one of these strings it will be discarded)
+	// only things that aren't really part of the emulation state should go in here
+	static const char* s_snapshotVerifyIgnoreFilter [] = {
+		"&SoundData::", // because SoundData is full of stuff that changes asynchronously from the emulation
+	};
+
+	#include <vector>
+	#include <string>
+	std::vector<std::string> g_verifyErrors;
+	static std::vector<std::string> s_verifyInfoStack;
+	struct PointerRangeInfo
+	{
+		void* start; // (pointer to a byte in the savestate)
+		void* end; // (1 past the last byte)
+		std::string name;
+	};
+	static std::vector<PointerRangeInfo> s_verifyActiveRangeInfo;
+
+	static void PushVerifyError(void* pCurStateBlockStartByte, unsigned char* pCurStateByte, unsigned char* pOldStateByte)
+	{
+		std::string errStr = "";
+		for(unsigned int i = 0; i < s_verifyInfoStack.size(); i++)
+		{
+			errStr += s_verifyInfoStack[i];
+			errStr += ':';
+		}
+		for(unsigned int i = 0; i < s_verifyActiveRangeInfo.size(); i++)
+		{
+			if(pCurStateByte >= s_verifyActiveRangeInfo[i].start && pCurStateByte < s_verifyActiveRangeInfo[i].end)
+			{
+				errStr += ':';
+				errStr += s_verifyActiveRangeInfo[i].name;
+				errStr += ':';
+				pCurStateBlockStartByte = s_verifyActiveRangeInfo[i].start;
+			}
+		}
+		char temp [256];
+		sprintf(temp, " " /*"mismatch at "*/ "byte %d(0x%X): %d(0x%X) != %d(0x%X)\n", (int)pCurStateByte-(int)pCurStateBlockStartByte, (int)pCurStateByte-(int)pCurStateBlockStartByte, *pCurStateByte,*pCurStateByte, *pOldStateByte,*pOldStateByte);
+		errStr += temp;
+
+		for(int i = 0; i < sizeof(s_snapshotVerifyIgnoreFilter)/sizeof(*s_snapshotVerifyIgnoreFilter); i++)
+			if(strstr(errStr.c_str(), s_snapshotVerifyIgnoreFilter[i]))
+				return; // ignore this error...
+
+		g_verifyErrors.push_back(errStr); // <-- probably the best place for a breakpoint
+	}
+
+	static bool s_verifyingSnapshot = false;
+
+	static int WRITE_STREAM_ORIGINAL(void* p, int l, STREAM s)
+	{
+		return WRITE_STREAM(p,l,s);
+	}
+	#undef WRITE_STREAM
+	static void WRITE_STREAM(void* p, int l, STREAM s)
+	{
+		if(s_verifyingSnapshot)
+		{
+			unsigned char* temp = new unsigned char[l];
+			READ_STREAM(temp,l,s);
+			unsigned char* pCurStateByte = (unsigned char*)p;
+			unsigned char* pOldStateByte = temp;
+			int errorsFound = 0;
+			for(int i = 0; i < l; i++, pCurStateByte++, pOldStateByte++)
+			{
+				if(*pCurStateByte != *pOldStateByte)
+				{
+					PushVerifyError(p, pCurStateByte, pOldStateByte);
+					errorsFound++;
+					if(errorsFound >= 10)
+						break;
+				}
+			}
+			delete[] temp;
+		}
+		else
+		{
+			WRITE_STREAM_ORIGINAL(p,l,s);
+		}
+	}
+	static void PreVerifySnapshotsIdentical()
+	{
+		g_verifyErrors.clear();
+		s_verifyInfoStack.clear();
+		s_verifyActiveRangeInfo.clear();
+		s_verifyingSnapshot = true;
+	}
+	static bool PostVerifySnapshotsIdentical()
+	{
+		s_verifyingSnapshot = false;
+		if(!g_verifyErrors.empty())
+		{
+#ifdef _WIN32
+			OutputDebugString("\n");
+#endif
+			fputs("\n", stderr);
+
+			for(unsigned int i = 0; i < min(100,g_verifyErrors.size()); i++)
+			{
+#ifdef _WIN32
+				OutputDebugString(g_verifyErrors[i].c_str());
+#endif
+				fputs(g_verifyErrors[i].c_str(), stderr);
+			}
+
+			return false;
+		}
+		return true;
+	}
+	bool S9xVerifySnapshotsIdentical (STREAM stream)
+	{
+		PreVerifySnapshotsIdentical();
+		S9xFreezeToStream(stream);
+		return PostVerifySnapshotsIdentical();
+	}
+	bool S9xVerifySnapshotsIdentical (const char *filename)
+	{
+		PreVerifySnapshotsIdentical();
+		S9xFreezeGame(filename);
+		return PostVerifySnapshotsIdentical();
+	}
+
+#define FreezeStruct(stream,name,base,fields,num_fields)\
+	do{ if(s_verifyingSnapshot) s_verifyInfoStack.push_back(#base);\
+	FreezeStructF(stream,name,base,fields,num_fields);\
+	if(s_verifyingSnapshot) s_verifyInfoStack.pop_back();} while(0)
+
+#define FreezeBlock(stream,name,block,size)\
+	do{ if(s_verifyingSnapshot) s_verifyInfoStack.push_back(#block);\
+	FreezeBlockF(stream,name,block,size);\
+	if(s_verifyingSnapshot) s_verifyInfoStack.pop_back();} while(0)
+
+#else
+	#define FreezeStruct FreezeStructF
+	#define FreezeBlock FreezeBlockF
+#endif
+
 void S9xResetSaveTimer(bool8 dontsave){
     static time_t t=-1;
 
@@ -167,7 +313,7 @@ bool8 S9xUnfreezeZSNES (const char *filename);
 typedef struct {
     int offset;
     int offset2;
-    int size;
+    int size; // this is not necessarily in bytes (use FreezeSize to calculate that)
     int type;
     uint16 debuted_in, deleted_in;
     const char* name;
@@ -700,9 +846,9 @@ static FreezeData SnapScreenshot [] = {
 static char ROMFilename [_MAX_PATH];
 //static char SnapshotFilename [_MAX_PATH];
 
-void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+void FreezeStructF (STREAM stream, char *name, void *base, FreezeData *fields,
 				   int num_fields);
-void FreezeBlock (STREAM stream, char *name, uint8 *block, int size);
+void FreezeBlockF (STREAM stream, char *name, uint8 *block, int size);
 
 int UnfreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
 					int num_fields, int version);
@@ -731,6 +877,9 @@ bool8 S9xFreezeGame (const char *filename)
 	sscanf(ext, ".%03d", &stateNumber);
 	stateNumber++;
 	// call savestate.save callback if any and store the results in a luasav file if any
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	if(!s_verifyingSnapshot)
+#endif
 	{
 		LuaSaveData saveData;
 		CallRegisteredLuaSaveFunctions(stateNumber, saveData);
@@ -767,8 +916,14 @@ bool8 S9xFreezeGame (const char *filename)
 #endif // !NEW_SNAPSHOT_SCREENSHOT
 
 	STREAM stream = NULL;
-	
-    if (S9xOpenSnapshotFile (filename, FALSE, &stream))
+
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	BOOL openForRead = s_verifyingSnapshot;
+#else
+	BOOL openForRead = FALSE;
+#endif
+
+	if (S9xOpenSnapshotFile (filename, openForRead, &stream))
     {
 		#ifdef WIN32
 		EnterCriticalSection(&GUI.SoundCritSect);
@@ -940,6 +1095,9 @@ successFinish:
 	sscanf(ext, ".%03d", &stateNumber);
 	stateNumber++;
 	// call savestate.registerload callback if any, and pass it the result from the previous savestate.registerload callback to the same state if any
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	if(!s_verifyingSnapshot)
+#endif
 	{
 		LuaSaveData saveData;
 
@@ -966,7 +1124,7 @@ successFinish:
 }
 
 bool diagnostic_freezing = false;
-//#define DIAGNOSTIC_FREEZING_SUPPORT
+//#define DIAGNOSTIC_FREEZING_SUPPORT // obsoleted by SNAPSHOT_VERIFY_SUPPORTED
 
 bool freezing_to_stream = false;
 
@@ -1504,7 +1662,7 @@ int FreezeSize (int size, int type)
     }
 }
 
-void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
+void FreezeStructF (STREAM stream, char *name, void *base, FreezeData *fields,
 				   int num_fields)
 {
     // Work out the size of the required block
@@ -1566,6 +1724,16 @@ void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
 			{
 				memcpy(ptr, "\nUNKNOWN: ", 10);
 				ptr += 10;
+			}
+		}
+#endif
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+		if(s_verifyingSnapshot)
+		{
+			if(fields[i].name && *fields[i].name)
+			{
+				PointerRangeInfo pri = {ptr, ptr+FreezeSize(fields[i].size,fields[i].type), fields[i].name};
+				s_verifyActiveRangeInfo.push_back(pri);
 			}
 		}
 #endif
@@ -1650,12 +1818,22 @@ void FreezeStruct (STREAM stream, char *name, void *base, FreezeData *fields,
     }
     //fprintf(stderr, "%s: Wrote %d bytes\n", name, ptr-block);
 
-    FreezeBlock (stream, name, block, len);
+    FreezeBlockF (stream, name, block, len);
     delete[] block;
+
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	if(s_verifyingSnapshot)
+		s_verifyActiveRangeInfo.clear();
+#endif
 }
 
-void FreezeBlock (STREAM stream, char *name, uint8 *block, int size)
+void FreezeBlockF (STREAM stream, char *name, uint8 *block, int size)
 {
+//#ifdef SNAPSHOT_VERIFY_SUPPORTED
+//	if(s_verifyingSnapshot)
+//		s_verifyInfoStack.push_back(name);
+//#endif
+
     char buffer [512];
 
     if(size <= 999999) // check if it fits in 6 digits. (letting it go over and using strlen isn't safe)
@@ -1674,6 +1852,10 @@ void FreezeBlock (STREAM stream, char *name, uint8 *block, int size)
 	WRITE_STREAM (buffer, 11, stream);
     WRITE_STREAM (block, size, stream);
 
+//#ifdef SNAPSHOT_VERIFY_SUPPORTED
+//	if(s_verifyingSnapshot)
+//		s_verifyInfoStack.pop_back();
+//#endif
 }
 
 

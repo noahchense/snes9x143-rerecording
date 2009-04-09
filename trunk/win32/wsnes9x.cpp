@@ -12125,6 +12125,8 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 		{
 		DragAcceptFiles(hDlg, true);
 
+		SetDlgItemText(hDlg, IDC_LUA_FILENAME, S9xGetLuaScriptName());
+
 		// Nothing very useful to do
 		success = (int*)lParam;
 		return true;
@@ -12171,6 +12173,16 @@ INT_PTR CALLBACK DlgLuaScriptDialog(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
 				}
 				//SetCurrentDirectory(movieDirectory);
 				return true;
+			}
+			case IDC_LUA_FILENAME:
+			{
+				char filename[MAX_PATH];
+				GetDlgItemText(hDlg, IDC_LUA_FILENAME, filename, MAX_PATH);
+				FILE* file = fopen(filename, "rb");
+				EnableWindow(GetDlgItem(hDlg, IDOK), file != NULL);
+				if(file)
+					fclose(file);
+				break;
 			}
 		}
 		break;
