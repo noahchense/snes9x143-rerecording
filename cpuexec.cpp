@@ -265,8 +265,8 @@ void S9xDoHBlankProcessing ()
     switch (CPU.WhichEvent)
     {
     case HBLANK_START_EVENT:
-	if (IPPU.HDMA && CPU.V_Counter <= PPU.ScreenHeight)
-	    IPPU.HDMA = S9xDoHDMA (IPPU.HDMA);
+	if (PPU.HDMA && CPU.V_Counter <= PPU.ScreenHeight)
+	    PPU.HDMA = S9xDoHDMA (PPU.HDMA);
 
 	break;
 
@@ -279,7 +279,7 @@ void S9xDoHBlankProcessing ()
 #endif
 
 	CPU.Cycles -= Settings.H_Max;
-	IAPU.NextAPUTimerPos -= (Settings.H_Max * 10000L);
+	APU.NextAPUTimerPos -= (Settings.H_Max * 10000L);
 	if (IAPU.APUExecuting)
 	{
 	    APU.Cycles -= Settings.H_Max;
@@ -321,7 +321,7 @@ void S9xDoHBlankProcessing ()
 
 	    // Start of V-blank
 	    S9xEndScreenRefresh ();
-	    IPPU.HDMA = 0;
+	    PPU.HDMA = 0;
 	    // Bits 7 and 6 of $4212 are computed when read in S9xGetPPU.
 	    missing.dma_this_frame = 0;
 	    IPPU.MaxBrightness = PPU.Brightness;

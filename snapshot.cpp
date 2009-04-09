@@ -231,6 +231,12 @@ static FreezeData SnapCPU [] = {
 	INT_ENTRY(1, MemSpeed),
 	INT_ENTRY(1, MemSpeedx2),
 	INT_ENTRY(1, FastROMSpeed),
+
+	// not sure if the following are necessary, but better safe than sorry
+	INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
+	INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
+	INT_ENTRY(V1_RR_UNOFFICIAL, TriedInterleavedMode2),
+	INT_ENTRY(V1_RR_UNOFFICIAL, InDMA),
 };
 
 #undef STRUCT
@@ -381,6 +387,22 @@ static FreezeData SnapPPU [] = {
     INT_ENTRY(1, BGnxOFSbyte), // ZELDA FIX
     INT_ENTRY(1, OpenBus1), // ZELDA FIX
     INT_ENTRY(1, OpenBus2), // ZELDA FIX
+
+	// not sure if the following are necessary, but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, OBJThroughMain),
+    INT_ENTRY(V1_RR_UNOFFICIAL, OBJThroughSub),
+    INT_ENTRY(V1_RR_UNOFFICIAL, OBJAddition),
+#define O(N) \
+    INT_ENTRY(V1_RR_UNOFFICIAL, ClipCounts[N])
+    O(0), O(1), O(2), O(3), O(4), O(5),
+#undef O
+    INT_ENTRY(V1_RR_UNOFFICIAL, OAMWriteRegister),
+    INT_ENTRY(V1_RR_UNOFFICIAL, BGnxOFSbyte),
+    INT_ENTRY(V1_RR_UNOFFICIAL, OpenBus1),
+    INT_ENTRY(V1_RR_UNOFFICIAL, OpenBus2),
+
+    INT_ENTRY(V1_RR_UNOFFICIAL, HDMA),
+    INT_ENTRY(V1_RR_UNOFFICIAL, HDMAStarted),
 };
 
 #undef STRUCT
@@ -423,6 +445,12 @@ static FreezeData SnapAPU [] = {
     ARRAY_ENTRY(1, TimerTarget, 3, uint16_ARRAY_V),
     ARRAY_ENTRY(1, TimerEnabled, 3, uint8_ARRAY_V),
     ARRAY_ENTRY(1, TimerValueWritten, 3, uint8_ARRAY_V),
+
+	// not sure if the following are necessary, but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, Flags),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Cycles),
+    INT_ENTRY(V1_RR_UNOFFICIAL, NextAPUTimerPos),
+    INT_ENTRY(V1_RR_UNOFFICIAL, APUTimerCounter),
 };
 
 #undef STRUCT
@@ -514,6 +542,18 @@ static FreezeData SnapSA1 [] = {
     INT_ENTRY(1, arithmetic_op),
     INT_ENTRY(1, sum),
     INT_ENTRY(1, overflow),
+
+	// not sure if the following are necessary, but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, CPUExecuting),
+    INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedPB),
+    INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedDB),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Executing),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Waiting),
+    INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
+    INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
+    INT_ENTRY(V1_RR_UNOFFICIAL, VirtualBitmapFormat),
+    INT_ENTRY(V1_RR_UNOFFICIAL, in_char_dma),
+    INT_ENTRY(V1_RR_UNOFFICIAL, variable_bit_pos),
 };
 
 #undef STRUCT
@@ -610,6 +650,7 @@ static FreezeData SnapIPPU [] = {
     ARRAY_ENTRY(1, Mouse, 2, uint32_ARRAY_V),
     ARRAY_ENTRY(1, PrevMouseX, 2, uint32_ARRAY_V),
     ARRAY_ENTRY(1, PrevMouseY, 2, uint32_ARRAY_V),
+
     INT_ENTRY(V1_RR_UNOFFICIAL, pad_read),
     INT_ENTRY(V1_RR_UNOFFICIAL, pad_read_last),
     INT_ENTRY(V1_RR_UNOFFICIAL, TotalEmulatedFrames),
@@ -1228,6 +1269,8 @@ int S9xUnfreezeFromStream (STREAM stream)
 		memcpy (Memory.RAM, local_ram, 0x20000);
 		memcpy (Memory.SRAM, local_sram, 0x20000);
 		memcpy (Memory.FillRAM, local_fillram, 0x8000);
+		APU.NextAPUTimerPos = CPU.Cycles * 10000L;
+		APU.APUTimerCounter = 0; 
 		if(local_apu)
 		{
 			UnfreezeStructFromCopy (&APU, SnapAPU, COUNT (SnapAPU), local_apu, version);
@@ -1402,10 +1445,6 @@ int S9xUnfreezeFromStream (STREAM stream)
 		S9xSRTCPostLoadState ();
 		if (Settings.SDD1)
 			S9xSDD1PostLoadState ();
-
-		// XXX is this correct? maybe it causes occasional desyncs when recording?
-		IAPU.NextAPUTimerPos = CPU.Cycles * 10000L;
-		IAPU.APUTimerCounter = 0; 
 	}
 
 	if (local_cpu)           delete [] local_cpu;

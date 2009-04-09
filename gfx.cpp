@@ -595,7 +595,7 @@ void S9xEndScreenRefresh ()
 {
 	CallRegisteredLuaFunctions(LUACALL_AFTEREMULATION);
 
-	IPPU.HDMAStarted = FALSE;
+	PPU.HDMAStarted = FALSE;
 	if(IPPU.RenderThisFrame) {
 		FLUSH_REDRAW();
 		if(IPPU.ColorsChanged) {

@@ -190,8 +190,8 @@ void S9xResetAPU ()
     IAPU.WaitAddress2 = NULL;
     IAPU.WaitCounter = 0;
 #endif
-	IAPU.NextAPUTimerPos = 0;
-	IAPU.APUTimerCounter = 0;
+	APU.NextAPUTimerPos = 0;
+	APU.APUTimerCounter = 0;
     APU.ShowROM = TRUE;
     IAPU.RAM [0xf1] = 0x80;
 		
@@ -919,12 +919,12 @@ void S9xUpdateAPUTimer (void)
 	if(Settings.UseWIPAPUTiming)
 		return;
 
-	while (CPU.Cycles * 10000L >= IAPU.NextAPUTimerPos)
-	//if (CPU.Cycles * 10000L >= IAPU.NextAPUTimerPos)
+	while (CPU.Cycles * 10000L >= APU.NextAPUTimerPos)
+	//if (CPU.Cycles * 10000L >= APU.NextAPUTimerPos)
 	{
 		//APU_EXECUTE();
 		
-		IAPU.NextAPUTimerPos += SNES_APUTIMER2_CYCLEx10000;		
+		APU.NextAPUTimerPos += SNES_APUTIMER2_CYCLEx10000;		
 		
 		if (APU.TimerEnabled [2])
 		{
@@ -940,9 +940,9 @@ void S9xUpdateAPUTimer (void)
 			}
 		}
 
-		if (++IAPU.APUTimerCounter == 8)
+		if (++APU.APUTimerCounter == 8)
 		{
-			IAPU.APUTimerCounter = 0;
+			APU.APUTimerCounter = 0;
 			
 			if (APU.TimerEnabled [0])
 			{

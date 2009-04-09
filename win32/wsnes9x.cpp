@@ -5086,7 +5086,7 @@ void FreezeUnfreeze (int slot, bool8 freeze)
 //            UpdateBackBuffer();
         }
     }
-    
+
     S9xClearPause (PAUSE_FREEZE_FILE);
     free(filename);
 }

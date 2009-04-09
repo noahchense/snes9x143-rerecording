@@ -889,22 +889,22 @@ update_address:
 void S9xStartHDMA ()
 {
     if (Settings.DisableHDMA)
-		IPPU.HDMA = 0;
+		PPU.HDMA = 0;
     else
-		missing.hdma_this_frame = IPPU.HDMA = Memory.FillRAM [0x420c];
+		missing.hdma_this_frame = PPU.HDMA = Memory.FillRAM [0x420c];
 	
 	//per anomie timing post
-	if(IPPU.HDMA!=0)
+	if(PPU.HDMA!=0)
 	{
 		CPU.Cycles+=ONE_CYCLE*3;
 		S9xUpdateAPUTimer();
 	}
     
-	IPPU.HDMAStarted = TRUE;
+	PPU.HDMAStarted = TRUE;
 
     for (uint8 i = 0; i < 8; i++)
     {
-		if (IPPU.HDMA & (1 << i))
+		if (PPU.HDMA & (1 << i))
 		{
 			CPU.Cycles+=SLOW_ONE_CYCLE ;
 			S9xUpdateAPUTimer();
