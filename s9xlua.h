@@ -30,6 +30,7 @@ EXTERN_C void S9xLuaClearGui();
 void S9xLuaEnableGui(bool enabled);
 
 struct lua_State* S9xGetLuaState();
+char* S9xGetLuaScriptName(); // note: returns a pointer to a writable static buffer of _MAX_PATH length
 
 // And some interesting REVERSE declarations!
 char *S9xGetFreezeFilename(int slot);

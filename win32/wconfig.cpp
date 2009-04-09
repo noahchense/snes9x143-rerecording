@@ -116,6 +116,7 @@
 #include "../spc7110.h"
 #include "../gfx.h"
 #include "../snapshot.h"
+#include "../s9xlua.h"
 #ifdef NETPLAY_SUPPORT
 	#include "../netplay.h"
 	extern SNPServer NPServer;
@@ -1006,6 +1007,11 @@ void WinRegisterConfigItems()
 	AddBool("DisplayWatchedAddresses", Settings.DisplayWatchedAddresses, true);
 	AddBool2C("WrongMovieStateProtection", Settings.WrongMovieStateProtection, true, "off to allow states to be loaded for recording from a different movie than they were made in");
 	AddUIntC("MessageDisplayTime", Settings.InitialInfoStringTimeout, 120, "display length of messages, in frames. set to 0 to disable all message text");
+
+#undef CATEGORY
+#define CATEGORY "Settings\\Script"
+	AddStringC("LastScriptFile", S9xGetLuaScriptName(), _MAX_PATH, "", "filename of the last Lua script that ran, for the Reload Lua Script menu option");
+
 #undef CATEGORY
 #define CATEGORY "Settings\\Win"
 	AddBoolC("PauseWhenInactive", GUI.InactivePause, true, "true to pause Snes9x when it is not the active window");
@@ -1017,8 +1023,8 @@ void WinRegisterConfigItems()
 //	AddBoolC("FrameAdvanceSkipsNonInput", GUI.FASkipsNonInput, false, "causes frame advance to fast-forward past frames where the game is definitely not checking input, such as during lag or loading time. EXPERIMENTAL");
 	AddUIntC("SPC7110LoadMethod", mk_temp, 0, "for graphics packs: 0=load all into memory, 1=load nothing into memory, 2=load CacheSize at a time into memory");
 	AddUIntC("SPC7110CacheSize", cacheMegs, 5, "number of megabytes used if SPC7110LoadMethod = 2");
-	AddBool("MovieDefaultClearSRAM", GUI.MovieClearSRAM, false);
-	AddBool("MovieDefaultStartFromReset", GUI.MovieStartFromReset, false);
+	AddBool("MovieDefaultClearSRAM", GUI.MovieClearSRAM, true);
+	AddBool("MovieDefaultStartFromReset", GUI.MovieStartFromReset, true);
 	AddBool("MovieDefaultReadOnly", GUI.MovieReadOnly, true);
 	AddUInt("CurrentSaveSlot", GUI.CurrentSaveSlot, 0);
 	AddUIntC("MaxRecentGames", GUI.MaxRecentGames, 14, "max recent games to show in the recent games menu (must be <= 32)");

@@ -37,7 +37,7 @@ extern "C" {
 static lua_State *LUA;
 
 // Are we running any code right now?
-static char *luaScriptName = NULL;
+static char luaScriptName [_MAX_PATH] = {0};
 
 // Are we running any code right now?
 static bool8 luaRunning = FALSE;
@@ -699,6 +699,48 @@ static int savestate_load(lua_State *L) {
 	return 0;
 
 }
+
+
+#ifdef _DEBUG
+	#define SNAPSHOT_VERIFY_SUPPORTED
+#endif
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+
+bool S9xVerifySnapshotsIdentical (const char *filename);
+//bool S9xVerifySnapshotsIdentical (STREAM stream);
+#include <vector>
+#include <string>
+extern std::vector<std::string> g_verifyErrors;
+
+// savestate.verify(object state)
+//
+//   Verify that a snapshot saved of the current emulation state would exactly match
+//   with the snapshot that's already in the given file or stream (this is for desync testing).
+//   If verification fails, will error out with some info (with possibly more in the console or debugger output).
+//   This function only exists in Debug, because it was only intended to be a tool for Snes9x developers.
+static int savestate_verify(lua_State *L) {
+
+	const char *filename = savestateobj2filename(L,1);
+
+//	printf("verifying %s\n", filename);
+
+	bool8 retvalue = S9xVerifySnapshotsIdentical(filename);
+	if (!retvalue) {
+		// Uh oh
+		static unsigned int maxErrorsToShow = 20;
+		unsigned int errorsToShow = min(maxErrorsToShow, g_verifyErrors.size());
+		luaL_where(L, 1);
+		lua_pushliteral(L, "savestate verification failed:\n");
+		lua_checkstack(L, errorsToShow);
+		for(unsigned int i = 0; i < errorsToShow; i++)
+			lua_pushstring(L, g_verifyErrors[i].c_str());
+		lua_concat(L, errorsToShow + 2);
+		lua_error(L);
+	}
+	return 0;
+}
+#endif // SNAPSHOT_VERIFY_SUPPORTED
+
 
 static int savestate_registersave(lua_State *L) {
  
@@ -1373,6 +1415,65 @@ static int gui_fillcircle(lua_State *L) {
 
 	return 0;
 }
+
+static int gui_getpixel(lua_State *L) {
+
+	int x = luaL_checkinteger(L, 1);
+	int y = luaL_checkinteger(L, 2);
+
+	if(!gui_check_boundary(x,y))
+	{
+		lua_pushinteger(L, 0);
+		lua_pushinteger(L, 0);
+		lua_pushinteger(L, 0);
+	}
+	else
+	{
+		int pitch = GFX.Pitch2;
+		int width = IPPU.RenderedScreenWidth;
+		int xscale = (width == 512) ? 2 : 1;
+#if 0
+		switch(bpp)
+		{
+		case 16:
+#endif
+			{
+				uint16 *screen = (uint16*) GFX.Screen;
+				uint16 pix = screen[y*pitch/2 + (x*xscale/*+x2*/)];
+				lua_pushinteger(L, (pix >> 8) & 0xF8); // red
+				lua_pushinteger(L, (pix >> 3) & 0xFC); // green
+				lua_pushinteger(L, (pix << 3) & 0xF8); // blue
+			}
+#if 0
+			break;
+		case 24:
+			{
+				uint8 *screen = (uint8*) s;
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*3 + 2]); // red
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*3 + 1]); // green
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*3 + 0]); // blue
+			}
+			break;
+		case 32:
+			{
+				uint8 *screen = (uint8*) s;
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*4 + 2]); // red
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*4 + 1]); // green
+				lua_pushinteger(L, screen[y*pitch + (x*xscale/*+x2*/)*4 + 0]); // blue
+			}
+			break;
+		default:
+			lua_pushinteger(L, 0);
+			lua_pushinteger(L, 0);
+			lua_pushinteger(L, 0);
+			break;
+		}
+#endif
+	}
+
+	return 3;
+}
+
 
 // gui.gdscreenshot()
 //
@@ -2437,6 +2538,9 @@ static const struct luaL_reg savestatelib[] = {
 	{"create", savestate_create},
 	{"save", savestate_save},
 	{"load", savestate_load},
+#ifdef SNAPSHOT_VERIFY_SUPPORTED
+	{"verify", savestate_verify},
+#endif
 
 	{"registersave", savestate_registersave},
 	{"registerload", savestate_registerload},
@@ -2472,6 +2576,7 @@ static const struct luaL_reg guilib[] = {
 	{"popup", gui_popup},
 	{"gdscreenshot", gui_gdscreenshot},
 	{"gdoverlay", gui_gdoverlay},
+	{"getpixel", gui_getpixel},
 	// alternative names
 	{"drawtext", gui_text},
 	{"drawbox", gui_drawbox},
@@ -2484,6 +2589,7 @@ static const struct luaL_reg guilib[] = {
 	{"drawrect", gui_drawbox},
 	{"drawimage", gui_gdoverlay},
 	{"image", gui_gdoverlay},
+	{"readpixel", gui_getpixel},
 	{NULL,NULL}
 };
 
@@ -2615,11 +2721,8 @@ void S9xLuaFrameBoundary() {
  * Returns true on success, false on failure.
  */
 int S9xLoadLuaCode(const char *filename) {
-	if (filename != luaScriptName)
-	{
-		if (luaScriptName) free(luaScriptName);
-		luaScriptName = strdup(filename);
-	}
+	strncpy(luaScriptName, filename, _MAX_PATH);
+	luaScriptName[_MAX_PATH-1] = '\0';
 
 	//stop any lua we might already have had running
 	S9xLuaStop();
@@ -2711,7 +2814,7 @@ int S9xLoadLuaCode(const char *filename) {
  */
 int S9xReloadLuaCode()
 {
-	if (!luaScriptName) {
+	if (!*luaScriptName) {
 		S9xSetInfoString("There's no script to reload.");
 		return 0;
 	}
@@ -2986,7 +3089,11 @@ void S9xLuaClearGui() {
 void S9xLuaEnableGui(bool enabled) {
 	gui_enabled = enabled;
 }
- 
+
+
 lua_State* S9xGetLuaState() {
 	return LUA;
+}
+char* S9xGetLuaScriptName() {
+	return luaScriptName;
 }
