@@ -869,6 +869,24 @@ void S9xParseCheatsFile (const char *rom_filename)
     }
 }
 
+#ifdef ZLIB
+STREAM S9xGZOpen (const char* filename, const char* mode)
+{
+	char gzmode[16] = {0};
+	strncpy(gzmode+1, mode, sizeof(gzmode)-2);
+	gzmode[0] = '0' + Settings.CompressionLevel;
+	return gzopen(filename, gzmode);
+}
+STREAM S9xGZReopen (int fileid, const char* mode)
+{
+	char gzmode[16] = {0};
+	strncpy(gzmode+1, mode, sizeof(gzmode)-2);
+	gzmode[0] = '0' + Settings.CompressionLevel;
+	return gzdopen(fileid, gzmode);
+}
+#endif
+
+
 #include "conffile.h"
 
 /*
@@ -1147,6 +1165,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
     Settings.MovieTruncate=conf.GetBool("Settings::MovieTruncateAtEnd", false);
 	Settings.DisplayWatchedAddresses=conf.GetBool("Settings::DisplayWatchedAddresses", false);
 	Settings.WrongMovieStateProtection=conf.GetBool("Settings::WrongMovieStateProtection", true);
+	Settings.CompressionLevel=conf.GetInt("Settings::SavestateCompressionLevel", 3);
 //    rom_filename=conf.GetStringDup("ROM::Filename", NULL);
 
     S9xParsePortConfig(conf, 1);

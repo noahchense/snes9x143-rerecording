@@ -126,11 +126,13 @@
 #define WRITE_STREAM(p,l,s) gzwrite (s,p,l)
 #define GETS_STREAM(p,l,s) gzgets(s,p,l)
 #define GETC_STREAM(s) gzgetc(s)
-#define OPEN_STREAM(f,m) gzopen (f,m)
-#define REOPEN_STREAM(f,m) gzdopen (f,m)
+#define OPEN_STREAM(f,m) S9xGZOpen(f,m) //was: gzopen(f,m)
+#define REOPEN_STREAM(f,m) S9xGZReopen(f,m) //was: gzdopen(f,m)
 #define FIND_STREAM(f)	gztell(f)
 #define REVERT_STREAM(f,o,s)  gzseek(f,o,s)
 #define CLOSE_STREAM(s) gzclose (s)
+STREAM S9xGZOpen (const char* file, const char* mode);
+STREAM S9xGZReopen (int fileid, const char* mode);
 #else
 #define STREAM FILE *
 #define READ_STREAM(p,l,s) fread (p,1,l,s)
@@ -394,6 +396,7 @@ struct SSettings{
     uint32 AutoMaxSkipFrames;
     bool8  MovieTruncate;
     bool8  WrongMovieStateProtection;
+    uint32 CompressionLevel;
 
 /* Fixes for individual games */
     bool8  StarfoxHack;

@@ -3245,6 +3245,16 @@ LRESULT CALLBACK WinProc(
 						case ID_EMULATOR_CUSTOMROMOPEN:
 							GUI.CustomRomOpen = !GUI.CustomRomOpen;
 							break;
+						case ID_EMULATOR_SAVECOMPRESS0: Settings.CompressionLevel = 0; break;
+						case ID_EMULATOR_SAVECOMPRESS1: Settings.CompressionLevel = 1; break;
+						case ID_EMULATOR_SAVECOMPRESS2: Settings.CompressionLevel = 2; break;
+						case ID_EMULATOR_SAVECOMPRESS3: Settings.CompressionLevel = 3; break;
+						case ID_EMULATOR_SAVECOMPRESS4: Settings.CompressionLevel = 4; break;
+						case ID_EMULATOR_SAVECOMPRESS5: Settings.CompressionLevel = 5; break;
+						case ID_EMULATOR_SAVECOMPRESS6: Settings.CompressionLevel = 6; break;
+						case ID_EMULATOR_SAVECOMPRESS7: Settings.CompressionLevel = 7; break;
+						case ID_EMULATOR_SAVECOMPRESS8: Settings.CompressionLevel = 8; break;
+						case ID_EMULATOR_SAVECOMPRESS9: Settings.CompressionLevel = 9; break;
 						case ID_FILE_SAVE_SPC_DATA:
 							spc_is_dumping = 1;
 							//                    S9xSPCDump (S9xGetFilenameInc (".spc", SPC_DIR));
@@ -5207,6 +5217,12 @@ static void CheckMenuStates ()
 
 	mii.fState = GUI.CustomRomOpen ? MFS_CHECKED : MFS_UNCHECKED;
 	SetMenuItemInfo (GUI.hMenu, ID_EMULATOR_CUSTOMROMOPEN, FALSE, &mii);
+
+	for(int i = 0; i < 10; i++)
+	{
+		mii.fState = (Settings.CompressionLevel == i) ? MFS_CHECKED : MFS_UNCHECKED;
+		SetMenuItemInfo (GUI.hMenu, ID_EMULATOR_SAVECOMPRESS0 + i, FALSE, &mii);
+	}
 
     mii.fState = MFS_UNCHECKED;
     if (Settings.StopEmulation)

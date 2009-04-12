@@ -909,6 +909,9 @@ void WinPostLoad(ConfigFile& conf)
 		}
 	}
 
+	if(Settings.CompressionLevel < 0) Settings.CompressionLevel = 0;
+	if(Settings.CompressionLevel > 9) Settings.CompressionLevel = 9;
+
 	// realtime is not allowed anyway
 	if ((GUI.threadPriority < -7 || GUI.threadPriority > 6) && GUI.threadPriority != THREAD_PRIORITY_IDLE)
 		GUI.threadPriority = THREAD_PRIORITY_NORMAL;
@@ -1007,6 +1010,7 @@ void WinRegisterConfigItems()
 	AddBool("DisplayWatchedAddresses", Settings.DisplayWatchedAddresses, true);
 	AddBool2C("WrongMovieStateProtection", Settings.WrongMovieStateProtection, true, "off to allow states to be loaded for recording from a different movie than they were made in");
 	AddUIntC("MessageDisplayTime", Settings.InitialInfoStringTimeout, 120, "display length of messages, in frames. set to 0 to disable all message text");
+	AddIntC("SavestateCompressionLevel", Settings.CompressionLevel, 3, "0=none, 1=low(fastest), 4=medium(slow), 9=maximum(slowest)");
 
 #undef CATEGORY
 #define CATEGORY "Settings\\Script"
