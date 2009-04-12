@@ -1293,6 +1293,20 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "Custom ROM Open Dialog",      ID_EMULATOR_CUSTOMROMOPEN
             MENUITEM SEPARATOR
+            POPUP "Savestate Compression Level"
+            BEGIN
+                MENUITEM "1 (Fastest) (Low Compression)",          ID_EMULATOR_SAVECOMPRESS1
+                MENUITEM "2 (Fast)",                               ID_EMULATOR_SAVECOMPRESS2
+                MENUITEM "3 (Fast)",                               ID_EMULATOR_SAVECOMPRESS3
+                MENUITEM "0 (Slow) (Uncompressed)",                ID_EMULATOR_SAVECOMPRESS0
+                MENUITEM "4 (Slow)",                               ID_EMULATOR_SAVECOMPRESS4
+                MENUITEM "5 (Slow)",                               ID_EMULATOR_SAVECOMPRESS5
+                MENUITEM "6 (Slow) (High Compression)",            ID_EMULATOR_SAVECOMPRESS6
+                MENUITEM "7 (Slow)",                               ID_EMULATOR_SAVECOMPRESS7
+                MENUITEM "8 (Slow)",                               ID_EMULATOR_SAVECOMPRESS8
+                MENUITEM "9 (Slowest) (Maximum Compression)",      ID_EMULATOR_SAVECOMPRESS9
+            END
+            MENUITEM SEPARATOR
             MENUITEM "SPC7110 Cache Settings...",   IDM_7110_CACHE
             MENUITEM "GFX Pack Configuration...",   IDM_GFX_PACKS
             MENUITEM "&Settings...",                ID_OPTIONS_SETTINGS
