@@ -117,13 +117,19 @@ struct SDSP1 {
     uint32 out_index;
     uint8 parameters [512];
     uint8 output [512];
+
+	uint8 temp_save_data [460];
 };
 
 START_EXTERN_C
 void S9xResetDSP1 ();
 uint8 S9xGetDSP (uint16 Address);
 void S9xSetDSP (uint8 Byte, uint16 Address);
+void S9xPreSaveDSP1();
+void S9xPostLoadDSP1();
+
 extern struct SDSP1 DSP1;
+
 END_EXTERN_C
 
 #endif
