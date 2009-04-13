@@ -841,6 +841,7 @@ static FreezeData SnapDSP1 [] = {
 	INT_ENTRY(1, out_index),
 	ARRAY_ENTRY(1, parameters, 512, uint8_ARRAY_V),
 	ARRAY_ENTRY(1, output, 512, uint8_ARRAY_V),
+	ARRAY_ENTRY(V1_RR_UNOFFICIAL, temp_save_data, sizeof(DSP1.temp_save_data), uint8_ARRAY_V),
 };
 
 #undef STRUCT
@@ -1347,7 +1348,13 @@ void S9xFreezeToStream (STREAM stream)
 	// DSP1 chip
 	if(Settings.DSP1Master)
 	{
+		S9xPreSaveDSP1();
 		FreezeStruct (stream, "DSP", &DSP1, SnapDSP1, COUNT (SnapDSP1));
+	}
+
+	if (Settings.C4)
+	{
+		FreezeBlock (stream, "CX4", Memory.C4RAM, 8192);
 	}
 
 	FreezeStruct (stream, "IPU", &IPPU, SnapIPPU, COUNT (SnapIPPU));
@@ -1449,6 +1456,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	uint8* local_spc_rtc = NULL;
 	uint8* local_movie_data = NULL;
 	uint8* local_dsp1 = NULL;
+	uint8* local_cx4_data = NULL;
 	uint8* local_ippu = NULL;
 #ifndef NEW_SNAPSHOT_SCREENSHOT
 	uint8* local_gfx = NULL;
@@ -1539,6 +1547,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 			if(Settings.DSP1Master)
 				break;
 
+		if ((result = UnfreezeBlockCopy (stream, "CX4", &local_cx4_data, 8192)) != SUCCESS)
+			if(Settings.C4)
+				break;
+
 		UnfreezeStructCopy (stream, "IPU", &local_ippu, SnapIPPU, COUNT(SnapIPPU), version);
 #ifndef NEW_SNAPSHOT_SCREENSHOT
 		UnfreezeStructCopy (stream, "GFX", &local_gfx, SnapGFX, COUNT(SnapGFX), version);
@@ -1604,6 +1616,12 @@ int S9xUnfreezeFromStream (STREAM stream)
 		if(local_dsp1)
 		{
 			UnfreezeStructFromCopy (&DSP1, SnapDSP1, COUNT (SnapDSP1), local_dsp1, version);
+			S9xPostLoadDSP1();
+		}
+
+		if (local_cx4_data)
+		{
+			memcpy(Memory.C4RAM, local_cx4_data, 8192);
 		}
 
 		if(local_ippu)
@@ -1739,12 +1757,14 @@ int S9xUnfreezeFromStream (STREAM stream)
 		uint8 hdma_byte = Memory.FillRAM[0x420c];
 		S9xSetCPU(hdma_byte, 0x420c);
 
+#if 0 // disabled because it happens even for some new savestates, which causes desync
 		if(!Memory.FillRAM[0x4213]){
 			// most likely an old savestate
 			Memory.FillRAM[0x4213]=Memory.FillRAM[0x4201];
 			if(!Memory.FillRAM[0x4213])
 				Memory.FillRAM[0x4213]=Memory.FillRAM[0x4201]=0xFF;
 		}
+#endif
 
 		if(!local_icpu)
 		{
@@ -1787,8 +1807,9 @@ int S9xUnfreezeFromStream (STREAM stream)
 	if (local_spc)           delete [] local_spc;
 	if (local_spc_rtc)       delete [] local_spc_rtc;
 	if (local_movie_data)    delete [] local_movie_data;
-	if (local_dsp1)			 delete [] local_dsp1;
-	if (local_ippu)			 delete [] local_ippu;
+	if (local_dsp1)          delete [] local_dsp1;
+	if (local_cx4_data)      delete [] local_cx4_data;
+	if (local_ippu)          delete [] local_ippu;
 #ifndef NEW_SNAPSHOT_SCREENSHOT
 	if (local_gfx)			 delete [] local_gfx;
 #else
