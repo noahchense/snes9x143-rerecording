@@ -181,18 +181,32 @@ void S9xSA1SetBWRAMMemMap (uint8 val)
 
 void S9xFixSA1AfterSnapshotLoad ()
 {
-    SA1.ShiftedPB = (uint32) SA1Registers.PB << 16;
-    SA1.ShiftedDB = (uint32) SA1Registers.DB << 16;
+	bool useOldMethod = (SA1.Executing == 2);
+	
+	if(useOldMethod)
+	{
+		SA1.ShiftedPB = (uint32) SA1Registers.PB << 16;
+		SA1.ShiftedDB = (uint32) SA1Registers.DB << 16;
+	}
 
-    S9xSA1SetPCBase (SA1.ShiftedPB + SA1Registers.PC);
-    S9xSA1UnpackStatus ();
-    S9xSA1FixCycles ();
-    SA1.VirtualBitmapFormat = (Memory.FillRAM [0x223f] & 0x80) ? 2 : 4;
-    Memory.BWRAM = Memory.SRAM + (Memory.FillRAM [0x2224] & 7) * 0x2000;
-    S9xSA1SetBWRAMMemMap (Memory.FillRAM [0x2225]);
+	S9xSA1SetPCBase (SA1.ShiftedPB + SA1Registers.PC);
 
-    SA1.Waiting = (Memory.FillRAM [0x2200] & 0x60) != 0;
-    SA1.Executing = !SA1.Waiting;
+	if(useOldMethod)
+		S9xSA1UnpackStatus ();
+
+	S9xSA1FixCycles ();
+
+	if(useOldMethod)
+		SA1.VirtualBitmapFormat = (Memory.FillRAM [0x223f] & 0x80) ? 2 : 4;
+
+	Memory.BWRAM = Memory.SRAM + (Memory.FillRAM [0x2224] & 7) * 0x2000;
+	S9xSA1SetBWRAMMemMap (Memory.FillRAM [0x2225]);
+
+	if(useOldMethod)
+	{
+		SA1.Waiting = (Memory.FillRAM [0x2200] & 0x60) != 0;
+		SA1.Executing = !SA1.Waiting;
+	}
 }
 
 uint8 S9xSA1GetByte (uint32 address)

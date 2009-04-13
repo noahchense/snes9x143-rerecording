@@ -156,6 +156,7 @@ END_EXTERN_C
 	// only things that aren't really part of the emulation state should go in here
 	static const char* s_snapshotVerifyIgnoreFilter [] = {
 		"&SoundData::", // because SoundData is full of stuff that changes asynchronously from the emulation
+		"&GFX::LastScreen", // because I think this can have stuff like GUI text in its pixels and it doesn't matter if it's not the same
 	};
 
 	#include <vector>
@@ -247,14 +248,14 @@ END_EXTERN_C
 #ifdef _WIN32
 			OutputDebugString("\n");
 #endif
-			fputs("\n", stderr);
+			fputs("\n", stdout);
 
 			for(unsigned int i = 0; i < min(100,g_verifyErrors.size()); i++)
 			{
 #ifdef _WIN32
 				OutputDebugString(g_verifyErrors[i].c_str());
 #endif
-				fputs(g_verifyErrors[i].c_str(), stderr);
+				fputs(g_verifyErrors[i].c_str(), stdout);
 			}
 
 			return false;
@@ -379,13 +380,110 @@ static FreezeData SnapCPU [] = {
 	INT_ENTRY(1, FastROMSpeed),
 
 	// not sure if the following are necessary, but better safe than sorry
-    INT_ENTRY(V1_RR_UNOFFICIAL, PC), // just in case
-    INT_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
-	INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
 	INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
 	INT_ENTRY(V1_RR_UNOFFICIAL, TriedInterleavedMode2),
 	INT_ENTRY(V1_RR_UNOFFICIAL, InDMA),
+	INT_ENTRY(V1_RR_UNOFFICIAL, NMICycleCount),
+	INT_ENTRY(V1_RR_UNOFFICIAL, IRQCycleCount),
+	INT_ENTRY(V1_RR_UNOFFICIAL, NMITriggerPoint),
+	INT_ENTRY(V1_RR_UNOFFICIAL, BRKTriggered),
+	// these might already be saved, I'm not sure, but I'm also not sure how to save them if they aren't
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PC, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+	//POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase, ???), // TODO: save this somehow? it doesn't have only 1 base address...
 };
+
+#undef STRUCT
+#define STRUCT struct SICPU
+
+static FreezeData SnapICPU [] = {
+	// not sure if the following are necessary (actually I'm pretty sure some of them are), but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Carry),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Zero),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Negative),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Overflow),
+    INT_ENTRY(V1_RR_UNOFFICIAL, CPUExecuting),
+    INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedPB),
+    INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedDB),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Frame),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Scanline),
+};
+
+
+// some global variables that unfortunately we probably have to save.
+// only Work32 is confirmed definitely necessary to save due to a bug in spc700.cpp
+// which is only in the 1.43 branch (seems to be already fixed in 1.51).
+// the rest are a "just in case, maybe they are needed too" deal.
+#define GLOBAL_JUNK_DEF \
+	GJFORMAT(uint8,       A1       ) \
+	GJFORMAT(uint8,       A2       ) \
+	GJFORMAT(uint8,       A3       ) \
+	GJFORMAT(uint8,       A4       ) \
+	GJFORMAT(uint8,       W1       ) \
+	GJFORMAT(uint8,       W2       ) \
+	GJFORMAT(uint8,       W3       ) \
+	GJFORMAT(uint8,       W4       ) \
+	GJFORMAT(uint8,       Ans8     ) \
+	GJFORMAT(uint16,      Ans16    ) \
+	GJFORMAT(uint32,      Ans32    ) \
+	GJFORMAT(uint8,       Work8    ) \
+	GJFORMAT(uint16,      Work16   ) \
+	GJFORMAT(uint32,      Work32   ) \
+	GJFORMAT(signed char, Int8     ) \
+	GJFORMAT(short,       Int16    ) \
+	GJFORMAT(long,        Int32    ) \
+	GJFORMAT(long,        OpAddress) \
+	GJFORMAT(uint8,       OpenBus  ) \
+	//end
+
+// extern the globals so we can reference them
+#define GJFORMAT(t,v) extern "C" t v;
+	GLOBAL_JUNK_DEF
+#undef GJFORMAT
+
+// define a struct to put them in so we can save and load the struct
+struct SGlobalJunk
+{
+	#define GJFORMAT(t,v) t v;
+		GLOBAL_JUNK_DEF
+	#undef GJFORMAT
+};
+
+// define a function that fills a struct with the current global variables and returns them, so we can save the struct
+static SGlobalJunk GetCurrentGlobalJunk()
+{
+	SGlobalJunk gj = {
+		#define GJFORMAT(t,v) v,
+			GLOBAL_JUNK_DEF
+		#undef GJFORMAT
+	};
+	return gj;
+}
+
+// define a function that takes a struct and sets the current global variables from them, so we can load the struct
+static void SetCurrentGlobalJunk(SGlobalJunk gj)
+{
+	#define GJFORMAT(t,v) v = gj.v;
+		GLOBAL_JUNK_DEF
+	#undef GJFORMAT
+}
+
+// define a snapshot definition struct like usual
+
+#undef STRUCT
+#define STRUCT struct SGlobalJunk
+
+static FreezeData SnapGlobalJunk [] = {
+	#define GJFORMAT(t,v) INT_ENTRY(V1_RR_UNOFFICIAL, v),
+		GLOBAL_JUNK_DEF
+	#undef GJFORMAT
+};
+
+// that's all for that
+#undef GLOBAL_JUNK_DEF
+
+
 
 #undef STRUCT
 #define STRUCT struct SRegisters
@@ -544,13 +642,10 @@ static FreezeData SnapPPU [] = {
     INT_ENTRY(V1_RR_UNOFFICIAL, ClipCounts[N])
     O(0), O(1), O(2), O(3), O(4), O(5),
 #undef O
-    INT_ENTRY(V1_RR_UNOFFICIAL, OAMWriteRegister),
-    INT_ENTRY(V1_RR_UNOFFICIAL, BGnxOFSbyte),
-    INT_ENTRY(V1_RR_UNOFFICIAL, OpenBus1),
-    INT_ENTRY(V1_RR_UNOFFICIAL, OpenBus2),
-
     INT_ENTRY(V1_RR_UNOFFICIAL, HDMA),
     INT_ENTRY(V1_RR_UNOFFICIAL, HDMAStarted),
+    INT_ENTRY(V1_RR_UNOFFICIAL, RangeTimeOver),
+    //INT_ENTRY(V1_RR_UNOFFICIAL, RecomputeClipWindows), // actually shouldn't be saved, since it ends up differently depending on the frameskip settings and only affects the IPPU
 };
 
 #undef STRUCT
@@ -595,10 +690,30 @@ static FreezeData SnapAPU [] = {
     ARRAY_ENTRY(1, TimerValueWritten, 3, uint8_ARRAY_V),
 
 	// not sure if the following are necessary, but better safe than sorry
-    INT_ENTRY(V1_RR_UNOFFICIAL, Flags),
-    INT_ENTRY(V1_RR_UNOFFICIAL, Cycles),
     INT_ENTRY(V1_RR_UNOFFICIAL, NextAPUTimerPos),
     INT_ENTRY(V1_RR_UNOFFICIAL, APUTimerCounter),
+};
+
+#undef STRUCT
+#define STRUCT struct SIAPU
+
+static FreezeData SnapIAPU [] = {
+	// not sure if the following are necessary (actually I'm pretty sure some of them are), but better safe than sorry
+    INT_ENTRY(V1_RR_UNOFFICIAL, APUExecuting),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Bit),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Address),
+    INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Carry),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Zero),
+    INT_ENTRY(V1_RR_UNOFFICIAL, _Overflow),
+    INT_ENTRY(V1_RR_UNOFFICIAL, TimerErrorCounter),
+    INT_ENTRY(V1_RR_UNOFFICIAL, Scanline),
+    INT_ENTRY(V1_RR_UNOFFICIAL, OneCycle),
+    INT_ENTRY(V1_RR_UNOFFICIAL, TwoCycles),
+    POINTER_ENTRY(V1_RR_UNOFFICIAL, PC, RAM),
+    POINTER_ENTRY(V1_RR_UNOFFICIAL, DirectPage, RAM),
+    POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress1, RAM),
+    POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress2, RAM),
 };
 
 #undef STRUCT
@@ -697,12 +812,19 @@ static FreezeData SnapSA1 [] = {
     INT_ENTRY(V1_RR_UNOFFICIAL, ShiftedDB),
     INT_ENTRY(V1_RR_UNOFFICIAL, Executing),
     INT_ENTRY(V1_RR_UNOFFICIAL, Waiting),
-    INT_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
-    INT_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
     INT_ENTRY(V1_RR_UNOFFICIAL, WaitCounter),
     INT_ENTRY(V1_RR_UNOFFICIAL, VirtualBitmapFormat),
     INT_ENTRY(V1_RR_UNOFFICIAL, in_char_dma),
     INT_ENTRY(V1_RR_UNOFFICIAL, variable_bit_pos),
+	INT_ENTRY(V1_RR_UNOFFICIAL, _Carry),
+	INT_ENTRY(V1_RR_UNOFFICIAL, _Zero),
+	INT_ENTRY(V1_RR_UNOFFICIAL, _Negative),
+	INT_ENTRY(V1_RR_UNOFFICIAL, _Overflow),
+	// these might already be saved, I'm not sure, but I'm also not sure how to save them if they aren't
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PC, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase, ???), // TODO: save this somehow? it doesn't have only 1 base address...
 };
 
 #undef STRUCT
@@ -1162,6 +1284,7 @@ void S9xFreezeToStream (STREAM stream)
     FreezeStruct (stream, "REG", &Registers, SnapRegisters, COUNT (SnapRegisters));
     FreezeStruct (stream, "PPU", &PPU, SnapPPU, COUNT (SnapPPU));
     FreezeStruct (stream, "DMA", DMA, SnapDMA, COUNT (SnapDMA));
+    FreezeStruct (stream, "ICP", &ICPU, SnapICPU, COUNT (SnapICPU));
 
 	// RAM and VRAM
     FreezeBlock (stream, "VRA", Memory.VRAM, 0x10000);
@@ -1177,7 +1300,13 @@ void S9xFreezeToStream (STREAM stream)
 		FreezeBlock (stream, "ARA", IAPU.RAM, 0x10000);
 		FreezeStruct (stream, "SOU", &SoundData, SnapSoundData,
 			COUNT (SnapSoundData));
+		FreezeStruct (stream, "IAP", &IAPU, SnapIAPU, COUNT (SnapIAPU));
     }
+
+	{
+		SGlobalJunk globalJunk = GetCurrentGlobalJunk();
+		FreezeStruct (stream, "GBJ", &globalJunk, SnapGlobalJunk, COUNT(SnapGlobalJunk));
+	}
 
     // Special chips
     if (Settings.SA1)
@@ -1303,6 +1432,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	uint8* local_registers = NULL;
 	uint8* local_ppu = NULL;
 	uint8* local_dma = NULL;
+	uint8* local_icpu = NULL;
 	uint8* local_vram = NULL;
 	uint8* local_ram = NULL;
 	uint8* local_sram = NULL;
@@ -1310,7 +1440,9 @@ int S9xUnfreezeFromStream (STREAM stream)
 	uint8* local_apu = NULL;
 	uint8* local_apu_registers = NULL;
 	uint8* local_apu_ram = NULL;
+	uint8* local_global_junk = NULL;
 	uint8* local_apu_sounddata = NULL;
+	uint8* local_iapu = NULL;
 	uint8* local_sa1 = NULL;
 	uint8* local_sa1_registers = NULL;
 	uint8* local_spc = NULL;
@@ -1335,6 +1467,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 			break;
 		if ((result = UnfreezeStructCopy (stream, "DMA", &local_dma, SnapDMA, COUNT (SnapDMA), version)) != SUCCESS)
 			break;
+		UnfreezeStructCopy (stream, "ICP", &local_icpu, SnapICPU, COUNT (SnapICPU), version);
 		if ((result = UnfreezeBlockCopy (stream, "VRA", &local_vram, 0x10000)) != SUCCESS)
 			break;
 		if ((result = UnfreezeBlockCopy (stream, "RAM", &local_ram, 0x20000)) != SUCCESS)
@@ -1351,7 +1484,11 @@ int S9xUnfreezeFromStream (STREAM stream)
 				break;
 			if ((result = UnfreezeStructCopy (stream, "SOU", &local_apu_sounddata, SnapSoundData, COUNT (SnapSoundData), version)) != SUCCESS)
 				break;
+			UnfreezeStructCopy (stream, "IAP", &local_iapu, SnapIAPU, COUNT (SnapIAPU), version);
 		}
+
+		UnfreezeStructCopy (stream, "GBJ", &local_global_junk, SnapGlobalJunk, COUNT (SnapGlobalJunk), version);
+
 		if ((result = UnfreezeStructCopy (stream, "SA1", &local_sa1, SnapSA1, COUNT(SnapSA1), version)) == SUCCESS)
 		{
 			if ((result = UnfreezeStructCopy (stream, "SAR", &local_sa1_registers, SnapSA1Registers, COUNT (SnapSA1Registers), version)) != SUCCESS)
@@ -1426,6 +1563,8 @@ int S9xUnfreezeFromStream (STREAM stream)
 		UnfreezeStructFromCopy (&Registers, SnapRegisters, COUNT (SnapRegisters), local_registers, version);
 		UnfreezeStructFromCopy (&PPU, SnapPPU, COUNT (SnapPPU), local_ppu, version);
 		UnfreezeStructFromCopy (DMA, SnapDMA, COUNT (SnapDMA), local_dma, version);
+		if(local_icpu)
+			UnfreezeStructFromCopy (&ICPU, SnapICPU, COUNT (SnapICPU), local_icpu, version);
 		memcpy (Memory.VRAM, local_vram, 0x10000);
 		memcpy (Memory.RAM, local_ram, 0x20000);
 		memcpy (Memory.SRAM, local_sram, 0x20000);
@@ -1438,9 +1577,18 @@ int S9xUnfreezeFromStream (STREAM stream)
 			UnfreezeStructFromCopy (&APURegisters, SnapAPURegisters, COUNT (SnapAPURegisters), local_apu_registers, version);
 			memcpy (IAPU.RAM, local_apu_ram, 0x10000);
 			UnfreezeStructFromCopy (&SoundData, SnapSoundData, COUNT (SnapSoundData), local_apu_sounddata, version);
+			if(local_iapu)
+				UnfreezeStructFromCopy (&IAPU, SnapIAPU, COUNT (SnapIAPU), local_iapu, version);
+		}
+		if(local_global_junk)
+		{
+			SGlobalJunk globalJunk;
+			UnfreezeStructFromCopy (&globalJunk, SnapGlobalJunk, COUNT (SnapGlobalJunk), local_global_junk, version);
+			SetCurrentGlobalJunk(globalJunk);
 		}
 		if(local_sa1)
 		{
+			SA1.Executing = 2; // version hack for S9xFixSA1AfterSnapshotLoad...
 			UnfreezeStructFromCopy (&SA1, SnapSA1, COUNT (SnapSA1), local_sa1, version);
 			UnfreezeStructFromCopy (&SA1Registers, SnapSA1Registers, COUNT (SnapSA1Registers), local_sa1_registers, version);
 		}
@@ -1545,21 +1693,28 @@ int S9xUnfreezeFromStream (STREAM stream)
 
 	    IPPU.ColorsChanged = TRUE;
 		IPPU.OBJChanged = TRUE;
-		CPU.InDMA = FALSE;
+//		CPU.InDMA = FALSE;
 		S9xFixColourBrightness ();
 		IPPU.RenderThisFrame = TRUE; // was FALSE, but for most games it's more useful to see that frame
 
 		if (local_apu)
 		{
 			S9xSetSoundMute (FALSE);
-			IAPU.PC = IAPU.RAM + APURegisters.PC;
-			S9xAPUUnpackStatus ();
-			if (APUCheckDirectPage ())
-				IAPU.DirectPage = IAPU.RAM + 0x100;
-			else
-				IAPU.DirectPage = IAPU.RAM;
+			if(!local_iapu)
+			{
+				// something seems to be wrong with this logic
+				// (for example, sometimes APUExecuting is false when a savestate is made, but this sets it to always true)
+				// so this branch has been replaced by simply saving the IAPU struct instead
+
+				IAPU.PC = IAPU.RAM + APURegisters.PC;
+				S9xAPUUnpackStatus ();
+				if (APUCheckDirectPage ())
+					IAPU.DirectPage = IAPU.RAM + 0x100;
+				else
+					IAPU.DirectPage = IAPU.RAM;
+				IAPU.APUExecuting = TRUE;
+			}
 			Settings.APUEnabled = TRUE;
-			IAPU.APUExecuting = TRUE;
 		}
 		else
 		{
@@ -1591,10 +1746,14 @@ int S9xUnfreezeFromStream (STREAM stream)
 				Memory.FillRAM[0x4213]=Memory.FillRAM[0x4201]=0xFF;
 		}
 
-		ICPU.ShiftedPB = Registers.PB << 16;
-		ICPU.ShiftedDB = Registers.DB << 16;
+		if(!local_icpu)
+		{
+			ICPU.ShiftedPB = Registers.PB << 16;
+			ICPU.ShiftedDB = Registers.DB << 16;
+		}
 		S9xSetPCBase (ICPU.ShiftedPB + Registers.PC);
-		S9xUnpackStatus ();
+		if(!local_icpu)
+			S9xUnpackStatus (); // seems to have something incorrect about its logic (because saving then immediately loading sometimes flips ICPU._Negative) so it's been replaced by simply saving the ICPU struct
 		S9xFixCycles ();
 //		S9xReschedule ();				// <-- this causes desync when recording or playing movies
 
@@ -1612,6 +1771,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	if (local_registers)     delete [] local_registers;
 	if (local_ppu)           delete [] local_ppu;
 	if (local_dma)           delete [] local_dma;
+	if (local_icpu)          delete [] local_icpu;
 	if (local_vram)          delete [] local_vram;
 	if (local_ram)           delete [] local_ram;
 	if (local_sram)          delete [] local_sram;
@@ -1620,6 +1780,8 @@ int S9xUnfreezeFromStream (STREAM stream)
 	if (local_apu_registers) delete [] local_apu_registers;
 	if (local_apu_ram)       delete [] local_apu_ram;
 	if (local_apu_sounddata) delete [] local_apu_sounddata;
+	if (local_iapu)          delete [] local_iapu;
+	if (local_global_junk)   delete [] local_global_junk;
 	if (local_sa1)           delete [] local_sa1;
 	if (local_sa1_registers) delete [] local_sa1_registers;
 	if (local_spc)           delete [] local_spc;
@@ -1875,7 +2037,9 @@ int UnfreezeBlock (STREAM stream, char *name, uint8 *block, int size)
      || buffer[3] != ':')
     {
     err:
+#ifdef _DEBUG
 		fprintf(stdout, "absent: %s(%d); next: '%.11s'\n", name, size, buffer);
+#endif
 		REVERT_STREAM(stream, FIND_STREAM(stream)-l, 0);
 		return (WRONG_FORMAT);
     }
