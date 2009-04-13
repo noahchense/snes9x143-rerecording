@@ -1103,6 +1103,9 @@ void Apu7A ()
 
 // XXX: BJ: i think the old HalfCarry behavior was wrong...
 // XXX: Or is it between bits 7 and 8 for ADDW/SUBW?
+// nitsuja note: this function is buggy
+//  (for example it uses uninitialized Work32 instead of Int32)
+//  but we can't fix that in the 1.43 branch without breaking movie sync
 void Apu9A ()
 {
 // SUBW YA,dp
