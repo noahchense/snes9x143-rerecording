@@ -502,7 +502,7 @@ void S9xFixSoundAfterSnapshotLoad (int version)
 	SoundData.master_volume [1 ^ Settings.ReverseStereo] = SoundData.master_volume_right;
 	SoundData.echo_volume [Settings.ReverseStereo] = SoundData.echo_volume_left;
 	SoundData.echo_volume [1 ^ Settings.ReverseStereo] = SoundData.echo_volume_right;
-    IAPU.Scanline = 0;
+    //IAPU.Scanline = 0;
 }
 
 void S9xSetFilterCoefficient (int tap, int value)

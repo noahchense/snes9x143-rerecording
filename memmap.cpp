@@ -456,6 +456,7 @@ char * CMemory::SafeANK (const char *s)
 /**********************************************************************************************/
 bool8 CMemory::Init ()
 {
+#if 0 // old method
     RAM	    = (uint8 *) malloc (0x20000);
     SRAM    = (uint8 *) malloc (0x20000);
     VRAM    = (uint8 *) malloc (0x10000);
@@ -467,6 +468,23 @@ bool8 CMemory::Init ()
     
 	BSRAM	= (uint8 *) malloc (0x80000);
 	memset (BSRAM, 0, 0x80000);
+#else // contiguous method, to simplify the snapshot code (for MEMPOINTER_ENTRY)
+	int allocAmount = 0;
+	RAM   = (uint8*)allocAmount; allocAmount += 0x20000;
+	SRAM  = (uint8*)allocAmount; allocAmount += 0x20000;
+	VRAM  = (uint8*)allocAmount; allocAmount += 0x10000;
+	ROM   = (uint8*)allocAmount; allocAmount += MAX_ROM_SIZE + 0x200 + 0x8000;
+	BSRAM = (uint8*)allocAmount; allocAmount += 0x80000;
+
+	Base = (uint8*) malloc(allocAmount);
+	memset(Base, 0, allocAmount);
+
+	RAM += pint(Base);
+	SRAM += pint(Base);
+	VRAM += pint(Base);
+	ROM += pint(Base);
+	BSRAM += pint(Base);
+#endif
 
 	FillRAM = NULL;
 	
@@ -537,6 +555,7 @@ void CMemory::Deinit ()
 		MessageBox(GUI.hWnd, "CMemory::Deinit", "Heap Corrupt", MB_OK);
 #endif
 
+#if 0 // old method
     if (RAM)
     {
 		free ((char *) RAM);
@@ -564,6 +583,15 @@ void CMemory::Deinit ()
 		free((char*) BSRAM);
 		BSRAM=NULL;
 	}
+#else // contiguous method, to simplify the snapshot code (for MEMPOINTER_ENTRY)
+	free(Base);
+	Base = NULL;
+	RAM = NULL;
+	SRAM = NULL;
+	VRAM = NULL;
+	ROM = NULL;
+	BSRAM = NULL;
+#endif
 
     if (IPPU.TileCache [TILE_2BIT])
     {
