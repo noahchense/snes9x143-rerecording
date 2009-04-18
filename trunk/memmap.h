@@ -267,6 +267,7 @@ public:
 #if 0
 	bool8 LoadMulti (const char *,const char *,const char *);
 #endif
+    uint8 *Base;
 };
 
 START_EXTERN_C

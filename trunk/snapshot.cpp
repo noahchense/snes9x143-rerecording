@@ -155,8 +155,8 @@ END_EXTERN_C
 	// list of things to ignore (if the error message contains one of these strings it will be discarded)
 	// only things that aren't really part of the emulation state should go in here
 	static const char* s_snapshotVerifyIgnoreFilter [] = {
-		"&SoundData::", // because SoundData is full of stuff that changes asynchronously from the emulation
-		"&GFX::LastScreen", // because I think this can have stuff like GUI text in its pixels and it doesn't matter if it's not the same
+		"&SoundData.", // because SoundData is full of stuff that changes asynchronously from the emulation
+		"&GFX.LastScreen", // because I think this can have stuff like GUI text in its pixels and it doesn't matter if it's not the same
 	};
 
 	#include <vector>
@@ -176,19 +176,20 @@ END_EXTERN_C
 		std::string errStr = "";
 		for(unsigned int i = 0; i < s_verifyInfoStack.size(); i++)
 		{
+			if(i)
+				errStr += ':';
 			errStr += s_verifyInfoStack[i];
-			errStr += ':';
 		}
 		for(unsigned int i = 0; i < s_verifyActiveRangeInfo.size(); i++)
 		{
 			if(pCurStateByte >= s_verifyActiveRangeInfo[i].start && pCurStateByte < s_verifyActiveRangeInfo[i].end)
 			{
-				errStr += ':';
+				errStr += '.';
 				errStr += s_verifyActiveRangeInfo[i].name;
-				errStr += ':';
 				pCurStateBlockStartByte = s_verifyActiveRangeInfo[i].start;
 			}
 		}
+		errStr += ':';
 		char temp [256];
 		sprintf(temp, " " /*"mismatch at "*/ "byte %d(0x%X): %d(0x%X) != %d(0x%X)\n", (int)pCurStateByte-(int)pCurStateBlockStartByte, (int)pCurStateByte-(int)pCurStateBlockStartByte, *pCurStateByte,*pCurStateByte, *pOldStateByte,*pOldStateByte);
 		errStr += temp;
@@ -341,6 +342,7 @@ static struct Obsolete {
 #define INT_ENTRY(save_version_introduced, field) {OFFSET(field),0, sizeof(((STRUCT*)NULL)->field), INT_V, save_version_introduced, 9999, #field}
 #define ARRAY_ENTRY(save_version_introduced, field, count, elemType) {OFFSET(field),0, count, elemType, save_version_introduced, 9999, #field}
 #define POINTER_ENTRY(save_version_introduced, field, relativeToField) {OFFSET(field),OFFSET(relativeToField), 4, POINTER_V, save_version_introduced, 9999, #field} // size=4 -> (field - relativeToField) must fit in 4 bytes
+#define MEMPOINTER_ENTRY(save_version_introduced, field) {OFFSET(field),-1, 4, POINTER_V, save_version_introduced, 9999, #field} // like POINTER_ENTRY but always uses SNES memory Memory.Base as the pointer base
 #define OBSOLETE_INT_ENTRY(save_version_introduced, save_version_removed, field) {DUMMY(field),0, sizeof(((struct Obsolete*)NULL)->field), INT_V, save_version_introduced, save_version_removed, #field}
 #define OBSOLETE_ARRAY_ENTRY(save_version_introduced, save_version_removed, field, count, elemType) {DUMMY(field),0, count, elemType, save_version_introduced, save_version_removed, #field}
 #define OBSOLETE_POINTER_ENTRY(save_version_introduced, save_version_removed, field, relativeToField) {DUMMY(field),DUMMY(relativeToField), 4, POINTER_V, save_version_introduced, save_version_removed, #field} // size=4 -> (field - relativeToField) must fit in 4 bytes
@@ -387,11 +389,10 @@ static FreezeData SnapCPU [] = {
 	INT_ENTRY(V1_RR_UNOFFICIAL, IRQCycleCount),
 	INT_ENTRY(V1_RR_UNOFFICIAL, NMITriggerPoint),
 	INT_ENTRY(V1_RR_UNOFFICIAL, BRKTriggered),
-	// these might already be saved, I'm not sure, but I'm also not sure how to save them if they aren't
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PC, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-	//POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PC),
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
+	MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase),
 };
 
 #undef STRUCT
@@ -410,6 +411,9 @@ static FreezeData SnapICPU [] = {
     INT_ENTRY(V1_RR_UNOFFICIAL, Scanline),
 };
 
+
+extern uint8 *HDMAMemPointers [8];
+extern uint8 *HDMABasePointers [8];
 
 // some global variables that unfortunately we probably have to save.
 // only Work32 is confirmed definitely necessary to save due to a bug in spc700.cpp
@@ -448,6 +452,8 @@ struct SGlobalJunk
 	#define GJFORMAT(t,v) t v;
 		GLOBAL_JUNK_DEF
 	#undef GJFORMAT
+	uint8* HDMAMemPointers [8];
+	uint8* HDMABasePointers [8];
 };
 
 // define a function that fills a struct with the current global variables and returns them, so we can save the struct
@@ -457,6 +463,8 @@ static SGlobalJunk GetCurrentGlobalJunk()
 		#define GJFORMAT(t,v) v,
 			GLOBAL_JUNK_DEF
 		#undef GJFORMAT
+		{HDMAMemPointers[0], HDMAMemPointers[1], HDMAMemPointers[2], HDMAMemPointers[3], HDMAMemPointers[4], HDMAMemPointers[5], HDMAMemPointers[6], HDMAMemPointers[7], },
+		{HDMABasePointers[0], HDMABasePointers[1], HDMABasePointers[2], HDMABasePointers[3], HDMABasePointers[4], HDMABasePointers[5], HDMABasePointers[6], HDMABasePointers[7], },
 	};
 	return gj;
 }
@@ -467,6 +475,10 @@ static void SetCurrentGlobalJunk(SGlobalJunk gj)
 	#define GJFORMAT(t,v) v = gj.v;
 		GLOBAL_JUNK_DEF
 	#undef GJFORMAT
+	for(int i = 0; i < 8; i++)
+		HDMAMemPointers[i] = gj.HDMAMemPointers[i];
+	for(int i = 0; i < 8; i++)
+		HDMABasePointers[i] = gj.HDMABasePointers[i];
 }
 
 // define a snapshot definition struct like usual
@@ -478,10 +490,140 @@ static FreezeData SnapGlobalJunk [] = {
 	#define GJFORMAT(t,v) INT_ENTRY(V1_RR_UNOFFICIAL, v),
 		GLOBAL_JUNK_DEF
 	#undef GJFORMAT
+#define O(N) MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, HDMAMemPointers[N])
+    O(0), O(1), O(2), O(3), O(4), O(5), O(6), O(7),
+#undef O
+#define O(N) MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, HDMABasePointers[N])
+    O(0), O(1), O(2), O(3), O(4), O(5), O(6), O(7),
+#undef O
 };
 
 // that's all for that
 #undef GLOBAL_JUNK_DEF
+
+
+
+#ifdef ZSNES_FX
+
+extern "C" uint8 regptra;
+extern "C" uint8 regptwa;
+extern "C" uint8* SFXPlotTable;
+
+#define GLOBAL_SUPERFX_DEF \
+	GSFXFORMAT(uint32, SfxR0, 0) \
+	GSFXFORMAT(uint32, SfxR1, 0) \
+	GSFXFORMAT(uint32, SfxR2, 0) \
+	GSFXFORMAT(uint32, SfxR3, 0) \
+	GSFXFORMAT(uint32, SfxR4, 0) \
+	GSFXFORMAT(uint32, SfxR5, 0) \
+	GSFXFORMAT(uint32, SfxR6, 0) \
+	GSFXFORMAT(uint32, SfxR7, 0) \
+	GSFXFORMAT(uint32, SfxR8, 0) \
+	GSFXFORMAT(uint32, SfxR9, 0) \
+	GSFXFORMAT(uint32, SfxR10, 0) \
+	GSFXFORMAT(uint32, SfxR11, 0) \
+	GSFXFORMAT(uint32, SfxR12, 0) \
+	GSFXFORMAT(uint32, SfxR13, 0) \
+	GSFXFORMAT(uint32, SfxR14, 0) \
+	GSFXFORMAT(uint32, SfxR15, 0) \
+	GSFXFORMAT(uint32, SfxSFR, 0) \
+	GSFXFORMAT(uint32, SfxBRAMR, 0) \
+	GSFXFORMAT(uint32, SfxPBR, 0) \
+	GSFXFORMAT(uint32, SfxROMBR, 0) \
+	GSFXFORMAT(uint32, SfxCFGR, 0) \
+	GSFXFORMAT(uint32, SfxSCBR, 0) \
+	GSFXFORMAT(uint32, SfxCLSR, 0) \
+	GSFXFORMAT(uint32, SfxSCMR, 0) \
+	GSFXFORMAT(uint32, SfxVCR, 0) \
+	GSFXFORMAT(uint32, SfxRAMBR, 0) \
+	GSFXFORMAT(uint32, SfxCBR, 0) \
+	GSFXFORMAT(uint32, SfxCOLR, 0) \
+	GSFXFORMAT(uint32, SfxPOR, 0) \
+	GSFXFORMAT(uint32, SfxCacheFlags, 0) \
+	GSFXFORMAT(uint8*, SfxLastRamAdr, Memory.SRAM) \
+	GSFXFORMAT(uint32, SfxDREG, 0) \
+	GSFXFORMAT(uint32, SfxSREG, 0) \
+	GSFXFORMAT(uint8*, SfxRomBuffer, Memory.ROM) \
+	GSFXFORMAT(uint32, SfxPIPE, 0) \
+	GSFXFORMAT(uint32, SfxPipeAdr, 0) \
+	GSFXFORMAT(uint32, SfxnRamBanks, 0) \
+	GSFXFORMAT(uint32, SfxnRomBanks, 0) \
+	GSFXFORMAT(uint32, SfxvScreenHeight, 0) \
+	GSFXFORMAT(uint32, SfxvScreenSize, 0) \
+	GSFXFORMAT(uint32, SfxCacheActive, 0) \
+	GSFXFORMAT(uint32, SfxCarry, 0) \
+	GSFXFORMAT(uint32, SfxSignZero, 0) \
+	GSFXFORMAT(uint32, SfxB, 0) \
+	GSFXFORMAT(uint32, SfxOverflow, 0) \
+	GSFXFORMAT(uint32, PHnum2writesfxreg, 0) \
+	GSFXFORMAT(uint8*, SfxCPB, Memory.ROM) \
+	GSFXFORMAT(uint8*, SfxCROM, Memory.ROM) \
+	GSFXFORMAT(uint8*, SfxRAMMem, Memory.SRAM) \
+	GSFXFORMAT(uint32, withr15sk, 0) \
+	GSFXFORMAT(uint8*, sfxclineloc, SFXPlotTable) \
+	GSFXFORMAT(uint32, fxbit01pcal, 0) \
+	GSFXFORMAT(uint32, fxbit23pcal, 0) \
+	GSFXFORMAT(uint32, fxbit45pcal, 0) \
+	GSFXFORMAT(uint32, fxbit67pcal, 0) \
+	GSFXFORMAT(uint32, SFXCounter, 0) \
+	GSFXFORMAT(uint32, SfxAC, 0) \
+	GSFXFORMAT(uint32, flagnz, 0) \
+	GSFXFORMAT(uint8*, regptr, &regptra - 0x8000) \
+	GSFXFORMAT(uint8*, regptw, &regptwa - 0x8000) \
+	GSFXFORMAT(uint32, NumberOfOpcodes, 0) \
+	GSFXFORMAT(uint32, NumberOfOpcodesBU, 0) \
+	GSFXFORMAT(uint8,  sfxwarningb, 0) \
+	GSFXFORMAT(uint8*, sfx128lineloc, SFXPlotTable) \
+	GSFXFORMAT(uint8*, sfx160lineloc, SFXPlotTable) \
+	GSFXFORMAT(uint8*, sfx192lineloc, SFXPlotTable) \
+	GSFXFORMAT(uint8*, sfxobjlineloc, SFXPlotTable) \
+	GSFXFORMAT(uint8,  cachewarning, 0) \
+	GSFXFORMAT(uint32, SFXProc, 0) \
+	GSFXFORMAT(int32,  ChangeOps, 0) \
+	//end
+
+#define GSFXFORMAT(t,v,r) extern "C" t v;
+	GLOBAL_SUPERFX_DEF
+#undef GSFXFORMAT
+
+struct SGlobalSuperFX
+{
+	#define GSFXFORMAT(t,v,r) t v;
+		GLOBAL_SUPERFX_DEF
+	#undef GSFXFORMAT
+};
+
+static SGlobalSuperFX GetCurrentGlobalSuperFX()
+{
+	SGlobalSuperFX gsfx = {
+		#define GSFXFORMAT(t,v,r) v - pint(r),
+			GLOBAL_SUPERFX_DEF
+		#undef GSFXFORMAT
+	};
+	return gsfx;
+}
+
+static void SetCurrentGlobalSuperFX(SGlobalSuperFX gsfx)
+{
+	#define GSFXFORMAT(t,v,r) v = gsfx.v + pint(r);
+		GLOBAL_SUPERFX_DEF
+	#undef GSFXFORMAT
+}
+
+#undef STRUCT
+#define STRUCT struct SGlobalSuperFX
+
+static FreezeData SnapGlobalSuperFX [] = {
+	#define GSFXFORMAT(t,v,r) INT_ENTRY(V1_RR_UNOFFICIAL, v),
+		GLOBAL_SUPERFX_DEF
+	#undef GSFXFORMAT
+};
+
+#undef GLOBAL_SUPERFX_DEF
+
+#endif // ZSNES_FX
+
+
 
 
 
@@ -820,11 +962,10 @@ static FreezeData SnapSA1 [] = {
 	INT_ENTRY(V1_RR_UNOFFICIAL, _Zero),
 	INT_ENTRY(V1_RR_UNOFFICIAL, _Negative),
 	INT_ENTRY(V1_RR_UNOFFICIAL, _Overflow),
-	// these might already be saved, I'm not sure, but I'm also not sure how to save them if they aren't
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PC, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress, ???), // TODO: save this somehow? it doesn't have only 1 base address...
-    //POINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase, ???), // TODO: save this somehow? it doesn't have only 1 base address...
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PC),
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PCAtOpcodeStart),
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, WaitAddress),
+    MEMPOINTER_ENTRY(V1_RR_UNOFFICIAL, PCBase),
 };
 
 #undef STRUCT
@@ -1263,10 +1404,10 @@ void S9xFreezeToStream (STREAM stream)
 	#endif
 
     S9xSetSoundMute (TRUE);
-#ifdef ZSNES_FX
-    if (Settings.SuperFX)
-		S9xSuperFXPreSaveState ();
-#endif
+//#ifdef ZSNES_FX
+//    if (Settings.SuperFX)
+//		S9xSuperFXPreSaveState ();
+//#endif
 	
 	S9xUpdateRTC();
     S9xSRTCPreSaveState ();
@@ -1318,7 +1459,15 @@ void S9xFreezeToStream (STREAM stream)
 		FreezeStruct (stream, "SAR", &SA1Registers, SnapSA1Registers, 
 			COUNT (SnapSA1Registers));
     }
-	
+
+#ifdef ZSNES_FX
+	if(Settings.SuperFX)
+	{
+		SGlobalSuperFX globalSuperFX = GetCurrentGlobalSuperFX();
+		FreezeStruct (stream, "GSF", &globalSuperFX, SnapGlobalSuperFX, COUNT(SnapGlobalSuperFX));
+	}
+#endif
+
 	if (Settings.SPC7110)
     {
 		FreezeStruct (stream, "SP7", &s7r, SnapSPC7110, COUNT (SnapSPC7110));
@@ -1389,10 +1538,10 @@ void S9xFreezeToStream (STREAM stream)
 #endif // !NEW_SNAPSHOT_SCREENSHOT
 
 	S9xSetSoundMute (FALSE);
-#ifdef ZSNES_FX
-	if (Settings.SuperFX)
-		S9xSuperFXPostSaveState ();
-#endif
+//#ifdef ZSNES_FX
+//	if (Settings.SuperFX)
+//		S9xSuperFXPostSaveState ();
+//#endif
 
 	#ifdef WIN32
 	LeaveCriticalSection(&GUI.SoundCritSect);
@@ -1452,6 +1601,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	uint8* local_iapu = NULL;
 	uint8* local_sa1 = NULL;
 	uint8* local_sa1_registers = NULL;
+	uint8* local_zsuperfx = NULL;
 	uint8* local_spc = NULL;
 	uint8* local_spc_rtc = NULL;
 	uint8* local_movie_data = NULL;
@@ -1504,6 +1654,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 		}
 		else if (Settings.SA1)
 			break;
+
+#ifdef ZSNES_FX
+		UnfreezeStructCopy (stream, "GSF", &local_zsuperfx, SnapGlobalSuperFX, COUNT (SnapGlobalSuperFX), version);
+#endif
 
 		if ((result = UnfreezeStructCopy (stream, "SP7", &local_spc, SnapSPC7110, COUNT(SnapSPC7110), version)) != SUCCESS)
 			if (Settings.SPC7110)
@@ -1603,6 +1757,12 @@ int S9xUnfreezeFromStream (STREAM stream)
 			SA1.Executing = 2; // version hack for S9xFixSA1AfterSnapshotLoad...
 			UnfreezeStructFromCopy (&SA1, SnapSA1, COUNT (SnapSA1), local_sa1, version);
 			UnfreezeStructFromCopy (&SA1Registers, SnapSA1Registers, COUNT (SnapSA1Registers), local_sa1_registers, version);
+		}
+		if(local_zsuperfx)
+		{
+			SGlobalSuperFX globalSuperFX;
+			UnfreezeStructFromCopy (&globalSuperFX, SnapGlobalSuperFX, COUNT (SnapGlobalSuperFX), local_zsuperfx, version);
+			SetCurrentGlobalSuperFX(globalSuperFX);
 		}
 		if(local_spc)
 		{
@@ -1754,8 +1914,8 @@ int S9xUnfreezeFromStream (STREAM stream)
 
 		S9xFixSoundAfterSnapshotLoad (version);
 
-		uint8 hdma_byte = Memory.FillRAM[0x420c];
-		S9xSetCPU(hdma_byte, 0x420c);
+//		uint8 hdma_byte = Memory.FillRAM[0x420c];
+//		S9xSetCPU(hdma_byte, 0x420c); // was sometimes causing desync
 
 #if 0 // disabled because it happens even for some new savestates, which causes desync
 		if(!Memory.FillRAM[0x4213]){
@@ -1777,10 +1937,10 @@ int S9xUnfreezeFromStream (STREAM stream)
 		S9xFixCycles ();
 //		S9xReschedule ();				// <-- this causes desync when recording or playing movies
 
-#ifdef ZSNES_FX
-		if (Settings.SuperFX)
-			S9xSuperFXPostLoadState ();
-#endif
+//#ifdef ZSNES_FX
+//		if (Settings.SuperFX)
+//			S9xSuperFXPostLoadState ();
+//#endif
 		
 		S9xSRTCPostLoadState ();
 		if (Settings.SDD1)
@@ -1804,6 +1964,7 @@ int S9xUnfreezeFromStream (STREAM stream)
 	if (local_global_junk)   delete [] local_global_junk;
 	if (local_sa1)           delete [] local_sa1;
 	if (local_sa1_registers) delete [] local_sa1_registers;
+	if (local_zsuperfx)      delete [] local_zsuperfx;
 	if (local_spc)           delete [] local_spc;
 	if (local_spc_rtc)       delete [] local_spc_rtc;
 	if (local_movie_data)    delete [] local_movie_data;
@@ -1933,7 +2094,7 @@ void FreezeStructF (STREAM stream, char *name, void *base, FreezeData *fields,
 		if(fields[i].type == POINTER_V)
 		{
 			uint8* pointer = (uint8*)*((pint*)((uint8 *) base + fields[i].offset));
-			uint8* relativeTo = (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
+			uint8* relativeTo = (fields[i].offset2 == -1) ? Memory.Base : (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
 			relativeAddr = pointer - relativeTo;
 			addr = (uint8*)&relativeAddr;
 		}
@@ -2197,6 +2358,7 @@ void UnfreezeStructFromCopy (void *sbase, FreezeData *fields, int num_fields, ui
                 dword |= *ptr++ << 16;
                 dword |= *ptr++ << 8;
                 dword |= *ptr++;
+				//assert(!((uint8*)dword >= Memory.Base && (uint8*)dword < Memory.Base + 0x80000+0x20000+0x20000+0x10000+0x200+0x8000+0x800000));
                 *((uint32 *) (addr)) = dword;
                 break;
               case 8:
@@ -2250,7 +2412,7 @@ void UnfreezeStructFromCopy (void *sbase, FreezeData *fields, int num_fields, ui
 		if(fields[i].type == POINTER_V)
 		{
 			int relativeAddr = (int)*((pint*)((uint8 *) base + fields[i].offset));
-			uint8* relativeTo = (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
+			uint8* relativeTo = (fields[i].offset2 == -1) ? Memory.Base : (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
 			*((pint *) (addr)) = (pint)(relativeTo + relativeAddr);
 		}
 	}
