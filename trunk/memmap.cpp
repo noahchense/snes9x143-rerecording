@@ -1882,6 +1882,7 @@ void CMemory::ResetSpeedMap()
 		MemorySpeed[i+4]=MemorySpeed[0x800+i+4]= ONE_CYCLE;
 		MemorySpeed[i+5]=MemorySpeed[0x800+i+5]= ONE_CYCLE;
 	}
+	CPU.FastROMSpeed = 0; // have to reset this here, otherwise the previous FastROMSpeed can carry over (into Memory.MemorySpeed) across a hard reset, causing desync
 	CMemory::FixROMSpeed ();
 }
 

@@ -176,6 +176,7 @@ extern struct SSA1 SA1;
 
 void S9xSA1MainLoop ();
 void S9xSA1Init ();
+void S9xSA1FullInit ();
 void S9xFixSA1AfterSnapshotLoad ();
 void S9xSA1ExecuteDuringSleep ();
 END_EXTERN_C

@@ -116,7 +116,7 @@ void S9xResetSuperFX ()
 }
 #endif
 
-void S9xResetCPU ()
+void S9xSoftResetCPU ()
 {
     Registers.PB = 0;
     Registers.PC = S9xGetWord (0xFFFC);
@@ -150,7 +150,7 @@ void S9xResetCPU ()
     CPU.V_Counter = 0;
     CPU.MemSpeed = SLOW_ONE_CYCLE;
     CPU.MemSpeedx2 = SLOW_ONE_CYCLE * 2;
-    CPU.FastROMSpeed = SLOW_ONE_CYCLE;
+    //CPU.FastROMSpeed = SLOW_ONE_CYCLE; // Set when ROM image loaded (setting it here could cause desyncs after loading savestates saved immediately after a soft reset, because Memory.MemorySpeed isn't saved)
     CPU.AutoSaveTimer = 0;
     CPU.SRAMModified = FALSE;
     // CPU.NMITriggerPoint = 4; // Set when ROM image loaded
@@ -166,20 +166,44 @@ void S9xResetCPU ()
     S9xUnpackStatus();
 }
 
+void S9xResetCPU ()
+{
+	ICPU.Frame = 0;
+	ICPU.Scanline = 0;
+	Registers.A.W = 0;
+	Registers.XL = 0;
+	Registers.YL = 0;
+
+	S9xSoftResetCPU ();
+}
+
 #ifdef ZSNES_FX
 START_EXTERN_C
 void S9xResetSuperFX ();
 bool8 WinterGold = 0;
 extern uint8 *C4Ram;
 END_EXTERN_C
+void ResetGlobalSuperFX();
 #endif
+
+void ResetGlobalJunk();
 
 void S9xReset (void)
 {
     S9xResetSaveTimer (FALSE);
 
+	// misc. previously-uninitialized things
+	{
+		ResetGlobalJunk();
+	}
+
     if (Settings.SuperFX)
+	{
+#ifdef ZSNES_FX
+		ResetGlobalSuperFX();
+#endif
         S9xResetSuperFX ();
+	}
 
 #ifdef ZSNES_FX
     WinterGold = Settings.WinterGold;
@@ -199,7 +223,7 @@ void S9xReset (void)
     S9xResetDMA ();
     S9xResetAPU ();
     S9xResetDSP1 ();
-    S9xSA1Init ();
+    S9xSA1FullInit ();
     if (Settings.C4)
         S9xInitC4 ();
     S9xInitCheatData ();
@@ -224,18 +248,18 @@ void S9xSoftReset (void)
 
 	if(Settings.SPC7110)
 		S9xSpc7110Reset();
-    S9xResetCPU ();
+    S9xSoftResetCPU ();
     S9xSoftResetPPU ();
     S9xResetSRTC ();
     if (Settings.SDD1)
         S9xResetSDD1 ();
 
-    S9xResetDMA ();
-    S9xResetAPU ();
+    S9xSoftResetDMA ();
+    S9xSoftResetAPU ();
     S9xResetDSP1 ();
 	if(Settings.OBC1)
 		ResetOBC1();
-    S9xSA1Init ();
+    S9xSA1Init (); // shouldn't this call S9xSA1Reset instead? oh well, too late now.
     if (Settings.C4)
         S9xInitC4 ();
     S9xInitCheatData ();
