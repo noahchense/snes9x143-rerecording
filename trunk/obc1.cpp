@@ -92,12 +92,12 @@
 
 static uint8 *OBC1_RAM = NULL;
 
+extern "C"
+{
 int OBC1_Address;
 int OBC1_BasePtr;
 int OBC1_Shift;
 
-extern "C"
-{
 uint8 GetOBC1 (uint16 Address)
 {
 	switch(Address) {
