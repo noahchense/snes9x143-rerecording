@@ -1484,9 +1484,10 @@ static int gui_getpixel(lua_State *L) {
 //  This allows us to make screen shots available without gd installed locally.
 //  Users can also just grab pixels via substring selection.
 //
-//  I think...  Does lua support grabbing byte values from a string?
+//  I think...  Does lua support grabbing byte values from a string? // yes, string.byte(str,offset)
 //  Well, either way, just install gd and do what you like with it.
 //  It really is easier that way.
+// example: gd.createFromGdStr(gui.gdscreenshot()):png("outputimage.png")
 static int gui_gdscreenshot(lua_State *L) {
 
 	int width = IPPU.RenderedScreenWidth;
@@ -1527,10 +1528,10 @@ static int gui_gdscreenshot(lua_State *L) {
 				uint32 r, g, b;
 				DECOMPOSE_PIXEL((*(uint16 *)(screen+2*x)), r, g, b);
 
-				// Diagram:   000XXxxx -> XXxxx000 -> XXxxxXXx
-				r = ((r << 3) & 0xff) | ((r >> 5) & 0xff);
-				g = ((g << 3) & 0xff) | ((g >> 5) & 0xff);
-				b = ((b << 3) & 0xff) | ((b >> 5) & 0xff);
+				// Diagram:   000XXxxx -> XXxxx000 ;// -> XXxxxXXx
+				r = ((r << 3) & 0xff) ;// | ((r >> 2) & 0xff);
+				g = ((g << 3) & 0xff) ;// | ((g >> 2) & 0xff);
+				b = ((b << 3) & 0xff) ;// | ((b >> 2) & 0xff);
 
 				*ptr++ = 0;
 				*ptr++ = r;
@@ -1854,19 +1855,27 @@ static int gui_text(lua_State *L) {
 
 }
 
-
-// gui.gdoverlay(string str)
+// gui.gdoverlay([int x=0, int y=0,] string str [, float alphamul=1.0])
 //
 //  Overlays the given image on the screen.
+// example: gui.gdoverlay(gd.createFromPng("myimage.png"):gdStr())
 static int gui_gdoverlay(lua_State *L) {
 
-	int baseX, baseY;
 	int width, height;
 	size_t size;
 
-	baseX = luaL_checkinteger(L,1);
-	baseY = luaL_checkinteger(L,2);
-	const uint8 *data = (const uint8*) luaL_checklstring(L, 3, &size);
+	int baseX = 0;
+	int baseY = 0;
+
+	int index = 1;
+	if(lua_type(L,index) == LUA_TNUMBER)
+	{
+		baseX = lua_tointeger(L,index++);
+		if(lua_type(L,index) == LUA_TNUMBER)
+			baseY = lua_tointeger(L,index++);
+	}
+
+	const uint8 *data = (const uint8*) luaL_checklstring(L, index++, &size);
 	
 	if (size < 11)
 		luaL_error(L, "bad image data");
@@ -1880,12 +1889,30 @@ static int gui_gdoverlay(lua_State *L) {
 	if (!data[6])
 		luaL_error(L, "bad image data or not truecolour");
 	
-	// Don't care about transparent colour
 	if ((int)size < (11+ width*height*4))
 		luaL_error(L, "bad image data");
 	
 	const uint8* pixels = data + 11;
-	
+
+	int alphaMul = transparencyModifier;
+	if(lua_isnumber(L, index))
+		alphaMul = (int)(alphaMul * lua_tonumber(L, index++));
+	if(alphaMul <= 0)
+		return 0; // if it's 100% transparent, don't bother drawing it
+
+	// since there aren't that many possible opacity levels,
+	// do the opacity modification calculations beforehand instead of per pixel
+	int opacMap[256];
+	for(int i = 0; i < 256; i++)
+	{
+		int opac = 255 - (i << 1); // not sure why, but gdstr seems to divide each alpha value by 2
+		opac = (opac * alphaMul) / 255;
+		if(opac < 0) opac = 0;
+		if(opac > 255) opac = 255;
+		opacMap[i] = opac;
+	}
+
+
 	// Run image
 
 	gui_prepare();
@@ -1917,11 +1944,13 @@ static int gui_gdoverlay(lua_State *L) {
 		}
 
 		for (; x < width && sx < 256; x++, sx++) {
-			if (pixels[4 * (y*height+x)] == 127)
+			int alpha = opacMap[pixels[4 * (y*width+x)]];
+			if (alpha == 0)
 				continue;
 
-			gui_drawpixel_fast(sx, sy, LUA_BUILD_PIXEL(255,
-				pixels[4 * (y*width+x)+1], pixels[4 * (y*width+x)+2],
+			gui_drawpixel_fast(sx, sy, LUA_BUILD_PIXEL(alpha,
+				pixels[4 * (y*width+x)+1],
+				pixels[4 * (y*width+x)+2],
 				pixels[4 * (y*width+x)+3]));
 		}
 	
@@ -2329,7 +2358,7 @@ static int input_getcurrentinputstatus(lua_State *L) {
 		extern BOOL GetCursorPosSNES(LPPOINT lpPoint, bool clip);
 
 		POINT mouse;
-		GetCursorPosSNES(&mouse, true);
+		GetCursorPosSNES(&mouse, false); // mouse coordinate clip disabled because it makes some useful things impossible to do, whereas the user can always clip it themselves if they want that
 		if (IPPU.RenderedScreenWidth > SNES_WIDTH)
 			mouse.x /= 2;
 
