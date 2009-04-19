@@ -1221,6 +1221,7 @@ struct OpenMovieParams
 	uint8 ControllersMask;
 	uint8 Opts;
 	uint8 SyncFlags;
+	uint8 SyncFlags2;
 	wchar_t Metadata[MOVIE_MAX_METADATA];
 };
 
@@ -2048,7 +2049,7 @@ bool WinLoadROM(const char *filename)
 bool WinMoviePlay(const char* filename)
 {
 	struct MovieInfo info;
-	uint8 syncFlags;
+	uint8 syncFlags, syncFlags2;
 	int err;
 
 	bool abort_anyway = false;
@@ -2106,6 +2107,7 @@ bool WinMoviePlay(const char* filename)
 		return false;
 
 	syncFlags = info.SyncFlags;
+	syncFlags2 = info.SyncFlags2;
 	if (info.SyncFlags & MOVIE_SYNC_DATA_EXISTS)
 	{
 //		if (Settings.UpAndDown)
@@ -2118,7 +2120,7 @@ bool WinMoviePlay(const char* filename)
 			syncFlags &= ~MOVIE_SYNC_SYNCSOUND;
 	}
 
-	S9xMovieOpen (filename, GUI.MovieReadOnly, syncFlags);
+	S9xMovieOpen (filename, GUI.MovieReadOnly, syncFlags, syncFlags2);
 	if(err != SUCCESS)
 	{
 		_TCHAR* err_string = MOVIE_ERR_COULD_NOT_OPEN;
@@ -2380,7 +2382,7 @@ LRESULT CALLBACK WinProc(
 				if(DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_OPENMOVIE), hWnd, DlgOpenMovie, (LPARAM)&op) &&
 					op.Path[0]!='\0')
 				{
-					int err=S9xMovieOpen (op.Path, op.ReadOnly, op.SyncFlags);
+					int err=S9xMovieOpen (op.Path, op.ReadOnly, op.SyncFlags, op.SyncFlags2);
 					if(err!=SUCCESS)
 					{
 						_TCHAR* err_string=TEXT(MOVIE_ERR_COULD_NOT_OPEN);
@@ -11906,9 +11908,10 @@ static void set_movieinfo(const char* path, HWND hDlg)
 	int i;
 	int getInfoResult=FILE_NOT_FOUND;
 
-	EnableWindow(GetDlgItem(hDlg, IDC_WIP1), FALSE); // shouldn't change these three from how it was recorded
+	EnableWindow(GetDlgItem(hDlg, IDC_WIP1), FALSE); // shouldn't change these from how it was recorded
 	EnableWindow(GetDlgItem(hDlg, IDC_ENVX), FALSE);
 	EnableWindow(GetDlgItem(hDlg, IDC_FMUT), FALSE);
+	EnableWindow(GetDlgItem(hDlg, IDC_INIT_FASTROM_SETTING), FALSE);
 
 	if(strlen(path))
 		getInfoResult = S9xMovieGetInfo(path, &m);
@@ -12007,6 +12010,7 @@ static void set_movieinfo(const char* path, HWND hDlg)
 			SendDlgItemMessage(hDlg,IDC_ENVX,BM_SETCHECK,              (m.SyncFlags & MOVIE_SYNC_VOLUMEENVX)!=0 ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SendDlgItemMessage(hDlg,IDC_FMUT,BM_SETCHECK,              (m.SyncFlags & MOVIE_SYNC_FAKEMUTE)!=0   ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, (m.SyncFlags & MOVIE_SYNC_SYNCSOUND)!=0  ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
+			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, (m.SyncFlags2 & MOVIE_SYNC2_INIT_FASTROM)!=0  ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SetWindowText(GetDlgItem(hDlg, IDC_LOADEDFROMMOVIE), _T(MOVIE_LABEL_SYNC_DATA_FROM_MOVIE));
 		}
 		else
@@ -12031,12 +12035,23 @@ static void set_movieinfo(const char* path, HWND hDlg)
 			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 //			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, Settings.SoundSync ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 
+			// old movies didn't initialize CPU.FastROMSpeed so leave it uninitialized by default
+			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+//			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, Settings.InitFastROMSetting ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
+
 			SetWindowText(GetDlgItem(hDlg, IDC_LOADEDFROMMOVIE), _T(MOVIE_LABEL_SYNC_DATA_NOT_FROM_MOVIE));
 
 			EnableWindow(GetDlgItem(hDlg, IDC_WIP1), TRUE);
 			EnableWindow(GetDlgItem(hDlg, IDC_ENVX), TRUE);
 			EnableWindow(GetDlgItem(hDlg, IDC_FMUT), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDC_INIT_FASTROM_SETTING), TRUE);
 		}
+
+		// memory speed init should *always* be on for slowrom games
+		// (well, technically speaking it should be on for all games, but some old movies of fastrom games need it off)
+		// and probably nobody has made a movie that they expect other people to play by opening a different game first
+		if((Memory.ROMSpeed&0x10)==0)
+			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 
 		{
 			char str [256];
@@ -12114,6 +12129,7 @@ static void set_movieinfo(const char* path, HWND hDlg)
 			SendDlgItemMessage(hDlg,IDC_ENVX,BM_SETCHECK, Settings.SoundEnvelopeHeightReading ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SendDlgItemMessage(hDlg,IDC_FMUT,BM_SETCHECK, Settings.FakeMuteFix ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, Settings.SoundSync ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
+			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, Settings.InitFastROMSetting ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 		}
 
 		{
@@ -12305,6 +12321,7 @@ INT_PTR CALLBACK DlgOpenMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 			case IDC_ENVX:
 			case IDC_FMUT:
 			case IDC_SYNC_TO_SOUND_CPU:
+			case IDC_INIT_FASTROM_SETTING:
 				SetWindowText(GetDlgItem(hDlg, IDC_LOADEDFROMMOVIE), _T(""));
 				break;
 			case IDC_BROWSE_MOVIE:
@@ -12400,11 +12417,13 @@ INT_PTR CALLBACK DlgOpenMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				// store temporary settings for movie playback
 				op->SyncFlags = MOVIE_SYNC_DATA_EXISTS;
+				op->SyncFlags2 = 0;
 				op->SyncFlags |= (IsDlgButtonChecked(hDlg, IDC_WIP1)!=0)              ? MOVIE_SYNC_WIP1TIMING : 0; // set in movie.cpp on playback, if sync data exists
 				op->SyncFlags |= (IsDlgButtonChecked(hDlg, IDC_ALLOWLEFTRIGHT)!=0)    ? MOVIE_SYNC_LEFTRIGHT  : 0;
 				op->SyncFlags |= (IsDlgButtonChecked(hDlg, IDC_ENVX)!=0)              ? MOVIE_SYNC_VOLUMEENVX : 0; // set in movie.cpp on playback, if sync data exists
 				op->SyncFlags |= (IsDlgButtonChecked(hDlg, IDC_FMUT)!=0)              ? MOVIE_SYNC_FAKEMUTE   : 0; // set in movie.cpp on playback, if sync data exists
 				op->SyncFlags |= (IsDlgButtonChecked(hDlg, IDC_SYNC_TO_SOUND_CPU)!=0) ? MOVIE_SYNC_SYNCSOUND  : 0;
+				op->SyncFlags2 |= (IsDlgButtonChecked(hDlg, IDC_INIT_FASTROM_SETTING)!=0) ? MOVIE_SYNC2_INIT_FASTROM : 0; // set in movie.cpp on playback, if sync data exists
 				EndDialog(hDlg, 1);
 				return true;
 				
@@ -12481,8 +12500,14 @@ INT_PTR CALLBACK DlgCreateMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 //			SendDlgItemMessage(hDlg,IDC_FMUT,BM_SETCHECK, Settings.FakeMuteFix ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SendDlgItemMessage(hDlg,IDC_ENVX,BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0); // I realized that this should almost *always* be off when recording, because whenever it makes any difference to have it off, it prevents desyncs. Let the user turn it on  each time if they really want it on  when recording.
 			SendDlgItemMessage(hDlg,IDC_FMUT,BM_SETCHECK, (WPARAM)BST_CHECKED, 0);   // I realized that this should almost *always* be on  when recording, because whenever it makes any difference to have it on,  it prevents desyncs. Let the user turn it off each time if they really want it off when recording.
+			SendDlgItemMessage(hDlg,IDC_INIT_FASTROM_SETTING,BM_SETCHECK, (WPARAM)BST_CHECKED, 0);        // should almost *always* be on  when recording, because whenever it makes any difference to have it on,  it prevents desyncs. Let the user turn it off each time if they really want it off when recording.
 			SendDlgItemMessage(hDlg,IDC_SYNC_TO_SOUND_CPU,BM_SETCHECK, Settings.SoundSync ? (WPARAM)BST_CHECKED : (WPARAM)BST_UNCHECKED, 0);
 			SetWindowText(GetDlgItem(hDlg, IDC_LOADEDFROMMOVIE), _T(""));
+
+			// gray out the fast rom setting if the curent rom isn't a fastrom, to avoid confusion
+			if(((Memory.ROMSpeed&0x10)==0))
+				EnableWindow(GetDlgItem(hDlg, IDC_INIT_FASTROM_SETTING), FALSE);
+
 
 			//EnableWindow(GetDlgItem(hDlg, IDC_SYNC_TO_SOUND_CPU), Settings.SoundDriver<1||Settings.SoundDriver>3); // can't sync sound to CPU unless using "Snes9x DirectSound" driver
 
@@ -12584,14 +12609,17 @@ INT_PTR CALLBACK DlgCreateMovie(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 					Settings.UpAndDown = IsDlgButtonChecked(hDlg, IDC_ALLOWLEFTRIGHT);
 					Settings.SoundEnvelopeHeightReading = IsDlgButtonChecked(hDlg, IDC_ENVX);
 					Settings.FakeMuteFix = IsDlgButtonChecked(hDlg, IDC_FMUT);
+					Settings.InitFastROMSetting = IsDlgButtonChecked(hDlg, IDC_INIT_FASTROM_SETTING);
 					Settings.SoundSync = IsDlgButtonChecked(hDlg, IDC_SYNC_TO_SOUND_CPU)/* ? 2 : 0*/;
 
 					op->SyncFlags = MOVIE_SYNC_DATA_EXISTS | MOVIE_SYNC_HASROMINFO;
+					op->SyncFlags2 = 0;
 					if(Settings.UseWIPAPUTiming) op->SyncFlags |= MOVIE_SYNC_WIP1TIMING;
 					if(Settings.UpAndDown) op->SyncFlags |= MOVIE_SYNC_LEFTRIGHT;
 					if(Settings.SoundEnvelopeHeightReading) op->SyncFlags |= MOVIE_SYNC_VOLUMEENVX;
 					if(Settings.FakeMuteFix) op->SyncFlags |= MOVIE_SYNC_FAKEMUTE;
 					if(Settings.SoundSync) op->SyncFlags |= MOVIE_SYNC_SYNCSOUND;
+					if(Settings.InitFastROMSetting) op->SyncFlags2 |= MOVIE_SYNC2_INIT_FASTROM;
 
 					if(IsDlgButtonChecked(hDlg, IDC_CLEARSRAM) && IsDlgButtonChecked(hDlg, IDC_RECORD_RESET) && existsSRAM())
 					{

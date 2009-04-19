@@ -96,7 +96,7 @@
 #include "snes9x.h"
 
 #define SNAPSHOT_MAGIC "#!snes9x"
-#define SNAPSHOT_VERSION 1
+#define SNAPSHOT_VERSION 1430
 
 #define SUCCESS 1
 #define WRONG_FORMAT (-1)

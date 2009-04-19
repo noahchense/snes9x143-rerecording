@@ -1531,9 +1531,9 @@ static int gui_gdscreenshot(lua_State *L) {
 				DECOMPOSE_PIXEL((*(uint16 *)(screen+2*x)), r, g, b);
 
 				// Diagram:   000XXxxx -> XXxxx000 ;//-> XXxxxXXx
-				r = ((r << 3) & 0xff) ;// | ((r >> 5) & 0xff);
-				g = ((g << 3) & 0xff) ;// | ((g >> 5) & 0xff);
-				b = ((b << 3) & 0xff) ;// | ((b >> 5) & 0xff);
+				r = ((r << 3) & 0xff) ;// | ((r >> 2) & 0xff); // ">> 5" would be wrong
+				g = ((g << 3) & 0xff) ;// | ((g >> 2) & 0xff);
+				b = ((b << 3) & 0xff) ;// | ((b >> 2) & 0xff);
 
 				*ptr++ = 0;
 				*ptr++ = r;

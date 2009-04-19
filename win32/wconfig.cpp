@@ -210,6 +210,7 @@ void WinSetDefaultValues ()
 	Settings.SoundBufferSize = 4;
 	Settings.SoundMixInterval =	20;
 	Settings.DisableSampleCaching=TRUE;
+	Settings.InitFastROMSetting=TRUE;
 	GUI.SoundChannelEnable=255;
 	GUI.FAMute	= FALSE;
 

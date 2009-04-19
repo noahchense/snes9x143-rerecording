@@ -164,6 +164,7 @@ static struct SMovie
 	uint8  ControllersMask;
 	uint8  Opts;
 	uint8  SyncFlags;
+	uint8  SyncFlags2;
 	bool8  ReadOnly;
 	uint32 BytesPerFrame;
 	uint8* InputBuffer;
@@ -217,7 +218,7 @@ static struct SMovie
 */
 
 bool8 prevForcePal, prevPal, prevForceNTSC, delayedPrevRestore=false;
-bool8 prevWIPAPUTiming, prevUpAndDown, prevSoundEnvelopeHeightReading, prevFakeMuteFix, prevSoundSync, prevCPUShutdown;
+bool8 prevWIPAPUTiming, prevUpAndDown, prevSoundEnvelopeHeightReading, prevFakeMuteFix, prevSoundSync, prevCPUShutdown, prevClearFastROM;
 
 static int bytes_per_frame()
 {
@@ -317,7 +318,7 @@ static int read_movie_header(FILE* fd, SMovie* movie)
 	{
 		movie->ControllersMask=Read8(ptr);
 		movie->Opts=Read8(ptr);
-		Read8(ptr); // reserved byte
+		movie->SyncFlags2=Read8(ptr); // previously reserved byte
 		movie->SyncFlags=Read8(ptr); // previously reserved byte
 
 		movie->SaveStateOffset=Read32(ptr);
@@ -374,7 +375,7 @@ static void write_movie_header(FILE* fd, const SMovie* movie)
 
 	Write8(movie->ControllersMask, ptr);
 	Write8(movie->Opts, ptr);
-	Write8(0, ptr); // reserved byte
+	Write8(movie->SyncFlags2, ptr); // previously reserved byte
 	Write8(movie->SyncFlags, ptr); // previously reserved byte
 
 	Write32(movie->SaveStateOffset, ptr);
@@ -459,6 +460,7 @@ static void store_previous_settings()
 	prevSoundEnvelopeHeightReading = Settings.SoundEnvelopeHeightReading;
 	prevFakeMuteFix = Settings.FakeMuteFix;
 	prevSoundSync = Settings.SoundSync;
+	prevClearFastROM = Settings.InitFastROMSetting;
 }
 
 static void restore_previous_settings()
@@ -468,6 +470,7 @@ static void restore_previous_settings()
 	Settings.UseWIPAPUTiming = prevWIPAPUTiming;
 	Settings.SoundEnvelopeHeightReading = prevSoundEnvelopeHeightReading;
 	Settings.FakeMuteFix = prevFakeMuteFix;
+	Settings.InitFastROMSetting = prevClearFastROM;
 //	Settings.PAL = prevPal; // changing this after the movie while it's still emulating would be bad
 //	Settings.ShutdownMaster = prevCPUShutdown; // changing this after the movie while it's still emulating would be bad
 	delayedPrevRestore = true; // wait to change the above 2 settings until later
@@ -489,6 +492,7 @@ static void store_movie_settings()
 	if(Settings.FakeMuteFix || !Settings.APUEnabled) Movie.SyncFlags |= MOVIE_SYNC_FAKEMUTE;
 	if(Settings.SoundSync) Movie.SyncFlags |= MOVIE_SYNC_SYNCSOUND;
 	if(!Settings.ShutdownMaster) Movie.SyncFlags |= MOVIE_SYNC_NOCPUSHUTDOWN;
+	if(Settings.InitFastROMSetting) Movie.SyncFlags2 |= MOVIE_SYNC2_INIT_FASTROM;
 }
 
 static void restore_movie_settings()
@@ -510,6 +514,7 @@ static void restore_movie_settings()
 		Settings.SoundEnvelopeHeightReading = (Movie.SyncFlags & MOVIE_SYNC_VOLUMEENVX) ? TRUE : FALSE;
 		Settings.FakeMuteFix = (Movie.SyncFlags & MOVIE_SYNC_FAKEMUTE) ? TRUE : FALSE;
 		Settings.ShutdownMaster = (Movie.SyncFlags & MOVIE_SYNC_NOCPUSHUTDOWN) ? FALSE : TRUE; // OK to change while starting playing a movie because either we are re-loading the ROM or we are entering a state that already had this setting set
+		Settings.InitFastROMSetting = (Movie.SyncFlags2 & MOVIE_SYNC2_INIT_FASTROM) ? TRUE : FALSE;
 //		Settings.UpAndDown = (Movie.SyncFlags & MOVIE_SYNC_LEFTRIGHT) ? TRUE : FALSE; // doesn't actually affect synchronization, so leave the setting alone; the port can change it if it wants
 //		Settings.SoundSync = (Movie.SyncFlags & MOVIE_SYNC_SYNCSOUND) ? TRUE : FALSE; // doesn't seem to affect synchronization, so leave the setting alone; the port can change it if it wants
 	}
@@ -517,6 +522,12 @@ static void restore_movie_settings()
 	{
 		Settings.ShutdownMaster = TRUE;
 	}
+
+	// memory speed init should *always* be on for slowrom games
+	// (well, technically speaking it should be on for all games, but some old movies of fastrom games need it off)
+	// and probably nobody has made a movie that they expect other people to play by opening a different game first
+	if((Memory.ROMSpeed&0x10)==0)
+		Settings.InitFastROMSetting = TRUE;
 }
 
 // file must still be open for this to work
@@ -743,7 +754,7 @@ void S9xUpdateFrameCounter (int offset)
 	}
 }
 
-int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags)
+int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags, uint8 sync_flags2)
 {
 	FILE* fd;
 	STREAM stream;
@@ -797,6 +808,7 @@ int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags)
 		Settings.FakeMuteFix = (sync_flags & MOVIE_SYNC_FAKEMUTE) ? TRUE : FALSE;
 		Settings.UpAndDown = (sync_flags & MOVIE_SYNC_LEFTRIGHT) ? TRUE : FALSE; // doesn't actually affect synchronization
 		Settings.SoundSync = (sync_flags & MOVIE_SYNC_SYNCSOUND) ? TRUE : FALSE; // doesn't seem to affect synchronization
+		Settings.InitFastROMSetting = (sync_flags2 & MOVIE_SYNC2_INIT_FASTROM) ? TRUE : FALSE;
 		//Settings.ShutdownMaster = (sync_flags & MOVIE_SYNC_NOCPUSHUTDOWN) ? FALSE : TRUE;
 	}
 
@@ -886,6 +898,9 @@ int S9xMovieCreate (const char* filename, uint8 controllers_mask, uint8 opts, co
 	const bool8 wasPaused = Settings.Paused;
 	const uint32 prevFrameTime = Settings.FrameTime;
 
+	// store new settings, otherwise they'll always get overridden when stopping a movie
+	store_previous_settings();
+
 	// stop current movie before opening
 	change_state(MOVIE_STATE_NONE);
 
@@ -902,9 +917,7 @@ int S9xMovieCreate (const char* filename, uint8 controllers_mask, uint8 opts, co
 	Movie.ControllersMask=controllers_mask;
 	Movie.Opts=opts;
 	Movie.SyncFlags=MOVIE_SYNC_DATA_EXISTS|MOVIE_SYNC_HASROMINFO;
-
-	// store previous, in case we switch to playback later
-	store_previous_settings();
+	Movie.SyncFlags2=0;
 
 	// store settings in movie
 	store_movie_settings();
@@ -1195,6 +1208,7 @@ int S9xMovieGetInfo (const char* filename, struct MovieInfo* info)
 
 	info->Opts=local_movie.Opts;
 	info->SyncFlags=local_movie.SyncFlags;
+	info->SyncFlags2=local_movie.SyncFlags2;
 	info->ControllersMask=local_movie.ControllersMask;
 
 	if(local_movie.SaveStateOffset > SMV_HEADER_SIZE)
