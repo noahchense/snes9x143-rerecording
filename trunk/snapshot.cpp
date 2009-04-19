@@ -443,6 +443,8 @@ extern uint8 *HDMABasePointers [8];
 	GJFORMAT(int,         OBC1_Address ) \
 	GJFORMAT(int,         OBC1_BasePtr ) \
 	GJFORMAT(int,         OBC1_Shift ) \
+	GJFORMAT(uint8,       KeyOn ) \
+	GJFORMAT(uint8,       KeyOnPrev ) \
 	//end
 
 // extern the globals so we can reference them
