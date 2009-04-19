@@ -297,8 +297,6 @@ void WinSetDefaultValues ()
 
 	GUI.AVIDoubleScale = false;
 
-	Settings.StretchScreenshots=1;
-
 	GUI.Language=0;
 
 	InitCustomKeys(&CustomKeys);
@@ -1009,6 +1007,7 @@ void WinRegisterConfigItems()
 	AddBoolC("MovieTruncateAtEnd", Settings.MovieTruncate, true, "true to truncate any leftover data in the movie file after the current frame when recording stops");
 	AddBool("DisplayWatchedAddresses", Settings.DisplayWatchedAddresses, true);
 	AddBool2C("WrongMovieStateProtection", Settings.WrongMovieStateProtection, true, "off to allow states to be loaded for recording from a different movie than they were made in");
+	AddInt("StretchScreenshots", Settings.StretchScreenshots, 1);
 	AddUIntC("MessageDisplayTime", Settings.InitialInfoStringTimeout, 120, "display length of messages, in frames. set to 0 to disable all message text");
 	AddIntC("SavestateCompressionLevel", Settings.CompressionLevel, 3, "0=none, 1=low(fastest), 4=medium(slow), 9=maximum(slowest)");
 
