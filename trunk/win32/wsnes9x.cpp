@@ -592,6 +592,8 @@ void HotkeyMovieStop ();
 void HotkeyReadOnly ();
 void HotkeyShowPressed ();
 void HotkeyFrameCount ();
+void HotkeyLagCount ();
+void HotkeyFrameAndLagCount ();
 void HotkeyResetLagCounter ();
 void HotkeyToggleMacro0 ();
 void HotkeyToggleMacro1 ();
@@ -753,7 +755,9 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->MovieStop.handleKeyDown = HotkeyMovieStop;
 	keys->ReadOnly.handleKeyDown = HotkeyReadOnly;
 	keys->ShowPressed.handleKeyDown = HotkeyShowPressed;
-	keys->FrameCount.handleKeyDown = HotkeyFrameCount;
+	keys->FrameCountOnly.handleKeyDown = HotkeyFrameCount;
+	keys->LagCountOnly.handleKeyDown = HotkeyLagCount;
+	keys->FrameCount.handleKeyDown = HotkeyFrameAndLagCount;
 	keys->ResetLagCounter.handleKeyDown = HotkeyResetLagCounter;
 	keys->ToggleMacro[0].handleKeyDown = HotkeyToggleMacro0;
 	keys->ToggleMacro[1].handleKeyDown = HotkeyToggleMacro1;
@@ -877,7 +881,9 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->MovieStop.name = _T("Movie Stop");
 	keys->ReadOnly.name = _T("Read-Only Toggle");
 	keys->ShowPressed.name = _T("Input Display Toggle");
-	keys->FrameCount.name = _T("Frame Counter Toggle");
+	keys->FrameCount.name = _T("Frame/Lag Counter Toggle");
+	keys->FrameCountOnly.name = _T("Frame Counter Toggle");
+	keys->LagCountOnly.name = _T("Lag Counter Toggle");
 	keys->ResetLagCounter.name = _T("Lag Counter Reset");
 	keys->ToggleMacro[0].name = _T("Macro 0");
 	keys->ToggleMacro[1].name = _T("Macro 1");
@@ -1002,6 +1008,8 @@ void InitCustomKeys (SCustomKeys *keys)
 	keys->ReadOnly.page = HOTKEY_PAGE_MOVIE;
 	keys->ShowPressed.page = HOTKEY_PAGE_MOVIE;
 	keys->FrameCount.page = HOTKEY_PAGE_MOVIE;
+	keys->FrameCountOnly.page = HOTKEY_PAGE_MOVIE;
+	keys->LagCountOnly.page = HOTKEY_PAGE_MOVIE;
 	keys->ResetLagCounter.page = HOTKEY_PAGE_MOVIE;
 	keys->ToggleMacro[0].page = HOTKEY_PAGE_TOOLS;
 	keys->ToggleMacro[1].page = HOTKEY_PAGE_TOOLS;
@@ -4250,6 +4258,22 @@ void HotkeyShowPressed ()
 void HotkeyFrameCount ()
 {
 	S9xMovieToggleFrameDisplay ();
+}
+
+void S9xReRefresh();
+
+void HotkeyLagCount ()
+{
+	Settings.DisplayLagCounter = !Settings.DisplayLagCounter;
+	S9xReRefresh();
+}
+
+void HotkeyFrameAndLagCount ()
+{
+	Settings.DisplayFrame = !Settings.DisplayFrame;
+	Settings.DisplayLagCounter = Settings.DisplayFrame;
+	// updating the frame counter string here won't work, because it may or may not be 1 too high now
+	S9xReRefresh();
 }
 
 void HotkeyResetLagCounter ()
