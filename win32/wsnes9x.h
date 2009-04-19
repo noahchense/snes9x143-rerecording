@@ -431,6 +431,8 @@ typedef union {
 		SCustomKey ReadOnly;
 		SCustomKey ShowPressed;
 		SCustomKey FrameCount;
+		SCustomKey FrameCountOnly;
+		SCustomKey LagCountOnly;
 		SCustomKey ResetLagCounter;
 		SCustomKey ToggleMacro [8];
 		SCustomKey EditMacro;
