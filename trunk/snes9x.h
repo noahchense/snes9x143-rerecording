@@ -356,6 +356,7 @@ struct SSettings{
     uint8  AltSampleDecode;
     bool8  FixFrequency;
     bool8  UseWIPAPUTiming;
+    bool8  InitFastROMSetting;
 
     /* Graphics options */
     bool8  Transparency;

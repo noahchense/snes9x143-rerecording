@@ -1084,6 +1084,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
     Settings.DisableSampleCaching=!conf.GetBool("Sound::SampleCaching");
     Settings.DisableMasterVolume=!conf.GetBool("Sound::MasterVolume");
     Settings.InterpolatedSound=conf.GetBool("Sound::Interpolate", true);
+	Settings.InitFastROMSetting=true;
     if(conf.Exists("Sound::Sync")){
         Settings.SoundSync=(bool8)conf.GetInt("Sound::Sync", 1);
         if(Settings.SoundSync>2) Settings.SoundSync=1;

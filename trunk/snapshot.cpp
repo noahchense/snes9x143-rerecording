@@ -351,7 +351,8 @@ static struct Obsolete {
 #define DELETED_ARRAY_ENTRY(save_version_introduced, save_version_removed, field, count, elemType) {DELETED(field),0, count, elemType, save_version_introduced, save_version_removed, #field}
 #define DELETED_POINTER_ENTRY(save_version_introduced, save_version_removed, field, relativeToField) {DELETED(field),DELETED(relativeToField), 4, POINTER_V, save_version_introduced, save_version_removed, #field} // size=4 -> (field - relativeToField) must fit in 4 bytes
 
-#define V1_RR_UNOFFICIAL 1  // unofficial members added by rerecording team
+#define V1_RR_UNOFFICIAL 1430  // unofficial members added by rerecording team
+// (see SNAPSHOT_VERSION)
 
 struct SnapshotMovieInfo
 {

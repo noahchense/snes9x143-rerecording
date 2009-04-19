@@ -123,6 +123,8 @@
 #define MOVIE_SYNC_HASROMINFO  0x40
 #define MOVIE_SYNC_NOCPUSHUTDOWN 0x80
 
+#define MOVIE_SYNC2_INIT_FASTROM 0x01
+
 START_EXTERN_C
 struct MovieInfo
 {
@@ -134,6 +136,7 @@ struct MovieInfo
 	uint8	ControllersMask;
 	bool8	ReadOnly;
 	uint8	SyncFlags;
+	uint8	SyncFlags2;
 
 	uint32	ROMCRC32;
 	char	ROMName [23];
@@ -143,7 +146,7 @@ struct MovieInfo
 };
 
 // methods used by the user-interface code
-int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags);
+int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags, uint8 sync_flags2);
 int S9xMovieCreate (const char* filename, uint8 controllers_mask, uint8 opts, const wchar_t* metadata, int metadata_length);
 bool8 S9xMovieRestart ();
 int S9xMovieGetInfo (const char* filename, struct MovieInfo* info);
