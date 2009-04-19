@@ -440,6 +440,9 @@ extern uint8 *HDMABasePointers [8];
 	GJFORMAT(long,        Int32    ) \
 	GJFORMAT(long,        OpAddress) \
 	GJFORMAT(uint8,       OpenBus  ) \
+	GJFORMAT(int,         OBC1_Address ) \
+	GJFORMAT(int,         OBC1_BasePtr ) \
+	GJFORMAT(int,         OBC1_Shift ) \
 	//end
 
 // extern the globals so we can reference them
