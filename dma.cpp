@@ -1165,7 +1165,7 @@ uint8 S9xDoHDMA (uint8 byte)
     return (byte);
 }
 
-void S9xResetDMA ()
+void S9xSoftResetDMA ()
 {
     int d;
     for (d = 0; d < 8; d++)
@@ -1189,3 +1189,12 @@ void S9xResetDMA ()
 		Memory.FillRAM [c + 0xf] = 0xff;
     }
 }
+
+void S9xResetDMA ()
+{
+	memset(DMA, 0, sizeof(DMA));
+	memset(HDMAMemPointers, 0, sizeof(HDMAMemPointers));
+	memset(HDMABasePointers, 0, sizeof(HDMABasePointers));
+	S9xSoftResetDMA();
+}
+

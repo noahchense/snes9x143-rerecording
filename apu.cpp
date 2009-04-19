@@ -151,9 +151,8 @@ void S9xDeinitAPU ()
 
 EXTERN_C uint8 APUROM [64];
 
-void S9xResetAPU ()
+void S9xSoftResetAPU ()
 {
-
     int i;
 
     Settings.APUEnabled = Settings.NextAPUEnabled;
@@ -221,6 +220,27 @@ void S9xResetAPU ()
 
 	IAPU.OUTXNotifier = false;
 	IAPU.ENVXNotifier = false;
+}
+
+void S9xResetAPU ()
+{
+	uint8* IAPURAM = IAPU.RAM;
+	uint8* IAPUShadowRAM = IAPU.ShadowRAM;
+	uint8* IAPUCachedSamples = IAPU.CachedSamples;
+	int32 IAPUOneCycle = IAPU.OneCycle;
+
+	memset(&IAPU, 0, sizeof(IAPU));
+
+	IAPU.RAM = IAPURAM;
+    IAPU.ShadowRAM = IAPUShadowRAM;
+    IAPU.CachedSamples = IAPUCachedSamples;
+	IAPU.OneCycle = IAPUOneCycle;
+
+	memset(IAPU.RAM, 0, 0x10000);
+	memset(IAPU.ShadowRAM, 0, 0x10000);
+	memset(IAPU.CachedSamples, 0, 0x40000);
+
+	S9xSoftResetAPU();
 }
 
 void S9xSetAPUDSP (uint8 byte)

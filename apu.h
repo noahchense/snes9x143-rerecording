@@ -156,6 +156,7 @@ STATIC inline void S9xAPUPackStatus()
 
 START_EXTERN_C
 void S9xResetAPU (void);
+void S9xSoftResetAPU (void);
 bool8 S9xInitAPU ();
 void S9xDeinitAPU ();
 void S9xDecacheSamples ();

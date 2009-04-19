@@ -120,6 +120,12 @@ void S9xSA1Init ()
 	SA1.S9xOpcodes=NULL;
 }
 
+void S9xSA1FullInit ()
+{
+	SA1.WaitCounter = 0;
+	S9xSA1Init();
+}
+
 void S9xSA1Reset ()
 {
     SA1Registers.PB = 0;

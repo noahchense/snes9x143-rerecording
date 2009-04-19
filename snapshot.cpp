@@ -156,7 +156,8 @@ END_EXTERN_C
 	// only things that aren't really part of the emulation state should go in here
 	static const char* s_snapshotVerifyIgnoreFilter [] = {
 		"&SoundData.", // because SoundData is full of stuff that changes asynchronously from the emulation
-		"&GFX.LastScreen", // because I think this can have stuff like GUI text in its pixels and it doesn't matter if it's not the same
+		"&GFX.", // because I think this can have stuff like GUI text in its pixels and it doesn't matter if it's not the same
+		//"movie_freeze_buf", // for comparing states that are in different movie files but should otherwise be identical
 	};
 
 	#include <vector>
@@ -481,6 +482,13 @@ static void SetCurrentGlobalJunk(SGlobalJunk gj)
 		HDMABasePointers[i] = gj.HDMABasePointers[i];
 }
 
+void ResetGlobalJunk()
+{
+	#define GJFORMAT(t,v) v = 0;
+		GLOBAL_JUNK_DEF
+	#undef GJFORMAT
+}
+
 // define a snapshot definition struct like usual
 
 #undef STRUCT
@@ -555,7 +563,7 @@ extern "C" uint8* SFXPlotTable;
 	GSFXFORMAT(uint32, SfxSignZero, 0) \
 	GSFXFORMAT(uint32, SfxB, 0) \
 	GSFXFORMAT(uint32, SfxOverflow, 0) \
-	GSFXFORMAT(uint32, PHnum2writesfxreg, 0) \
+	/* note: PHnum2writesfxreg MUST NOT be listed here */ \
 	GSFXFORMAT(uint8*, SfxCPB, Memory.ROM) \
 	GSFXFORMAT(uint8*, SfxCROM, Memory.ROM) \
 	GSFXFORMAT(uint8*, SfxRAMMem, Memory.SRAM) \
@@ -596,7 +604,7 @@ struct SGlobalSuperFX
 static SGlobalSuperFX GetCurrentGlobalSuperFX()
 {
 	SGlobalSuperFX gsfx = {
-		#define GSFXFORMAT(t,v,r) v - pint(r),
+		#define GSFXFORMAT(t,v,r) (r) ? (v ? v - pint(r) : (t)(-1)) : v,
 			GLOBAL_SUPERFX_DEF
 		#undef GSFXFORMAT
 	};
@@ -605,9 +613,18 @@ static SGlobalSuperFX GetCurrentGlobalSuperFX()
 
 static void SetCurrentGlobalSuperFX(SGlobalSuperFX gsfx)
 {
-	#define GSFXFORMAT(t,v,r) v = gsfx.v + pint(r);
+	#define GSFXFORMAT(t,v,r) v = (r) ? (gsfx.v!=(t)(-1) ? gsfx.v + pint(r) : NULL) : gsfx.v;
 		GLOBAL_SUPERFX_DEF
 	#undef GSFXFORMAT
+}
+
+void ResetGlobalSuperFX()
+{
+	#define GSFXFORMAT(t,v,r) v = 0;
+		GLOBAL_SUPERFX_DEF
+	#undef GSFXFORMAT
+	SfxSignZero = 1;
+	SfxnRamBanks = 4;
 }
 
 #undef STRUCT
@@ -2095,6 +2112,7 @@ void FreezeStructF (STREAM stream, char *name, void *base, FreezeData *fields,
 		{
 			uint8* pointer = (uint8*)*((pint*)((uint8 *) base + fields[i].offset));
 			uint8* relativeTo = (fields[i].offset2 == -1) ? Memory.Base : (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
+			if(!pointer) relativeTo = (uint8*)1; // store NULL as -1
 			relativeAddr = pointer - relativeTo;
 			addr = (uint8*)&relativeAddr;
 		}
@@ -2413,6 +2431,7 @@ void UnfreezeStructFromCopy (void *sbase, FreezeData *fields, int num_fields, ui
 		{
 			int relativeAddr = (int)*((pint*)((uint8 *) base + fields[i].offset));
 			uint8* relativeTo = (fields[i].offset2 == -1) ? Memory.Base : (uint8*)*((pint*)((uint8 *) base + fields[i].offset2));
+			if(relativeAddr == -1) relativeTo = (uint8*)1; // NULL is stored as -1
 			*((pint *) (addr)) = (pint)(relativeTo + relativeAddr);
 		}
 	}
