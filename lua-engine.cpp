@@ -1489,75 +1489,65 @@ static int gui_getpixel(lua_State *L) {
 //  It really is easier that way.
 static int gui_gdscreenshot(lua_State *L) {
 
-	// Eat the stack
-	lua_settop(L,0);
-	
-	// This is QUITE nasty...
-	
-	const int width=256, height=224;
-	
-	// Stack allocation
-	unsigned char *buffer = (unsigned char*)alloca(2+2+2+1+4 + (width*height*4));
-	unsigned char *pixels = (buffer + 2+2+2+1+4);
+	int width = IPPU.RenderedScreenWidth;
+	int height = IPPU.RenderedScreenHeight;
 
-	// Truecolour image
-	buffer[0] = 255;
-	buffer[1] = 254;
-	
-	// Width
-	buffer[2] = width >> 8;
-	buffer[3] = width & 0xFF;
-	
-	// height
-	buffer[4] = height >> 8;
-	buffer[5] = height & 0xFF;
-	
-	// Make it truecolour... AGAIN?
-	buffer[6] = 1;
-	
-	// No transparency
-	buffer[7] = buffer[8] = buffer[9] = buffer[10] = 255;
-	
-	// Now we can actually save the image data
-	int i = 0;
-	int x,y;
-	for (y=0; y < height; y++) {
-		for (x=0; x < width; x++) {
-			// This section is long and verbose for the sake of readability by you.
-			// I hope the compiler can make it a little bit faster than it looks!
-		
-			unsigned short rgb16 = *((unsigned short*)(GFX.Screen + GFX.Pitch*y) + x);
-			int red = (rgb16 >> 11) & 31;
-			
-			// Diagram:   000RRrrr -> RRrrr000 -> RRrrrRRr
-			red = ((red << 3) & 0xff) | ((red >> 5) & 0xff);
+	int imgwidth=width;
+	int imgheight=height;
+	if(Settings.StretchScreenshots==1){
+		if(width<=256 && height>SNES_HEIGHT_EXTENDED) imgwidth=width<<1;
+		if(width>256 && height<=SNES_HEIGHT_EXTENDED) imgheight=height<<1;
+	} else if(Settings.StretchScreenshots==2){
+		if(width<=256) imgwidth=width<<1;
+		if(height<=SNES_HEIGHT_EXTENDED) imgheight=height<<1;
+	}
 
-			int green = (rgb16 >> 5) & 63;
-			// 00Gggggg -> Gggggg00 -> GgggggGg
-			green = ((green << 2) & 0xff) | ((green >> 6) & 0xff);
+	int size = 11 + imgwidth * imgheight * 4;
+	char* str = new char[size+1];
+	str[size] = 0;
+	unsigned char* ptr = (unsigned char*)str;
 
-			int blue = (rgb16) & 31;
-			
-			// Diagram:   000RRrrr -> RRrrr000 -> RRrrrRRr
-			blue = ((blue << 3) & 0xff) | ((blue >> 5) & 0xff);
+	// GD format header for truecolor image (11 bytes)
+	*ptr++ = (65534 >> 8) & 0xFF;
+	*ptr++ = (65534     ) & 0xFF;
+	*ptr++ = (imgwidth >> 8) & 0xFF;
+	*ptr++ = (imgwidth     ) & 0xFF;
+	*ptr++ = (imgheight >> 8) & 0xFF;
+	*ptr++ = (imgheight     ) & 0xFF;
+	*ptr++ = 1;
+	*ptr++ = 255;
+	*ptr++ = 255;
+	*ptr++ = 255;
+	*ptr++ = 255;
 
-			// Alpha
-			pixels[i++] = 0;
-			// R
-			pixels[i++] = red;
-			// G
-			pixels[i++] = green;
-			// B
-			pixels[i++] = blue;
+	uint8 *screen=GFX.Screen;
+	for(int y=0; y<height; y++, screen+=GFX.Pitch){
+		for(int rows=0; rows<((imgheight!=height)?2:1); rows++){
+			for(int x=0; x<width; x++){
+				uint32 r, g, b;
+				DECOMPOSE_PIXEL((*(uint16 *)(screen+2*x)), r, g, b);
+
+				// Diagram:   000XXxxx -> XXxxx000 -> XXxxxXXx
+				r = ((r << 3) & 0xff) | ((r >> 5) & 0xff);
+				g = ((g << 3) & 0xff) | ((g >> 5) & 0xff);
+				b = ((b << 3) & 0xff) | ((b >> 5) & 0xff);
+
+				*ptr++ = 0;
+				*ptr++ = r;
+				*ptr++ = g;
+				*ptr++ = b;
+				if(imgwidth!=width){
+					*ptr++ = 0;
+					*ptr++ = r;
+					*ptr++ = g;
+					*ptr++ = b;
+				}
+			}
 		}
 	}
-	
-	// Ugh, ugh, ugh. Don't call this more than once a frame, for god's sake!
-	
-	lua_pushlstring(L, (char*)buffer, 2+2+2+1+4 + (width*height*4));
-	
-	// Buffers allocated with alloca are freed by the function's exit, since they're on the stack.
-	
+
+	lua_pushlstring(L, str, size);
+	delete[] str;
 	return 1;
 }
 
