@@ -2051,12 +2051,12 @@ bool WinMoviePlay(const char* filename)
 	uint8 syncFlags;
 	int err;
 
+	bool abort_anyway = false;
 	if (Settings.StopEmulation) {
-//		SendMenuCommand(ID_FILE_LOAD_GAME); // wait until the message is dispatched
-//		if (Settings.StopEmulation)
-//			return false;
-		PostMenuCommand(ID_FILE_LOAD_GAME);
-		return false; // FIXME: play a movie immediately after loading ROM seems to cause a serious desync...
+		SendMenuCommand(ID_FILE_LOAD_GAME); // wait until the message is dispatched
+		if (Settings.StopEmulation)
+			return false;
+		//abort_anyway = true;
 	}
 
 	err = S9xMovieGetInfo(filename, &info);
@@ -2083,7 +2083,6 @@ bool WinMoviePlay(const char* filename)
 //			return false;
 //	}
 
-	bool abort_anyway = false;
 	while (info.ROMCRC32 != Memory.ROMCRC32 || strcmp(info.RawROMName, Memory.RawROMName) != 0) {
 		char temp[512];
 		sprintf(temp, "Movie's ROM: crc32=%08X, name=%s\nCurrent ROM: crc32=%08X, name=%s\n\nstill want to play the movie?",
@@ -2094,10 +2093,10 @@ bool WinMoviePlay(const char* filename)
 			return false;
 		case IDRETRY:
 			SendMenuCommand(ID_FILE_LOAD_GAME); // wait until the message is dispatched
-			abort_anyway = true; // FIXME: play a movie immediately after loading ROM seems to cause a serious desync...
+			if (Settings.StopEmulation)
+				return false;
+			//abort_anyway = true;
 			break;
-//			PostMenuCommand(ID_FILE_LOAD_GAME);
-//			return false; // FIXME: play a movie immediately after loading ROM seems to cause a serious desync...
 		default:
 			goto romcheck_exit;
 		}

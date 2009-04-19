@@ -1853,11 +1853,13 @@ static int gui_text(lua_State *L) {
 
 }
 
-// gui.gdoverlay([int x=0, int y=0,] string str [, float alphamul=1.0])
+// gui.gdoverlay([int dx=0, int dy=0,] string str [, sx=0, sy=0, sw, sh] [, float alphamul=1.0])
 //
 //  Overlays the given image on the screen.
 // example: gui.gdoverlay(gd.createFromPng("myimage.png"):gdStr())
 static int gui_gdoverlay(lua_State *L) {
+
+	int argCount = lua_gettop(L);
 
 	int xStartDst = 0;
 	int yStartDst = 0;
@@ -1874,6 +1876,28 @@ static int gui_gdoverlay(lua_State *L) {
 
 	luaL_checktype(L,index,LUA_TSTRING);
 	const unsigned char* ptr = (const unsigned char*)lua_tostring(L,index++);
+
+	if (ptr[0] != 255 || (ptr[1] != 254 && ptr[1] != 255))
+		luaL_error(L, "bad image data");
+	bool trueColor = (ptr[1] == 254);
+	ptr += 2;
+	int imgwidth = *ptr++ << 8;
+	imgwidth |= *ptr++;
+	int width = imgwidth;
+	int imgheight = *ptr++ << 8;
+	imgheight |= *ptr++;
+	int height = imgheight;
+	if ((!trueColor && *ptr) || (trueColor && !*ptr))
+		luaL_error(L, "bad image data");
+	ptr++;
+	int pitch = imgwidth * (trueColor?4:1);
+
+	if ((argCount - index + 1) >= 4) {
+		xStartSrc = luaL_checkinteger(L,index++);
+		yStartSrc = luaL_checkinteger(L,index++);
+		width = luaL_checkinteger(L,index++);
+		height = luaL_checkinteger(L,index++);
+	}
 
 	int alphaMul = transparencyModifier;
 	if(lua_isnumber(L, index))
@@ -1895,20 +1919,6 @@ static int gui_gdoverlay(lua_State *L) {
 	for(int i = 128; i < 256; i++)
 		opacMap[i] = 0; // what should we do for them, actually?
 
-	if (ptr[0] != 255 || (ptr[1] != 254 && ptr[1] != 255))
-		luaL_error(L, "bad image data");
-	bool trueColor = (ptr[1] == 254);
-	ptr += 2;
-	int imgwidth = *ptr++ << 8;
-	imgwidth |= *ptr++;
-	int width = imgwidth;
-	int imgheight = *ptr++ << 8;
-	imgheight |= *ptr++;
-	int height = imgheight;
-	if ((!trueColor && *ptr) || (trueColor && !*ptr))
-		luaL_error(L, "bad image data");
-	ptr++;
-	int pitch = imgwidth * (trueColor?4:1);
 	int colorsTotal = 0;
 	if (!trueColor) {
 		colorsTotal = *ptr++ << 8;
@@ -1927,6 +1937,20 @@ static int gui_gdoverlay(lua_State *L) {
 	}
 
 	// some of clippings
+	if (xStartSrc < 0) {
+		width += xStartSrc;
+		xStartDst -= xStartSrc;
+		xStartSrc = 0;
+	}
+	if (yStartSrc < 0) {
+		height += yStartSrc;
+		yStartDst -= yStartSrc;
+		yStartSrc = 0;
+	}
+	if (xStartSrc+width >= imgwidth)
+		width = imgwidth - xStartSrc;
+	if (yStartSrc+height >= imgheight)
+		height = imgheight - yStartSrc;
 	if (xStartDst < 0) {
 		width += xStartDst;
 		if (width <= 0)
@@ -1945,13 +1969,13 @@ static int gui_gdoverlay(lua_State *L) {
 		width = LUA_SCREEN_WIDTH - xStartDst;
 	if (yStartDst+height >= LUA_SCREEN_HEIGHT)
 		height = LUA_SCREEN_HEIGHT - yStartDst;
-	if (width <= 0 || height <= 0 || xStartDst >= LUA_SCREEN_WIDTH || yStartDst >= LUA_SCREEN_HEIGHT)
-		return 0; // out of screen
-	int bytesToNextLine = pitch - (width * (trueColor?4:1));
+	if (width <= 0 || height <= 0)
+		return 0; // out of screen or invalid size
 
 	gui_prepare();
 
 	const uint8* pix = (const uint8*)(&ptr[yStartSrc*pitch + (xStartSrc*(trueColor?4:1))]);
+	int bytesToNextLine = pitch - (width * (trueColor?4:1));
 	if (trueColor)
 		for (int y = yStartDst; y < height+yStartDst && y < LUA_SCREEN_HEIGHT; y++, pix += bytesToNextLine) {
 			for (int x = xStartDst; x < width+xStartDst && x < LUA_SCREEN_WIDTH; x++, pix += 4) {
