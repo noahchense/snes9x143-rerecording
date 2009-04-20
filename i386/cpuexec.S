@@ -93,7 +93,6 @@ S9xMainLoop:
 	ccall S9xMovieUpdateOnReset
 	ccall S9xSoftReset
 .NoMovieReset:
-	//ccall S9xLuaClearGui
 	pushl $LUACALL_BEFOREEMULATION
 	ccall CallRegisteredLuaFunctions
 	popl %eax
