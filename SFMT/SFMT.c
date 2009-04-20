@@ -137,9 +137,9 @@ inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
     ol = tl >> (shift * 8);
     ol |= th << (64 - shift * 8);
     out->u[0] = (uint32_t)(ol >> 32);
-    out->u[1] = (uint32_t)ol;
+    out->u[1] = (uint32_t)(ol & 0xffffffff);
     out->u[2] = (uint32_t)(oh >> 32);
-    out->u[3] = (uint32_t)oh;
+    out->u[3] = (uint32_t)(oh & 0xffffffff);
 }
 #else
 inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
@@ -152,9 +152,9 @@ inline static void rshift128(w128_t *out, w128_t const *in, int shift) {
     ol = tl >> (shift * 8);
     ol |= th << (64 - shift * 8);
     out->u[1] = (uint32_t)(ol >> 32);
-    out->u[0] = (uint32_t)ol;
+    out->u[0] = (uint32_t)(ol & 0xffffffff);
     out->u[3] = (uint32_t)(oh >> 32);
-    out->u[2] = (uint32_t)oh;
+    out->u[2] = (uint32_t)(oh & 0xffffffff);
 }
 #endif
 /**
@@ -176,9 +176,9 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
     out->u[0] = (uint32_t)(ol >> 32);
-    out->u[1] = (uint32_t)ol;
+    out->u[1] = (uint32_t)(ol & 0xffffffff);
     out->u[2] = (uint32_t)(oh >> 32);
-    out->u[3] = (uint32_t)oh;
+    out->u[3] = (uint32_t)(oh & 0xffffffff);
 }
 #else
 inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
@@ -191,9 +191,9 @@ inline static void lshift128(w128_t *out, w128_t const *in, int shift) {
     ol = tl << (shift * 8);
     oh |= tl >> (64 - shift * 8);
     out->u[1] = (uint32_t)(ol >> 32);
-    out->u[0] = (uint32_t)ol;
+    out->u[0] = (uint32_t)(ol & 0xffffffff);
     out->u[3] = (uint32_t)(oh >> 32);
-    out->u[2] = (uint32_t)oh;
+    out->u[2] = (uint32_t)(oh & 0xffffffff);
 }
 #endif
 

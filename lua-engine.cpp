@@ -1224,7 +1224,7 @@ static inline bool str2colour(uint32 *colour, lua_State *L, const char *str) {
 	}
 	else {
 		if(!strnicmp(str, "rand", 4)) {
-			*colour = ((rand()*255/RAND_MAX) << 8) | ((rand()*255/RAND_MAX) << 16) | ((rand()*255/RAND_MAX) << 24) | 0xFF;
+			*colour = gen_rand32() | 0xFF; //((rand()*255/RAND_MAX) << 8) | ((rand()*255/RAND_MAX) << 16) | ((rand()*255/RAND_MAX) << 24) | 0xFF;
 			return true;
 		}
 		for(int i = 0; i < sizeof(s_colorMapping)/sizeof(*s_colorMapping); i++) {
