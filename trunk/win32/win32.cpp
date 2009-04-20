@@ -1207,7 +1207,10 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	{
 		uint32 RealPPL = GFX.Pitch2/2;
 		S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-		S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
+		if (!GFX.Repainting) {
+			S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
+			S9xLuaClearGui();
+		}
 	}
 
 	if(!GFX.Repainting && Settings.TakeScreenshot)
@@ -1216,8 +1219,10 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	// avi writing
 	DoAVIVideoFrame();
 
-	if(!Settings.AutoDisplayMessages && !GUI.MessagesInImage)
+	if(!Settings.AutoDisplayMessages && !GUI.MessagesInImage && !GFX.Repainting) {
 		S9xLuaGui(Src.Surface, Width, Height, srcDepth, Src.Pitch);
+		S9xLuaClearGui();
+	}
 
 	GUI.ScreenCleared = true;
 
