@@ -2024,42 +2024,56 @@ static int gui_register(lua_State *L) {
 
 }
 
-// string gui.popup(string message, [string type = "ok"])
-//
-//  Popup dialog!
-int gui_popup(lua_State *L) {
-	const char *message = luaL_checkstring(L, 1);
-	const char *type = luaL_optstring(L, 2, "ok");
-	
+static int doPopup(lua_State *L, const char* deftype, const char* deficon) {
+	const char *str = luaL_checkstring(L, 1);
+	const char* type = lua_type(L,2) == LUA_TSTRING ? lua_tostring(L,2) : deftype;
+	const char* icon = lua_type(L,3) == LUA_TSTRING ? lua_tostring(L,3) : deficon;
+
+	int itype = -1, iters = 0;
+	while(itype == -1 && iters++ < 2)
+	{
+		if(!stricmp(type, "ok")) itype = 0;
+		else if(!stricmp(type, "yesno")) itype = 1;
+		else if(!stricmp(type, "yesnocancel")) itype = 2;
+		else if(!stricmp(type, "okcancel")) itype = 3;
+		else if(!stricmp(type, "abortretryignore")) itype = 4;
+		else type = deftype;
+	}
+	assert(itype >= 0 && itype <= 4);
+	if(!(itype >= 0 && itype <= 4)) itype = 0;
+
+	int iicon = -1; iters = 0;
+	while(iicon == -1 && iters++ < 2)
+	{
+		if(!stricmp(icon, "message") || !stricmp(icon, "notice")) iicon = 0;
+		else if(!stricmp(icon, "question")) iicon = 1;
+		else if(!stricmp(icon, "warning")) iicon = 2;
+		else if(!stricmp(icon, "error")) iicon = 3;
+		else icon = deficon;
+	}
+	assert(iicon >= 0 && iicon <= 3);
+	if(!(iicon >= 0 && iicon <= 3)) iicon = 0;
+
+	static const char * const titles [] = {"Notice", "Question", "Warning", "Error"};
+	const char* answer = "ok";
+
 #ifdef __WIN32__
-	int t;
-	if (strcmp(type, "ok") == 0)
-		t = MB_OK;
-	else if (strcmp(type, "yesno") == 0)
-		t = MB_YESNO;
-	else if (strcmp(type, "yesnocancel") == 0)
-		t = MB_YESNOCANCEL;
-	else
-		return luaL_error(L, "invalid popup type \"%s\"", type);
-
-	int result = MessageBox(GUI.hWnd, message, "Lua Script Pop-up", t);
-	
-	lua_settop(L,1);
-
-	if (t != MB_OK) {
-		if (result == IDYES)
-			lua_pushstring(L, "yes");
-		else if (result == IDNO)
-			lua_pushstring(L, "no");
-		else if (result == IDCANCEL)
-			lua_pushstring(L, "cancel");
-		else
-			luaL_error(L, "win32 unrecognized return value %d", result);
-		return 1;
+	static const int etypes [] = {MB_OK, MB_YESNO, MB_YESNOCANCEL, MB_OKCANCEL, MB_ABORTRETRYIGNORE};
+	static const int eicons [] = {MB_ICONINFORMATION, MB_ICONQUESTION, MB_ICONWARNING, MB_ICONERROR};
+	int ianswer = MessageBox(GUI.hWnd, str, titles[iicon], etypes[itype] | eicons[iicon]);
+	switch(ianswer)
+	{
+		case IDOK: answer = "ok"; break;
+		case IDCANCEL: answer = "cancel"; break;
+		case IDABORT: answer = "abort"; break;
+		case IDRETRY: answer = "retry"; break;
+		case IDIGNORE: answer = "ignore"; break;
+		case IDYES: answer = "yes"; break;
+		case IDNO: answer = "no"; break;
 	}
 
-	// else, we don't care.
-	return 0;
+	lua_pushstring(L, answer);
+	return 1;
 #else
 
 	char *t;
@@ -2127,7 +2141,7 @@ int gui_popup(lua_State *L) {
 	
 		// I'm gonna be dead in a matter of microseconds anyways, so wasted memory doesn't matter to me.
 		// Go ahead and abuse strdup.
-		char * parameters[] = {"xmessage", "-buttons", t, strdup(message), NULL};
+		char * parameters[] = {"xmessage", "-buttons", t, strdup(str), NULL};
 
 		execvp("xmessage", parameters);
 		
@@ -2186,7 +2200,7 @@ use_console:
 	else
 		return luaL_error(L, "invalid popup type \"%s\"", type);
 
-	fprintf(stderr, "Lua Message: %s\n", message);
+	fprintf(stderr, "Lua Message: %s\n", str);
 
 	while (true) {
 		char buffer[64];
@@ -2227,6 +2241,17 @@ use_console:
 	// Nothing here, since the only way out is in the loop.
 #endif
 
+}
+
+// string gui.popup(string message, string type = "ok", string icon = "message")
+// string input.popup(string message, string type = "yesno", string icon = "question")
+static int gui_popup(lua_State *L)
+{
+	return doPopup(L, "ok", "message");
+}
+static int input_popup(lua_State *L)
+{
+	return doPopup(L, "yesno", "question");
 }
 
 #ifdef _WIN32
@@ -2686,6 +2711,7 @@ static const struct luaL_reg guilib[] = {
 
 static const struct luaL_reg inputlib[] = {
 	{"get", input_getcurrentinputstatus},
+	{"popup", input_popup},
 	// alternative names
 	{"read", input_getcurrentinputstatus},
 	{NULL, NULL}
