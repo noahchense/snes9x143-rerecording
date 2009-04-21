@@ -583,7 +583,7 @@ void S9xSyncSpeed( void)
     else
     {
 		uint32 SkipFrames;
-		if((Settings.TurboMode || Settings.HighSpeedSeek) && !GUI.AVIOut)
+		if(Settings.SkipFrames == AUTO_FRAMERATE && (Settings.TurboMode || Settings.HighSpeedSeek) && !GUI.AVIOut)
 			SkipFrames = Settings.TurboSkipFrames;
 		else
 			SkipFrames = (Settings.SkipFrames == AUTO_FRAMERATE) ? 0 : Settings.SkipFrames;
