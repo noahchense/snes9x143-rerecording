@@ -2995,6 +2995,8 @@ int S9xLuaRunning() {
  * Range is 0 through 4
  */
 int S9xLuaUsingJoypad(int which) {
+	if (!S9xLuaRunning())
+		return 0;
 	return lua_joypads_used & (1 << which);
 }
 
@@ -3006,6 +3008,8 @@ int S9xLuaUsingJoypad(int which) {
  * per frame (if S9xLuaUsingJoypad says it's safe to do so)
  */
 int S9xLuaReadJoypad(int which) {
+	if (!S9xLuaRunning())
+		return 0;
 	if (lua_joypads_used & (1 << which)) {
 		//lua_joypads_used &= ~(1 << which);
 		return lua_joypads[which] | 0x80000000;
