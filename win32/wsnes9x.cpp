@@ -4547,7 +4547,7 @@ VOID CALLBACK FrameTimer( UINT idEvent, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR d
         else
 #endif
 		{
-			if (Settings.SkipFrames != AUTO_FRAMERATE || Settings.TurboMode ||
+			if (/*Settings.SkipFrames != AUTO_FRAMERATE || */Settings.TurboMode ||
 				(Settings.Paused /*&& !Settings.FrameAdvance*/) || Settings.StopEmulation || Settings.ForcedPause)
 			{
 				WaitForSingleObject (GUI.FrameTimerSemaphore, 0);
@@ -4857,7 +4857,7 @@ int WINAPI WinMain(
 				}
 				run_loop=true;
 			}
-			else if (Settings.TurboMode || Settings.FrameAdvance || Settings.SkipFrames != AUTO_FRAMERATE  || S9xLuaSpeed() > 0
+			else if (Settings.TurboMode || Settings.FrameAdvance/* || Settings.SkipFrames != AUTO_FRAMERATE*/  || S9xLuaSpeed() > 0
 #ifdef NETPLAY_SUPPORT
 			|| Settings.NetPlay
 #endif
