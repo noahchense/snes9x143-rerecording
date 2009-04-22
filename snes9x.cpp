@@ -1169,6 +1169,8 @@ void S9xLoadConfigFiles(char **argv, int argc){
 	Settings.CompressionLevel=conf.GetInt("Settings::SavestateCompressionLevel", 3);
 //    rom_filename=conf.GetStringDup("ROM::Filename", NULL);
 
+	Settings.LuaColorConvRotateBit=conf.GetBool("Settings\\Script::LuaColorConvRotateBit", true);
+
     S9xParsePortConfig(conf, 1);
 //    S9xVerifyControllers();
 }

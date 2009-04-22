@@ -422,6 +422,7 @@ struct SSettings{
     unsigned int MaxCount;
 #endif
 
+	bool8 LuaColorConvRotateBit;
 };
 
 struct SSNESGameFixes
