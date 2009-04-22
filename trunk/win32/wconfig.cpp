@@ -1015,6 +1015,7 @@ void WinRegisterConfigItems()
 #undef CATEGORY
 #define CATEGORY "Settings\\Script"
 	AddStringC("LastScriptFile", S9xGetLuaScriptName(), _MAX_PATH, "", "filename of the last Lua script that ran, for the Reload Lua Script menu option");
+	AddBool("LuaColorConvRotateBit", Settings.LuaColorConvRotateBit, true);
 
 #undef CATEGORY
 #define CATEGORY "Settings\\Win"
