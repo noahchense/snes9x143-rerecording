@@ -1591,6 +1591,15 @@ static int gui_transparency(lua_State *L) {
 	return 0;
 }
 
+// gui.clearuncommitted()
+//
+//  undoes uncommitted drawing commands
+static int gui_clearuncommitted(lua_State *L) {
+	S9xLuaClearGui();
+	return 0;
+}
+
+
 
 static const uint32 Small_Font_Data[] =
 {
@@ -2703,6 +2712,7 @@ static const struct luaL_reg guilib[] = {
 	{"gdscreenshot", gui_gdscreenshot},
 	{"gdoverlay", gui_gdoverlay},
 	{"getpixel", gui_getpixel},
+	{"clearuncommitted", gui_clearuncommitted},
 	// alternative names
 	{"drawtext", gui_text},
 	{"drawbox", gui_drawbox},
