@@ -42,6 +42,9 @@ static lua_State *LUA;
 // Are we running any code right now?
 static char luaScriptName [_MAX_PATH] = {0};
 
+// Current working directory of the script
+static char luaCWD [_MAX_PATH] = {0};
+
 // Are we running any code right now?
 static bool8 luaRunning = FALSE;
 
@@ -2766,7 +2769,9 @@ void CallExitFunction() {
 	int errorcode = 0;
 	if (lua_isfunction(LUA, -1))
 	{
+		chdir(luaCWD);
 		errorcode = lua_pcall(LUA, 0, 0, 0);
+		_getcwd(luaCWD, _MAX_PATH);
 	}
 
 	if (errorcode)
@@ -2817,8 +2822,10 @@ void S9xLuaFrameBoundary() {
 	lua_joypads_used = 0;
 
 	numTries = 1000;
+	chdir(luaCWD);
 	int result = lua_resume(thread, 0);
-	
+	_getcwd(luaCWD, _MAX_PATH);
+
 	if (result == LUA_YIELD) {
 		// Okay, we're fine with that.
 	} else if (result != 0) {
@@ -2882,6 +2889,7 @@ int S9xLoadLuaCode(const char *filename) {
 		slash[1] = '\0';    // keep slash itself for some reasons
 		_chdir(dir);
 	}
+	_getcwd(luaCWD, _MAX_PATH);
 
 	if (!LUA) {
 		LUA = lua_open();

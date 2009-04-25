@@ -229,6 +229,7 @@ const void S9xGetLastDirectory (char* buffer, int buf_len)
 static char startDirectory [PATH_MAX];
 static bool startDirectoryValid = false;
 
+// Note: S9xGetDirectory changes the current directory
 const char *S9xGetDirectory (enum s9x_getdirtype dirtype)
 {
 //	_fullpath
