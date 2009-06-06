@@ -6,12 +6,22 @@
 #include <ctype.h>
 #include <assert.h>
 #include <math.h>
+#ifdef WIN32
 #include <direct.h>
+#endif
 #include <time.h>
 
 #ifdef __linux
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <algorithm> // max() and min()
+#include <sys/stat.h> // lstat
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
+#define _getcwd getcwd
+#define _chdir chdir
+#define max std::max
+#define min std::min   	 
 #endif
 
 
@@ -107,7 +117,9 @@ static const char* luaCallIDStrings [] =
 	"CALL_AFTEREMULATION",
 	"CALL_BEFOREEXIT",
 };
+#ifdef WIN32 // uh... yeah
 static const int _makeSureWeHaveTheRightNumberOfStrings [sizeof(luaCallIDStrings)/sizeof(*luaCallIDStrings) == LUACALL_COUNT ? 1 : 0];
+#endif
 
 INLINE void S9xSetDWord (uint32 DWord, uint32 Address);
 INLINE uint32 S9xGetDWord (uint32 Address);

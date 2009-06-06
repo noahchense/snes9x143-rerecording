@@ -194,31 +194,31 @@ STATIC inline void S9xFixCycles ()
 STATIC inline void S9xReschedule ()
 {
     uint8 which;
-    long max;
+    long maximum; // "max" is a function in std on Linux - I renamed the variable to "maximum"
     
     if (CPU.WhichEvent == HBLANK_START_EVENT ||
 	CPU.WhichEvent == HTIMER_AFTER_EVENT)
     {
 	which = HBLANK_END_EVENT;
-	max = Settings.H_Max;
+	maximum = Settings.H_Max;
     }
     else
     {
 	which = HBLANK_START_EVENT;
-	max = Settings.HBlankStart;
+	maximum = Settings.HBlankStart;
     }
 
     if (PPU.HTimerEnabled &&
-        (long) PPU.HTimerPosition < max &&
+        (long) PPU.HTimerPosition < maximum &&
 	(long) PPU.HTimerPosition > CPU.NextEvent &&
 	(!PPU.VTimerEnabled ||
 	 (PPU.VTimerEnabled && CPU.V_Counter == PPU.IRQVBeamPos)))
     {
 	which = (long) PPU.HTimerPosition < Settings.HBlankStart ?
 			HTIMER_BEFORE_EVENT : HTIMER_AFTER_EVENT;
-	max = PPU.HTimerPosition;
+	maximum = PPU.HTimerPosition;
     }
-    CPU.NextEvent = max;
+    CPU.NextEvent = maximum;
     CPU.WhichEvent = which;
 }
 

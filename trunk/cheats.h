@@ -172,6 +172,9 @@ void S9xSearchForAddress (SCheatData *, S9xCheatComparisonType cmp,
                         S9xCheatDataSize size, uint32 address, bool8 update);
 void S9xOutputCheatSearchResults (SCheatData *);
 
+#ifdef __linux
+#include <ctype.h>
+#endif
 template<typename IntType>
 int ScanAddress(const char* str, IntType& value)
 {

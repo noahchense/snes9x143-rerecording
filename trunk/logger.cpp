@@ -53,6 +53,8 @@ void ResetLogger()
 	framecounter = 0;
 	drift=0;
 
+	if (!resetno) // don't create multiple dumpfiles because of resets
+	{
 	if (video)
 		fclose(video);
 	if (audio)
@@ -92,6 +94,7 @@ void ResetLogger()
 			AudioLogger(buffer, soundsize);
 		}
 		fclose(l);
+	}
 	}
 	resetno++;
 }

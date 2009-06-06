@@ -1353,7 +1353,7 @@ void S9xProcessEvents (bool8 block)
 
     if (unlikely(autodemo[0]))
     {
-    	S9xMovieOpen(autodemo, true,0);
+    	S9xMovieOpen(autodemo, true, 0, 0);
     	printf("Autodemo loading.\n");
     	autodemo[0] = 0;
     }
@@ -1826,7 +1826,7 @@ void S9xProcessEvents (bool8 block)
                     if(event.type != KeyPress) break;
 
                     if(S9xMovieActive()) S9xMovieStop(FALSE);
-                    S9xMovieOpen(S9xChooseMovieFilename(TRUE), FALSE,0);
+                    S9xMovieOpen(S9xChooseMovieFilename(TRUE), FALSE, 0, 0);
                     break;
                 }
                 case KeyboardSetup::STOP_MOVIE:
