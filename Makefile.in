@@ -117,7 +117,7 @@ SETAOBJ=seta.o seta010.o seta011.o seta018.o
 OBJECTS=$(CPUOBJ) $(SOUNDOBJ) apudebug.o $(FXOBJ) $(C4OBJ) \
 	cpu.o sa1.o debug.o sdd1.o tile.o srtc.o gfx.o memmap.o clip.o \
 	dsp1.o ppu.o dma.o snes9x.o data.o globals.o reader.o \
-	conffile.o logger.o lua-engine.o \
+	conffile.o logger.o lua-engine.o luasav.o \
 	$(SPC7110OBJ) $(OBC1OBJ) $(SETAOBJ) $(KREEDOBJ) $(SDD1OBJ) \
 	$(CHEATOBJ) $(PLATFORMOBJ) $(SNAPOBJ) $(SCREENSHOTOBJ) $(MOVIEOBJ)
 
@@ -128,7 +128,7 @@ SERVER_OBJECTS=server.o
 endif
 
 ifdef UNZIP
-OBJECTS += loadzip.o unzip/unzip.o unzip/explode.o unzip/unreduce.o unzip/unshrink.o
+OBJECTS += loadzip.o unzip/unzip.o unzip/explode.o unzip/unreduce.o unzip/unshrink.o unzip/ioapi.o
 UNZIPDEFINES=-DUNZIP_SUPPORT
 endif
 
@@ -182,7 +182,7 @@ INCLUDES = @X_INCLUDES@
 DEFS = -DMITSHM
 endif
 
-INCLUDES += -I$(srcdir) -I$(srcdir)/unzip @CPUINC@
+INCLUDES += -I$(srcdir) -I$(srcdir)/unzip -Ilua/src @CPUINC@
 
 ifdef DREAMCAST
 OPTIMISE=-O4 -ffreestanding -ffast-math -fschedule-insns2 -fomit-frame-pointer -fno-inline-functions -fno-defer-pop -fforce-addr -fstrict-aliasing -funroll-loops -fdelete-null-pointer-checks -fno-exceptions
@@ -264,7 +264,7 @@ offsets: offsets.o
 	./offsets >$(srcdir)/$(CPU)/offsets.h #FIXME: Move to builddir
 
 snes9x: $(OBJECTS) unix/x11.o $(AIDOOBJS)
-	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) $(AIDOOBJS) $(GLIDEOBJS) $(OPENGLOBJS) unix/x11.o $(LDLIBS) $(GLIDELIBS) $(OPENGLLIBS) @SYSLIBS@ -lXext -lX11 $(EXTRALIBS) -lm
+	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) $(AIDOOBJS) $(GLIDEOBJS) $(OPENGLOBJS) unix/x11.o $(LDLIBS) $(GLIDELIBS) $(OPENGLLIBS) @SYSLIBS@ -lXext -lX11 $(EXTRALIBS) -lm -llua
 
 ssnes9x: $(OBJECTS) unix/svga.o 
 	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) $(GLIDEOBJS) unix/svga.o $(LDLIBS) $(GLIDELIBS) @SYSLIBS@ -lvga -lvgagl $(EXTRALIBS) -lm

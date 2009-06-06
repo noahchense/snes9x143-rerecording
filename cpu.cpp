@@ -102,6 +102,7 @@
 #include "spc7110.h"
 #include "obc1.h"
 #include "snapshot.h"
+#include "logger.h"
 
 
 #ifndef ZSNES_FX
@@ -190,6 +191,8 @@ void ResetGlobalJunk();
 
 void S9xReset (void)
 {
+    if (dumpstreams)
+      ResetLogger();
     S9xResetSaveTimer (FALSE);
 
 	// misc. previously-uninitialized things

@@ -1305,7 +1305,8 @@ bool8 S9xInitUpdate ()
 
 bool8 S9xDeinitUpdate (int Width, int Height)
 {
-    S9xLuaGui((uint16*)GFX.Screen,GFX.Pitch/2, Width, Height);
+    //S9xLuaGui((uint16*)GFX.Screen,GFX.Pitch/2, Width, Height);
+    S9xLuaGui((void*)GFX.Screen,GFX.Pitch/2, Width, Height, 32);
     S9xPutImage (Width, Height);
     if (!Settings.SoundSync)
     	S9xGenerateSound();

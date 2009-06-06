@@ -102,6 +102,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define BOOL bool
 #endif
 
 #include "snapshot.h"
@@ -1278,6 +1279,8 @@ bool8 S9xUnfreezeGame (const char *filename)
 	disableMessageImmediateRefresh = true;
 
     ZeroMemory (&Obsolete, sizeof(Obsolete));
+    
+    STREAM snapshot = NULL;
 
     if (S9xLoadOrigSnapshot (filename))
 		goto successFinish;
@@ -1285,7 +1288,6 @@ bool8 S9xUnfreezeGame (const char *filename)
     if (S9xUnfreezeZSNES (filename))
 		goto successFinish;
 	
-    STREAM snapshot = NULL;
     if (S9xOpenSnapshotFile (filename, TRUE, &snapshot))
     {
 		int result;
