@@ -1021,7 +1021,7 @@ public:
         FRAMEADVANCE,
         SEEK,
         LUA_CONTROL,
-        FUNC_LAST = SEEK /* update this to match the last token */
+        FUNC_LAST = LUA_CONTROL /* update this to match the last token */
     };
     static const char* GetFuncName(functiontype func)
     {
