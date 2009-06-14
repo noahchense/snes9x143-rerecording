@@ -94,6 +94,8 @@
 #include "wsnes9x.h"			// for GUI.hWnd
 #include "AVIOutput.h"
 
+#include <assert.h>
+
 #define VIDEO_STREAM	0
 #define AUDIO_STREAM	1
 
@@ -122,6 +124,9 @@ struct AVIFile
 	int					sound_samples;
 
 	LONG				tBytes, ByteBuffer;
+
+	BYTE				audio_buffer[48000*2*2]; // 1 second buffer
+	int					audio_buffer_pos;
 };
 
 static char saved_cur_avi_fnameandext[MAX_PATH];
@@ -152,6 +157,18 @@ static void clean_up(AVIFile* _avi)
 	{
 		if(avi.compressed_streams[AUDIO_STREAM])
 		{
+			if (avi.audio_buffer_pos > 0) {
+				if(FAILED(AVIStreamWrite(avi.compressed_streams[AUDIO_STREAM],
+				                         avi.sound_samples, avi.audio_buffer_pos / avi.wave_format.nBlockAlign,
+				                         avi.audio_buffer, avi.audio_buffer_pos, 0, NULL, &avi.ByteBuffer)))
+				{
+					avi.valid = false;
+				}
+				avi.sound_samples += avi.audio_buffer_pos / avi.wave_format.nBlockAlign;
+				avi.tBytes += avi.ByteBuffer;
+				avi.audio_buffer_pos = 0;
+			}
+
 			AVIStreamClose(avi.compressed_streams[AUDIO_STREAM]);
 			avi.compressed_streams[AUDIO_STREAM] = NULL;
 			avi.streams[AUDIO_STREAM] = NULL;				// compressed_streams[AUDIO_STREAM] is just a copy of streams[AUDIO_STREAM]
@@ -178,6 +195,15 @@ static void clean_up(AVIFile* _avi)
 		AVIFileClose(avi.avi_file);
 		avi.avi_file = NULL;
 	}
+}
+
+static int avi_audiosegment_size(struct AVIFile* avi_out)
+{
+	if(!avi_out || !avi_out->valid || !avi_out->sound_added)
+		return 0;
+
+	assert(avi_out->wave_format.nAvgBytesPerSec <= sizeof(avi_out->audio_buffer));
+	return avi_out->wave_format.nAvgBytesPerSec;
 }
 
 #ifdef __cplusplus
@@ -296,6 +322,7 @@ int AVIBegin(const char* filename, struct AVIFile* _avi_out)
 		avi.sound_samples = 0;
 		avi.tBytes = 0;
 		avi.ByteBuffer = 0;
+		avi.audio_buffer_pos = 0;
 
 		strncpy(saved_cur_avi_fnameandext,filename,MAX_PATH);
 		strncpy(saved_avi_fname,filename,MAX_PATH);
@@ -408,20 +435,28 @@ void AVIAddSoundSamples(void* sound_data, const int num_samples, struct AVIFile*
 		return;
 	}
 
-	int data_length = num_samples * avi_out->wave_format.nBlockAlign;
-    if(FAILED(AVIStreamWrite(avi_out->compressed_streams[AUDIO_STREAM],
-                             avi_out->sound_samples,
-                             num_samples,
-                             sound_data,
-                             data_length,
-                             0, NULL, &avi_out->ByteBuffer)))
-	{
-		avi_out->valid = false;
-		return;
-	}
+	const int audioSegmentSize = avi_audiosegment_size(avi_out);
+	const int samplesPerSegment = audioSegmentSize / avi_out->wave_format.nBlockAlign;
+	const int soundSize = num_samples * avi_out->wave_format.nBlockAlign;
+	int nBytes = soundSize;
+	while (avi_out->audio_buffer_pos + nBytes > audioSegmentSize) {
+		const int bytesToTransfer = audioSegmentSize - avi_out->audio_buffer_pos;
+		memcpy(&avi_out->audio_buffer[avi_out->audio_buffer_pos], &((BYTE*)sound_data)[soundSize - nBytes], bytesToTransfer);
+		nBytes -= bytesToTransfer;
 
-	avi_out->sound_samples += num_samples;
-	avi_out->tBytes += avi_out->ByteBuffer;
+		if(FAILED(AVIStreamWrite(avi_out->compressed_streams[AUDIO_STREAM],
+		                         avi_out->sound_samples, samplesPerSegment,
+		                         avi_out->audio_buffer, audioSegmentSize, 0, NULL, &avi_out->ByteBuffer)))
+		{
+			avi_out->valid = false;
+			return;
+		}
+		avi_out->sound_samples += samplesPerSegment;
+		avi_out->tBytes += avi_out->ByteBuffer;
+		avi_out->audio_buffer_pos = 0;
+	}
+	memcpy(&avi_out->audio_buffer[avi_out->audio_buffer_pos], &((BYTE*)sound_data)[soundSize - nBytes], nBytes);
+	avi_out->audio_buffer_pos += nBytes;
 }
 
 #ifdef __cplusplus
