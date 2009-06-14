@@ -1561,7 +1561,7 @@ static int gui_gdscreenshot(lua_State *L) {
 				}
 
 				// overlay uncommited Lua drawings if needed
-				if (Settings.LuaDrawingsInScreen) {
+				if (Settings.LuaDrawingsInScreen && gui_used && gui_enabled) {
 					const uint8 gui_alpha = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+3];
 					const uint8 gui_red   = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+2];
 					const uint8 gui_green = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+1];
