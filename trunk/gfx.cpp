@@ -616,16 +616,23 @@ void S9xEndScreenRefresh ()
 			GFX.Pitch = GFX.Pitch2 = GFX.RealPitch;
 			GFX.PPL = GFX.PPLx2 >> 1;
 		}
-#ifndef __WIN32__
+#ifndef WIN32
 		if(Settings.TakeScreenshot)
 			S9xDoScreenshot(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 #endif
-		if(Settings.AutoDisplayMessages || Settings.OpenGLEnable || Settings.GlideEnable)
+		if(Settings.OpenGLEnable || Settings.GlideEnable)
 		{
-			uint32 RealPPL = GFX.Pitch2/2;
-			S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-			S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
-			S9xLuaClearGui();
+			if(Settings.AutoDisplayMessages)
+			{
+				uint32 RealPPL = GFX.Pitch2/2;
+				S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
+
+				//if(Settings.LuaDrawingsInScreen)
+				{
+					S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
+					S9xLuaClearGui();
+				}
+			}
 		}
 		S9xDeinitUpdate(IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight);
 	}

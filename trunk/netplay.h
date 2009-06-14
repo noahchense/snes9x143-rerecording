@@ -206,7 +206,7 @@ struct SNetPlay
     volatile uint8  PercentageComplete;
     volatile bool8  Waiting4EmulationThread;
     volatile bool8  Answer;
-#ifdef __WIN32__
+#ifdef WIN32
     HANDLE          ReplyEvent;
 #endif
     volatile int    Socket;
@@ -276,7 +276,7 @@ void S9xNPServerAddTask (uint32 task, void *data);
 
 bool8 S9xNPStartServer (int port);
 void S9xNPStopServer ();
-#ifdef __WIN32__
+#ifdef WIN32
 #define S9xGetMilliTime timeGetTime
 #else
 uint32 S9xGetMilliTime ();

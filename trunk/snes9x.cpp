@@ -1039,6 +1039,7 @@ void S9xLoadConfigFiles(char **argv, int argc){
 	Settings.OldFashionedFrameCounter=conf.GetBool("Display::OldFashionedFrameCounter", false);
 	Settings.CounterInFrames=conf.GetBool("Display::CounterInFrames", true);
 	Settings.AutoDisplayMessages=conf.GetBool("Display::MessagesInImage", true);
+	Settings.LuaDrawingsInScreen=conf.GetBool("Display::LuaDrawingsInImage", true);
     if(conf.Exists("ROM::Interleaved")){
         Settings.ForceInterleaved=conf.GetBool("ROM::Interleaved", false);
         Settings.ForceNotInterleaved=!Settings.ForceInterleaved;

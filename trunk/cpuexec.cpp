@@ -313,7 +313,7 @@ void S9xDoHBlankProcessing ()
 	if (CPU.V_Counter == PPU.ScreenHeight + FIRST_VISIBLE_LINE)
 	{
 	#ifndef STORM
-#ifdef __WIN32__
+#ifdef WIN32
 		S9xGenerateFrameSound();
 #endif
 	#endif

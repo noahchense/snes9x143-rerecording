@@ -1204,11 +1204,15 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	if(!GFX.Repainting && Settings.TakeScreenshot)
 		GFX.InfoString = NULL; // remove text message for screenshot (even if GUI.MessagesInImage=true)
 
-	if((!Settings.AutoDisplayMessages && GUI.MessagesInImage) || Settings.OpenGLEnable || Settings.GlideEnable)
+	if(!Settings.AutoDisplayMessages || Settings.OpenGLEnable || Settings.GlideEnable)
 	{
 		uint32 RealPPL = GFX.Pitch2/2;
-		S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
-		if (!GFX.Repainting) {
+		if(GUI.MessagesInImage)
+		{
+			S9xDisplayMessages((uint16*)GFX.Screen, RealPPL, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 1);
+		}
+		if (Settings.LuaDrawingsInScreen && !GFX.Repainting)
+		{
 			S9xLuaGui((uint16*)GFX.Screen, IPPU.RenderedScreenWidth, IPPU.RenderedScreenHeight, 16, GFX.Pitch2);
 			S9xLuaClearGui();
 		}
@@ -1220,7 +1224,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
 	// avi writing
 	DoAVIVideoFrame();
 
-	if(!Settings.AutoDisplayMessages && !GUI.MessagesInImage && !GFX.Repainting) {
+	if(!Settings.AutoDisplayMessages && !Settings.LuaDrawingsInScreen && !GFX.Repainting) {
 		S9xLuaGui(Src.Surface, Width, Height, srcDepth, Src.Pitch);
 		S9xLuaClearGui();
 	}
@@ -1501,7 +1505,7 @@ bool8 S9xDeinitUpdate (int Width, int Height)
         srcRect.right  = Width;
         dstRect = srcRect;
 		RenderMethod (Src, Dst, &srcRect);
-//		if(!Settings.AutoDisplayMessages && !MessagesInImage)
+//		if(!Settings.AutoDisplayMessages && !GUI.MessagesInImage)
 //			S9xDisplayMessages ((uint16*)Dst.Surface, Dst.Pitch/2, srcRect.right-srcRect.left, srcRect.bottom-srcRect.top - ((in_display_dlg && GUI.HeightExtend) ? GetFilterScale(GUI.Scale) : 0), GetFilterScale(GUI.Scale));
     }
     

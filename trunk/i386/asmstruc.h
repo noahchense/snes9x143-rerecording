@@ -119,7 +119,7 @@
 #define S9xAPUOPrint _S9xAPUOPrint
 #define S9xSuperFXExec _S9xSuperFXExec
 #define S9xGenerateSound _S9xGenerateSound
-#ifdef __WIN32__
+#ifdef WIN32
 #define S9xGenerateFrameSound _S9xGenerateFrameSound
 #endif
 #define S9xUpdateJoypadButtons _S9xUpdateJoypadButtons

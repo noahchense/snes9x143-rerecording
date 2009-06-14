@@ -215,7 +215,7 @@ void S9xLuaWrite(uint32 addr) {
 	if (res) {
 		const char *err = lua_tostring(LUA, -1);
 		
-#ifdef __WIN32__
+#ifdef WIN32
 		MessageBox(GUI.hWnd, err, "Lua Engine", MB_OK);
 #else
 		fprintf(stderr, "Lua error: %s\n", err);
@@ -1560,6 +1560,27 @@ static int gui_gdscreenshot(lua_State *L) {
 					b = ((b << 3) & 0xff);
 				}
 
+				// overlay uncommited Lua drawings if needed
+				if (Settings.LuaDrawingsInScreen) {
+					const uint8 gui_alpha = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+3];
+					const uint8 gui_red   = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+2];
+					const uint8 gui_green = gui_data[(y*LUA_SCREEN_WIDTH+x)*4+1];
+					const uint8 gui_blue  = gui_data[(y*LUA_SCREEN_WIDTH+x)*4];
+
+					if (gui_alpha == 255) {
+						// direct copy
+						r = gui_red;
+						g = gui_green;
+						b = gui_blue;
+					}
+					else if (gui_alpha != 0) {
+						// alpha-blending
+						r = (((int) gui_red   - r) * gui_alpha / 255 + r) & 255;
+						g = (((int) gui_green - g) * gui_alpha / 255 + g) & 255;
+						b = (((int) gui_blue  - b) * gui_alpha / 255 + b) & 255;
+					}
+				}
+
 				*ptr++ = 0;
 				*ptr++ = r;
 				*ptr++ = g;
@@ -2091,7 +2112,7 @@ static int doPopup(lua_State *L, const char* deftype, const char* deficon) {
 	static const char * const titles [] = {"Notice", "Question", "Warning", "Error"};
 	const char* answer = "ok";
 
-#ifdef __WIN32__
+#ifdef WIN32
 	static const int etypes [] = {MB_OK, MB_YESNO, MB_YESNOCANCEL, MB_OKCANCEL, MB_ABORTRETRYIGNORE};
 	static const int eicons [] = {MB_ICONINFORMATION, MB_ICONQUESTION, MB_ICONWARNING, MB_ICONERROR};
 	int ianswer = MessageBox(GUI.hWnd, str, titles[iicon], etypes[itype] | eicons[iicon]);
@@ -2288,7 +2309,7 @@ static int input_popup(lua_State *L)
 	return doPopup(L, "yesno", "question");
 }
 
-#ifdef _WIN32
+#ifdef WIN32
 const char* s_keyToName[256] =
 {
 	NULL,
@@ -2401,7 +2422,7 @@ const char* s_keyToName[256] =
 static int input_getcurrentinputstatus(lua_State *L) {
 	lua_newtable(L);
 
-#ifdef _WIN32
+#ifdef WIN32
 	// keyboard and mouse button status
 	{
 		unsigned char keys [256];
@@ -2590,7 +2611,7 @@ static void S9xLuaHookFunction(lua_State *L, lua_Debug *dbg) {
 
 		int kill = 0;
 
-#ifdef __WIN32__
+#ifdef WIN32
 		// Uh oh
 		int ret = MessageBox(GUI.hWnd, "The Lua script running has been running a long time. It may have gone crazy. Kill it?\n\n(No = don't check anymore either)", "Lua Script Gone Nuts?", MB_YESNO);
 		
@@ -2761,7 +2782,7 @@ void HandleCallbackError(lua_State* L)
 		lua_setfield(LUA, LUA_REGISTRYINDEX, guiCallbackTable);
 
 		// Error?
-#ifdef __WIN32__
+#ifdef WIN32
 		MessageBox( GUI.hWnd, lua_tostring(LUA,-1), "Lua run error", MB_OK | MB_ICONSTOP);
 #else
 		fprintf(stderr, "Lua thread bombed out: %s\n", lua_tostring(LUA,-1));
@@ -2849,7 +2870,7 @@ void S9xLuaFrameBoundary() {
 		lua_setfield(LUA, LUA_REGISTRYINDEX, guiCallbackTable);
 
 		// Error?
-#ifdef __WIN32__
+#ifdef WIN32
 		MessageBox( GUI.hWnd, lua_tostring(thread,-1), "Lua run error", MB_OK | MB_ICONSTOP);
 #else
 		fprintf(stderr, "Lua thread bombed out: %s\n", lua_tostring(thread,-1));
@@ -2942,7 +2963,7 @@ int S9xLoadLuaCode(const char *filename) {
 	int result = luaL_loadfile(LUA,filename);
 
 	if (result) {
-#ifdef __WIN32__
+#ifdef WIN32
 		MessageBox( GUI.hWnd, lua_tostring(LUA,-1), "Lua load error", MB_OK | MB_ICONSTOP);
 #else
 		fprintf(stderr, "Failed to compile file: %s\n", lua_tostring(LUA,-1));
@@ -3097,7 +3118,7 @@ void S9xLuaGui(void *s, int width, int height, int bpp, int pitch) {
 			lua_pushnil(LUA);
 			lua_setfield(LUA, LUA_REGISTRYINDEX, guiCallbackTable);
 
-#ifdef __WIN32__
+#ifdef WIN32
 			MessageBox(GUI.hWnd, lua_tostring(LUA, -1), "Lua Error in GUI function", MB_OK);
 #else
 			fprintf(stderr, "Lua error in gui.register function: %s\n", lua_tostring(LUA, -1));

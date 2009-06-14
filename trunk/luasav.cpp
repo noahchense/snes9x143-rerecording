@@ -11,7 +11,7 @@ extern "C" {
 #include <algorithm>
 
 // can't remember what the best way of doing this is...
-#if defined(i386) || defined(__i386) || defined(__i386__) || defined(M_I86) || defined(_M_IX86) || defined(_WIN32)
+#if defined(i386) || defined(__i386) || defined(__i386__) || defined(M_I86) || defined(_M_IX86) || defined(WIN32)
 	#define IS_LITTLE_ENDIAN
 #endif
 
@@ -593,7 +593,7 @@ void CallRegisteredLuaSaveFunctions(int savestateNumber, LuaSaveData& saveData)
 				// This is grounds for trashing the function
 				lua_pushnil(L);
 				lua_setfield(L, LUA_REGISTRYINDEX, LUA_SAVE_CALLBACK_STRING);
-#ifdef __WIN32__
+#ifdef WIN32
 				MessageBox(GUI.hWnd, lua_tostring(L, -1), "Lua Error in SAVE function", MB_OK);
 #else
 				fprintf(stderr, "Lua error in registersave function: %s\n", lua_tostring(L, -1));
@@ -637,7 +637,7 @@ void CallRegisteredLuaLoadFunctions(int savestateNumber, const LuaSaveData& save
 				// This is grounds for trashing the function
 				lua_pushnil(L);
 				lua_setfield(L, LUA_REGISTRYINDEX, LUA_LOAD_CALLBACK_STRING);
-#ifdef __WIN32__
+#ifdef WIN32
 				MessageBox(GUI.hWnd, lua_tostring(L, -1), "Lua Error in LOAD function", MB_OK);
 #else
 				fprintf(stderr, "Lua error in registerload function: %s\n", lua_tostring(L, -1));

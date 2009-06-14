@@ -558,7 +558,7 @@ S9xSetByte:
 #endif
 
 	pushl LuaStorage
-#if defined(__DJGCC) || defined(MICROSOFT_C) || defined(_WINDOWS) || defined(__WIN32__)
+#if defined(__DJGCC) || defined(MICROSOFT_C) || defined(_WINDOWS) || defined(WIN32)
 	call _S9xLuaWriteCheck
 #else
 	call S9xLuaWriteCheck
@@ -778,7 +778,7 @@ S9xSetWord:
 
 	// Lua addition:
 	pushl LuaStorage
-#if defined(__DJGCC) || defined(MICROSOFT_C) || defined(_WINDOWS)  || defined(__WIN32__)
+#if defined(__DJGCC) || defined(MICROSOFT_C) || defined(_WINDOWS)  || defined(WIN32)
 	call _S9xLuaWriteCheck
 #else
 	call S9xLuaWriteCheck

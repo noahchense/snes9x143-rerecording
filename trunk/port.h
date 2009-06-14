@@ -104,7 +104,7 @@
 #endif
 
 #ifndef ACCEPT_SIZE_T
-#ifdef __WIN32__
+#ifdef WIN32
 //include <windef.h>
 #define ACCEPT_SIZE_T int
 #else
@@ -172,7 +172,7 @@ typedef int pint;
 #endif /* PTR_NOT_INT */
 
 /* FIXME: Refactor this by moving out the BORLAND part and unifying typedefs */
-#ifndef __WIN32__
+#ifndef WIN32
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef signed char int8;
@@ -186,7 +186,7 @@ __extension__ typedef unsigned long long uint64;
 typedef long long int64;
 typedef unsigned long long uint64;
 # endif
-#else /* __WIN32__ */
+#else /* WIN32 */
 
 #ifndef PATH_MAX
 #define PATH_MAX _MAX_PATH
@@ -226,7 +226,7 @@ typedef unsigned int uint32;
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
 
-#endif /* __WIN32__ */
+#endif /* WIN32 */
 #endif /* HAVE_STDINT_H */
 #endif /* snes9x_types_defined */
 
@@ -257,7 +257,7 @@ typedef unsigned __int64 uint64;
 #endif
 #endif
 
-#ifndef __WIN32__
+#ifndef WIN32
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -275,17 +275,17 @@ void _makepath (char *path, const char *drive, const char *dir,
 		const char *fname, const char *ext);
 void _splitpath (const char *path, char *drive, char *dir, char *fname,
 		 char *ext);
-#else /* __WIN32__ */
+#else /* WIN32 */
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
 #endif
 
 EXTERN_C void S9xGenerateSound ();
-#ifdef __WIN32__
+#ifdef WIN32
 EXTERN_C void S9xGenerateFrameSound ();
 #endif
 
-#ifdef __WIN32__
+#ifdef WIN32
 EXTERN_C bool8 S9xFreezePlatformDepends (const char *basefilename);
 EXTERN_C bool8 S9xUnfreezePlatformDepends (const char *basefilename);
 #endif
@@ -320,7 +320,7 @@ EXTERN_C void MixSound(void);
 #endif
 
 #if defined(__i386__) || defined(__i486__) || defined(__i586__) || \
-    defined(__x86_64__) || defined(__WIN32__) || defined(__alpha__)
+    defined(__x86_64__) || defined(WIN32) || defined(__alpha__)
 #define LSB_FIRST
 #define FAST_LSB_WORD_ACCESS
 #else

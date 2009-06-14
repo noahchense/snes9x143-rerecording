@@ -967,7 +967,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 	_splitpath (filename, drive, dir, name, ext);
     _makepath (fname, drive, dir, name, ext);
 	
-#if defined(__WIN32__) || defined(__MACOSX__)
+#if defined(WIN32) || defined(__MACOSX__)
     memmove (&ext [0], &ext[1], 4);
 #endif
 
@@ -1093,7 +1093,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 			{
 				more = TRUE;
 				ext [0]++;
-#if defined(__WIN32__) || defined(__MACOSX__)
+#if defined(WIN32) || defined(__MACOSX__)
 		        memmove (&ext [1], &ext [0], 4);
 			    ext [0] = '.';
 #endif
@@ -1107,7 +1107,7 @@ uint32 CMemory::FileLoader (uint8* buffer, const char* filename, int32 maxsize)
 			{
 				more = TRUE;
 				name [len - 1]++;
-#if defined(__WIN32__) || defined(__MACOSX__)
+#if defined(WIN32) || defined(__MACOSX__)
 				memmove (&ext [1], &ext [0], 4);
 				ext [0] = '.';
 #endif
@@ -1719,7 +1719,7 @@ void CMemory::InitROM (bool8 Interleaved)
 		ROMCRC32);
 	
 	S9xMessage (S9X_INFO, S9X_ROM_INFO, String);
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_ROM_INFO, MF_ENABLED);
 	#endif

@@ -2963,7 +2963,7 @@ void S9xUpdateJoypadButtons ()
 		}
     }
 
-//#ifdef __WIN32__
+//#ifdef WIN32
 //	extern bool WinReadJoypadNeedsScan;
 //	WinReadJoypadNeedsScan = true;
 //#endif
