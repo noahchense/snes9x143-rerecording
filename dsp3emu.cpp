@@ -218,7 +218,7 @@ uint16 DSP3_DataROM[1024] = {
 	0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff
 };
 
-#ifdef __WIN32__
+#ifdef WIN32
 	void (__cdecl *SetDSP3)(void);
 #else
 	void (*SetDSP3)(void);

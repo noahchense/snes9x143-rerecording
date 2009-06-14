@@ -3192,6 +3192,11 @@ LRESULT CALLBACK WinProc(
 
 							if(DirectDraw.Clipped) S9xReRefresh();
 							break;
+						case ID_VIDEO_LUAGUIINIMAGE:
+							Settings.LuaDrawingsInScreen = !Settings.LuaDrawingsInScreen;
+
+							if(DirectDraw.Clipped) S9xReRefresh();
+							break;
 						case ID_VIDEO_LAYERS_BG1:
 							Settings.BG_Forced ^= 1;
 							S9xDisplayStateChange (WINPROC_BG1, !(Settings.BG_Forced & 1));
@@ -5204,6 +5209,8 @@ static void CheckMenuStates ()
 
 	mii.fState = GUI.MessagesInImage ? MFS_CHECKED : MFS_UNCHECKED;
 	SetMenuItemInfo (GUI.hMenu, ID_VIDEO_TEXTINIMAGE, FALSE, &mii);
+	mii.fState = Settings.LuaDrawingsInScreen ? MFS_CHECKED : MFS_UNCHECKED;
+	SetMenuItemInfo (GUI.hMenu, ID_VIDEO_LUAGUIINIMAGE, FALSE, &mii);
 
 	mii.fState = !(Settings.BG_Forced & 1) ? MFS_CHECKED : MFS_UNCHECKED;
     SetMenuItemInfo (GUI.hMenu, ID_VIDEO_LAYERS_BG1, FALSE, &mii);

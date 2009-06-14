@@ -959,6 +959,7 @@ void WinRegisterConfigItems()
 	AddBoolC("Mode7Interpolate", Settings.Mode7Interpolate, false, "true for bi-linear filter mode7");
 	Settings.AutoDisplayMessages = false;
 	AddBoolC("MessagesInImage", GUI.MessagesInImage, false, "true to draw text inside the SNES image (will get into AVIs, screenshots, and filters)");
+	AddBoolC("LuaDrawingsInImage", Settings.LuaDrawingsInScreen, false, "true to draw Lua graphics inside the SNES image (will get into AVIs, screenshots, and filters)");
 	AddBool2C("FrameRate", Settings.DisplayFrameRate, false, "on to display the framerate (will be inaccurate if AutoMaxSkipFrames is too small)");
 	AddBoolC("DisplayInput", Settings.DisplayPressedKeys, false, "true to show which buttons are pressed");
 	AddBoolC("DisplayFrameCount", Settings.DisplayFrame, true, "true to show the frame count when a movie is playing");

@@ -97,7 +97,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __WIN32__
+#ifdef WIN32
 #include <windows.h>
 #include "win32/wsnes9x.h"
 #ifdef ZLIB
@@ -118,7 +118,7 @@
 #define ROM_NAME_LEN 23
 
 #ifdef ZLIB
-#ifndef __WIN32__
+#ifndef WIN32
 #include <zlib.h>
 #endif
 #define STREAM gzFile
@@ -366,6 +366,7 @@ struct SSettings{
     uint8  BG_Forced;
     bool8  SnapshotScreenshots;
     uint32 InitialInfoStringTimeout; // Messages normally display for this many frames
+    bool8  LuaDrawingsInScreen;
 
     /* SNES graphics options */
     bool8  BGLayering;

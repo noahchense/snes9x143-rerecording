@@ -93,7 +93,7 @@
 #endif
 #include <stdio.h>
 
-#ifndef __WIN32__
+#ifndef WIN32
 #include <unistd.h>
 #else
 #include <direct.h>

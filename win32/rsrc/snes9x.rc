@@ -20,10 +20,10 @@
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
+#ifdef WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
+#endif //WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -850,10 +850,10 @@ IDI_ICON1               ICON                    "icon1.ico"
 // Dutch (Netherlands) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NLD)
-#ifdef _WIN32
+#ifdef WIN32
 LANGUAGE LANG_DUTCH, SUBLANG_DUTCH
 #pragma code_page(1252)
-#endif //_WIN32
+#endif //WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -984,10 +984,10 @@ END
 // English (U.K.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
-#ifdef _WIN32
+#ifdef WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
-#endif //_WIN32
+#endif //WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1186,6 +1186,7 @@ BEGIN
             MENUITEM "Lock Window Size",            ID_WINDOW_LOCKRESIZE
             MENUITEM SEPARATOR
             MENUITEM "Text in Image",               ID_VIDEO_TEXTINIMAGE
+            MENUITEM "Lua Drawings in Image",       ID_VIDEO_LUAGUIINIMAGE
             MENUITEM SEPARATOR
             MENUITEM "&Display Configuration...",   ID_OPTIONS_DISPLAY
         END

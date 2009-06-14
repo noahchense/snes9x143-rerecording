@@ -95,14 +95,14 @@
 #include <memory.h>
 #include <sys/types.h>
 
-#ifndef __WIN32__
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
 
-#if defined (__WIN32__)
+#if defined (WIN32)
 #include <winsock.h>
 #include <process.h>
 
@@ -171,7 +171,7 @@ bool8 S9xNPConnectToServer (const char *hostname, int port,
     NetPlay.Port = port;
     NetPlay.PendingWait4Sync = FALSE;
 
-#ifdef __WIN32__
+#ifdef WIN32
     if (GUI.ClientSemaphore == NULL)
         GUI.ClientSemaphore = CreateSemaphore (NULL, 0, NP_JOYPAD_HIST_SIZE, NULL);
 
@@ -235,7 +235,7 @@ up correctly?");
     if (connect (NetPlay.Socket, (struct sockaddr *) &address, sizeof (address)) < 0)
     {
         char buf [100];
-#ifdef __WIN32__
+#ifdef WIN32
         if (WSAGetLastError () == WSAECONNREFUSED)
 #else
 	if (errno == ECONNREFUSED)
@@ -249,7 +249,7 @@ on the remote machine on this port?");
         else
         {
             sprintf (buf, "Connection to server failed with error number %d",
-#ifdef __WIN32__
+#ifdef WIN32
                      WSAGetLastError ()
 #else
 		     errno
@@ -275,7 +275,7 @@ on the remote machine on this port?");
     *ptr++ = NP_CLNT_HELLO;
     WRITE_LONG (ptr, len);
     ptr += 4;
-#ifdef __WIN32__
+#ifdef WIN32
     uint32 ft = Settings.FrameTime;
 
     WRITE_LONG (ptr, ft);
@@ -411,7 +411,7 @@ bool8 S9xNPSendPause (bool8 paused)
     return (TRUE);
 }
 
-#ifdef __WIN32__
+#ifdef WIN32
 void S9xNPClientLoop (void *)
 {
     NetPlay.Waiting4EmulationThread = FALSE;
@@ -577,7 +577,7 @@ bool8 S9xNPLoadROMDialog (const char *rom_name)
 {
     NetPlay.Answer = FALSE;
 
-#ifdef __WIN32__
+#ifdef WIN32
     ResetEvent (NetPlay.ReplyEvent); 
 
 #ifdef NP_DEBUG
@@ -683,7 +683,7 @@ bool8 S9xNPGetROMImage (uint32 len)
     S9xNPResetJoypadReadPos ();
     Settings.StopEmulation = FALSE;
 
-#ifdef __WIN32__
+#ifdef WIN32
     PostMessage (GUI.hWnd, WM_NULL, 0, 0);
 #endif
     
@@ -953,7 +953,7 @@ bool8 S9xNPGetData (int socket, uint8 *data, int length)
         if (!Settings.NetPlayServer && length > 1024)
         {
             NetPlay.PercentageComplete = (uint8) (((length - len) * 100) / length);
-#ifdef __WIN32__
+#ifdef WIN32
             PostMessage (GUI.hWnd, WM_APP, NetPlay.PercentageComplete, 
                          NetPlay.PercentageComplete);
             Sleep (0);
@@ -967,7 +967,7 @@ bool8 S9xNPGetData (int socket, uint8 *data, int length)
 
 bool8 S9xNPInitialise ()
 {
-#ifdef __WIN32__
+#ifdef WIN32
     static bool8 initialised = FALSE;
 
     if (!initialised)
@@ -1000,7 +1000,7 @@ void S9xNPDiscardHeartbeats ()
     fflush (stdout);
 #endif
 
-#ifdef __WIN32__
+#ifdef WIN32
     while (WaitForSingleObject (GUI.ClientSemaphore, 200) == WAIT_OBJECT_0)
         ;
 #endif
@@ -1017,7 +1017,7 @@ void S9xNPSetAction (const char *action, bool8 force)
     {
         strncpy (NetPlay.ActionMsg, action, NP_MAX_ACTION_LEN - 1);
         NetPlay.ActionMsg [NP_MAX_ACTION_LEN - 1] = 0;
-#ifdef __WIN32__
+#ifdef WIN32
         PostMessage (GUI.hWnd, WM_APP, 0, 0);
         Sleep (0);
 #endif
@@ -1028,7 +1028,7 @@ void S9xNPSetError (const char *error)
 {
     strncpy (NetPlay.ErrorMsg, error, NP_MAX_ACTION_LEN - 1);
     NetPlay.ErrorMsg [NP_MAX_ACTION_LEN - 1] = 0;
-#ifdef __WIN32
+#ifdef WIN32
     PostMessage (GUI.hWnd, WM_APP + 1, 0, 0);
     Sleep (0);
 #endif
@@ -1038,7 +1038,7 @@ void S9xNPSetWarning (const char *warning)
 {
     strncpy (NetPlay.WarningMsg, warning, NP_MAX_ACTION_LEN - 1);
     NetPlay.WarningMsg [NP_MAX_ACTION_LEN - 1] = 0;
-#ifdef __WIN32__
+#ifdef WIN32
     PostMessage (GUI.hWnd, WM_APP + 2, 0, 0);
     Sleep (0);
 #endif

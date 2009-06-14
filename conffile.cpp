@@ -101,7 +101,7 @@
 
 #include "conffile.h"
 
-#ifdef __WIN32__
+#ifdef WIN32
 #define snprintf _snprintf // needs ANSI compliant name
 #endif
 

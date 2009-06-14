@@ -404,7 +404,7 @@ S9xDoHBlankProcessing:
 	incl %eax
 	cmpl %eax,%edx
 	jne .L165
-#ifdef __WIN32__
+#ifdef WIN32
 	ccall S9xGenerateFrameSound
 #endif
 	ccall S9xEndScreenRefresh

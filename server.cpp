@@ -97,12 +97,12 @@
 #include <strings.h>
 #endif
 
-#ifndef __WIN32__
+#ifndef WIN32
 #include <unistd.h>
 #include <sys/time.h>
 #endif
 
-#ifdef __WIN32__
+#ifdef WIN32
 
 #include <winsock.h>
 #include <process.h>
@@ -126,7 +126,7 @@ void S9xGetTimeOfDay (struct timeval *n);
 #include <sys/stropts.h>
 #endif
 
-#endif // !__WIN32__
+#endif // !WIN32
 
 #include "snes9x.h"
 #include "netplay.h"
@@ -295,7 +295,7 @@ static bool8 S9xNPSSendData (int fd, const uint8 *data, int length)
         if (length > 1024)
         {
             Percent = (uint8) (((length - len) * 100) / length);
-#ifdef __WIN32__
+#ifdef WIN32
             PostMessage (GUI.hWnd, WM_APP, Percent, Percent);
             Sleep (0);
 #endif
@@ -743,7 +743,7 @@ static bool8 S9xNPServerInit (int port)
 
 void S9xNPServerLoop (void *)
 {
-#ifdef __WIN32__
+#ifdef WIN32
     BOOL success = FALSE;
 #else
     bool8 success = FALSE;
@@ -758,7 +758,7 @@ void S9xNPServerLoop (void *)
 
         int max_fd = NPServer.Socket;
         
-#ifdef __WIN32__
+#ifdef WIN32
         Sleep (0);
 #endif
 
@@ -802,7 +802,7 @@ void S9xNPServerLoop (void *)
             }
         } while (res > 0);
 
-#ifdef __WIN32__
+#ifdef WIN32
         success = WaitForSingleObject (GUI.ServerTimerSemaphore, 200) == WAIT_OBJECT_0;
 #endif
 
@@ -890,7 +890,7 @@ bool8 S9xNPStartServer (int port)
     p = port;
     server_continue = TRUE;
     if (S9xNPServerInit (port))
-#ifdef __WIN32__
+#ifdef WIN32
         return (_beginthread (S9xNPServerLoop, 0, &p) != ~0);
 #else
 	return (TRUE);
@@ -918,7 +918,7 @@ void S9xNPStopServer ()
     }
 }
 
-#ifdef __WIN32__
+#ifdef WIN32
 void S9xGetTimeOfDay (struct timeval *n)
 {
     unsigned long t = S9xGetMilliTime ();
@@ -1228,7 +1228,7 @@ void S9xNPWaitForEmulationToComplete ()
            !Settings.ForcedPause && !Settings.StopEmulation && 
            !(Settings.Paused && !Settings.FrameAdvance))
     {
-#ifdef __WIN32__
+#ifdef WIN32
         Sleep (40);
 #endif
     }
@@ -1283,7 +1283,7 @@ void S9xNPServerQueueSendingLoadROMRequest (const char *filename)
     }
 }
 
-#ifndef __WIN32__
+#ifndef WIN32
 uint32 S9xGetMilliTime ()
 {
     static bool8 first = TRUE;

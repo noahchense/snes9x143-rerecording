@@ -248,14 +248,14 @@ END_EXTERN_C
 		s_verifyingSnapshot = false;
 		if(!g_verifyErrors.empty())
 		{
-#ifdef _WIN32
+#ifdef WIN32
 			OutputDebugString("\n");
 #endif
 			fputs("\n", stdout);
 
 			for(unsigned int i = 0; i < min(100,g_verifyErrors.size()); i++)
 			{
-#ifdef _WIN32
+#ifdef WIN32
 				OutputDebugString(g_verifyErrors[i].c_str());
 #endif
 				fputs(g_verifyErrors[i].c_str(), stdout);

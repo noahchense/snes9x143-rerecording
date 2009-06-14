@@ -98,7 +98,7 @@
 	S9xDoHBlankProcessing ();
 
 struct SOpcodes {
-#ifdef __WIN32__
+#ifdef WIN32
 	void (__cdecl *S9xOpcode)( void);
 #else
 	void (*S9xOpcode)( void);

@@ -95,7 +95,7 @@
 #include <sys/stat.h>
 
 //Windows includes
-#ifdef __WIN32__
+#ifdef WIN32
 #ifndef _XBOX				// chdir and getcwd not supported on Xbox hardware
 #include <direct.h>
 #define chdir _chdir
@@ -1752,7 +1752,7 @@ void SPC7110Load(char* dirname)
 
 	Copy7110=&MovePackData;
 	CleanUp7110=&Del7110Gfx;
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_ENABLED);
 	#endif
@@ -1799,7 +1799,7 @@ void SPC7110Open(char* dirname)
 	Copy7110=&ReadPackData;
 	CleanUp7110=&Close7110Gfx;
 
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_ENABLED);
 	#endif
@@ -1881,7 +1881,7 @@ void SPC7110Grab(char* dirname)
 	CleanUp7110=&Drop7110Gfx;
 
 
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_ENABLED);
 	#endif
@@ -1894,7 +1894,7 @@ void Del7110Gfx()
 	int i;
 	if(Settings.SPC7110)
 	{
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_GRAYED);
 	#endif
@@ -1924,7 +1924,7 @@ void Close7110Gfx()
 	int i;
 	if(Settings.SPC7110)
 	{
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_GRAYED);
 	#endif
@@ -1954,7 +1954,7 @@ void Drop7110Gfx()
 	int i;
 	if(Settings.SPC7110)
 	{
-#ifdef __WIN32__
+#ifdef WIN32
 	#ifndef _XBOX
 		EnableMenuItem(GUI.hMenu, IDM_LOG_7110, MF_GRAYED);
 	#endif

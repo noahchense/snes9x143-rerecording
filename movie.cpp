@@ -109,7 +109,7 @@
 #endif
 #include <time.h>
 
-#ifdef __WIN32__
+#ifdef WIN32
 #include <io.h>
 #ifndef W_OK
 #define W_OK 2
@@ -762,7 +762,7 @@ int S9xMovieOpen (const char* filename, bool8 read_only, uint8 sync_flags, uint8
 	int fn;
 
 	char movie_filename [_MAX_PATH];
-#ifdef __WIN32__
+#ifdef WIN32
 	_fullpath(movie_filename, filename, _MAX_PATH);
 #else
 	strcpy(movie_filename, filename);
@@ -886,7 +886,7 @@ int S9xMovieCreate (const char* filename, uint8 controllers_mask, uint8 opts, co
 		return WRONG_FORMAT;
 
 	char movie_filename [_MAX_PATH];
-#ifdef __WIN32__
+#ifdef WIN32
 	_fullpath(movie_filename, filename, _MAX_PATH);
 #else
 	strcpy(movie_filename, filename);
